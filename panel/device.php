@@ -267,9 +267,9 @@ $sasaranAwal = ($kelas !== '' && isset($massal['kelas:' . $kelas])) ? 'kelas:' .
             <td><?= $d['last_used_at'] ? e(date('d/m/Y', strtotime($d['last_used_at']))) . '<br><small class="text-muted">' . e(date('H:i', strtotime($d['last_used_at']))) . '</small>' : '-' ?></td>
             <td>
               <?php if (!$d['binding_id']): ?>
-                <span class="badge bg-secondary">UNREGISTERED</span>
+                <span class="siap-badge siap-badge-info siap-mono-xs">UNREGISTERED</span>
               <?php else: ?>
-                <span class="badge bg-<?= $d['device_status'] === 'ACTIVE' ? 'success' : 'danger' ?>"><?= e($d['device_status']) ?></span>
+                <span class="siap-badge siap-badge-<?= $d['device_status'] === 'ACTIVE' ? 'success' : 'danger' ?> siap-mono-xs"><?= e($d['device_status']) ?></span>
               <?php endif; ?>
             </td>
             <td>
@@ -285,7 +285,7 @@ $sasaranAwal = ($kelas !== '' && isset($massal['kelas:' . $kelas])) ? 'kelas:' .
                     <button type="submit" name="aksi" value="aktifkan" class="btn btn-sm btn-outline-success">Aktifkan</button>
                   <?php endif; ?>
                 </form>
-                <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#resetModal<?= $d['siswa_id'] ?>">Reset</button>
+                <button type="button" class="siap-btn siap-btn-ghost siap-mono-xs" data-bs-toggle="modal" data-bs-target="#resetModal<?= $d['siswa_id'] ?>">Reset</button>
 
                 <div class="modal fade" id="resetModal<?= $d['siswa_id'] ?>" tabindex="-1">
                   <div class="modal-dialog">
@@ -320,7 +320,7 @@ $sasaranAwal = ($kelas !== '' && isset($massal['kelas:' . $kelas])) ? 'kelas:' .
                   </div>
                 </div>
               <?php else: ?>
-                <a href="#" data-popup="<?= e(modul_url('kode_pasangan', ['siswa_id' => (int) $d['siswa_id']])) ?>" data-popup-title="Kode Pasangan — <?= e($d['nama']) ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-key"></i> Kode Pasangan</a>
+                <a href="#" data-popup="<?= e(modul_url('kode_pasangan', ['siswa_id' => (int) $d['siswa_id']])) ?>" data-popup-title="Kode Pasangan — <?= e($d['nama']) ?>" class="siap-btn siap-btn-ghost siap-mono-xs"><i class="bi bi-key"></i> Kode Pasangan</a>
               <?php endif; ?>
               <?php endif; ?>
             </div>

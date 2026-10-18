@@ -49,3 +49,41 @@ function fallbackUuid() {
   const h = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
   return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20);
 }
+
+/**
+ * C1 — DEVICE SECRET (HMAC v3):
+ * Secret 32 byte di-generate sekali per instalasi, disimpan ganda
+ * (localStorage + cookie, pola sama dengan UUID), dan selalu dikirim
+ * bersama UUID. Server menghitung hash perangkat dari HMAC(uuid, secret):
+ * setelah baris binding terupgrade ke skema v3, UUID yang disalin saja
+ * TIDAK lagi cukup untuk memakai identitas perangkat.
+ */
+function getOrCreateDeviceSecret() {
+  const KEY = 'presensi_device_secret';
+  const RE = /^[0-9a-fA-F]{64}$/;
+
+  let ls = null, ck = null;
+  try { ls = localStorage.getItem(KEY); } catch (e) {}
+  try {
+    const m = document.cookie.match(new RegExp('(?:^|; )' + KEY + '=([^;]*)'));
+    ck = m ? decodeURIComponent(m[1]) : null;
+  } catch (e) {}
+
+  let secret = (ls && RE.test(ls)) ? ls : ((ck && RE.test(ck)) ? ck : null);
+  if (!secret) {
+    const b = new Uint8Array(32);
+    if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(b);
+    else for (let i = 0; i < 32; i++) b[i] = Math.random() * 256 | 0;
+    secret = Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+  }
+
+  // Tulis ulang bila ada yang kosong/berbeda
+  if (ls !== secret) { try { localStorage.setItem(KEY, secret); } catch (e) {} }
+  if (ck !== secret) {
+    try {
+      document.cookie = KEY + '=' + encodeURIComponent(secret) +
+        '; max-age=34560000; path=/; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : '');
+    } catch (e) {}
+  }
+  return secret;
+}

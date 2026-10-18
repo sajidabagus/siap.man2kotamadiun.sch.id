@@ -133,8 +133,8 @@ if ($modal) {
       </div>
     </div>
     <div class="mt-4 d-flex justify-content-end gap-2">
-      <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Batal</button>
-      <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> <?= $user ? 'Simpan Perubahan' : 'Simpan' ?></button>
+      <button type="button" class="siap-btn siap-btn-ghost siap-mono-xs" data-bs-dismiss="modal">Batal</button>
+      <button type="submit" class="siap-btn siap-btn-blue siap-mono-xs"><i class="bi bi-save"></i> <?= $user ? 'Simpan Perubahan' : 'Simpan' ?></button>
     </div>
   </form>
   <?php
@@ -148,8 +148,8 @@ $warnaAvatar = ['#20b2a0', '#4a9be8', '#a855c8', '#f59f0b', '#e5484d', '#2fb344'
 <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-3 mb-3">
   <h4 class="mb-0"><i class="bi bi-person-badge"></i> Pengguna</h4>
   <div class="d-flex gap-2">
-    <a href="<?= modul_url('hak_akses') ?>" class="btn btn-outline-secondary flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2"><i class="bi bi-shield-lock"></i><span>Hak Akses</span></a>
-    <a href="<?= e(modul_url('pengguna', ['modal' => 1])) ?>" data-popup="<?= e(modul_url('pengguna', ['modal' => 1])) ?>" data-popup-title="Tambah Pengguna" class="btn btn-primary flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2"><i class="bi bi-plus-circle"></i><span>Tambah Pengguna</span></a>
+    <a href="<?= modul_url('hak_akses') ?>" class="siap-btn siap-btn-ghost siap-mono-xs flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2"><i class="bi bi-shield-lock"></i><span>Hak Akses</span></a>
+    <a href="<?= e(modul_url('pengguna', ['modal' => 1])) ?>" data-popup="<?= e(modul_url('pengguna', ['modal' => 1])) ?>" data-popup-title="Tambah Pengguna" class="siap-btn siap-btn-blue siap-mono-xs flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2"><i class="bi bi-plus-circle"></i><span>Tambah Pengguna</span></a>
   </div>
 </div>
 

@@ -6,6 +6,10 @@
  * Body (opsional): {"device_uuid": "..."} ; tanpa body berperilaku seperti perangkat belum dikenali.
  */
 require_once __DIR__ . '/../includes/presensi_core.php';
+require_once __DIR__ . '/../includes/ratelimit.php';
+
+// RATE LIMIT (C6): 60 req/menit/IP (beranda juga akses DB & identifikasi perangkat).
+rate_limit_gate('beranda', 60, 60);
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -13,13 +17,17 @@ header('Cache-Control: no-store');
 try {
     $db = getDB();
     $settings = get_settings();
-    $input = json_decode(file_get_contents('php://input'), true) ?? [];
-    $uuid = clean($input['device_uuid'] ?? '');
+    // D7 (pelengkap pasca-audit): guard is_array/is_string — body JSON bisa
+    // bertipe array/angka, dulu TypeError lalu HTTP 500.
+    $input = json_decode(file_get_contents('php://input'), true);
+    $input = is_array($input) ? $input : [];
+    $uuid = is_string($input['device_uuid'] ?? null) ? clean($input['device_uuid']) : '';
+    $secret = is_string($input['device_secret'] ?? null) ? clean($input['device_secret']) : '';  // C1
 
     // ---- Kenali perangkat (hanya bila binding aktif & perangkat ACTIVE) ----
     $saya = null;
     if (!empty($settings['device_binding_aktif']) && $uuid !== '' && is_valid_install_uuid($uuid)) {
-        $b = get_device_binding_by_hash(build_device_hash($uuid));
+        $b = get_device_binding_by_hash(array_values(device_hash_variants($uuid, $secret !== '' ? $secret : null)));
         if ($b && $b['status'] === 'ACTIVE') {
             $st = $db->prepare("SELECT id, nama, kelas FROM siswa WHERE id = :id AND status = 'aktif'");
             $st->execute([':id' => $b['siswa_id']]);

@@ -129,23 +129,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <style>
   .im-dz { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; cursor: pointer;
-           border: 2px dashed #c9d3e4; border-radius: 16px; padding: 34px 18px; background: #f8faff; transition: border-color .15s, background .15s; }
-  .im-dz:hover, .im-dz.seret { border-color: #0d6efd; background: #eef4ff; }
-  .im-dz > i { font-size: 2.6rem; color: #0d6efd; line-height: 1; }
-  .im-dz .t { font-weight: 800; color: #14213d; margin-top: 6px; }
-  .im-dz .s { color: #8a94a6; font-size: .86rem; }
-  .im-dz .nama { margin-top: 10px; font-weight: 700; color: #1d7a33; background: #e8f7ec; border-radius: 999px; padding: 4px 14px; display: none; word-break: break-all; }
+           border: 2px dashed var(--siap-line); border-radius: 16px; padding: 34px 18px; background: var(--siap-bg); transition: border-color .15s, background .15s; }
+  .im-dz:hover, .im-dz.seret { border-color: var(--siap-blue); background: var(--siap-info-bg); }
+  .im-dz > i { font-size: 2.6rem; color: var(--siap-blue); line-height: 1; }
+  .im-dz .t { font-weight: 800; color: var(--siap-ink); margin-top: 6px; }
+  .im-dz .s { color: var(--siap-muted); font-size: .86rem; }
+  .im-dz .nama { margin-top: 10px; font-weight: 700; color: var(--siap-success-text); background: var(--siap-success-bg); border-radius: 999px; padding: 4px 14px; display: none; word-break: break-all; }
   .im-hasil { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .im-tile { border-radius: 14px; padding: 16px; text-align: center; }
   .im-tile .a { font-size: 2rem; font-weight: 800; line-height: 1.1; }
   .im-tile .l { font-size: .84rem; font-weight: 700; }
-  .im-tile.ok { background: #e8f7ec; color: #1d7a33; } .im-tile.lewat { background: #fff4e5; color: #a45a00; } .im-tile.nol { background: #f1f3f8; color: #8a94a6; }
+  .im-tile.ok { background: var(--siap-success-bg); color: var(--siap-success-text); } .im-tile.lewat { background: var(--siap-warning-bg); color: var(--siap-warning-text); } .im-tile.nol { background: var(--siap-bg); color: var(--siap-muted); }
   .im-kolom { display: flex; flex-wrap: wrap; gap: 7px; }
-  .im-kolom span { font-family: ui-monospace, Consolas, monospace; font-size: .82rem; padding: 3px 10px; border-radius: 8px; background: #f1f3f8; color: #3b4560; }
-  .im-kolom span.wajib { background: #eaf3ff; color: #0b57c4; font-weight: 700; }
-  .im-kolom span.wajib::after { content: " *"; color: #e03e4a; }
-  .im-cat { margin: 0; padding-left: 18px; color: #5b6580; font-size: .88rem; display: grid; gap: 6px; }
-  details.im-detail summary { cursor: pointer; color: #0d6efd; font-weight: 600; font-size: .9rem; }
+  .im-kolom span { font-family: ui-monospace, Consolas, monospace; font-size: .82rem; padding: 3px 10px; border-radius: 8px; background: var(--siap-bg); color: var(--siap-body); }
+  .im-kolom span.wajib { background: var(--siap-info-bg); color: var(--siap-blue); font-weight: 700; }
+  .im-kolom span.wajib::after { content: " *"; color: var(--siap-danger-text); }
+  .im-cat { margin: 0; padding-left: 18px; color: var(--siap-muted); font-size: .88rem; display: grid; gap: 6px; }
+  details.im-detail summary { cursor: pointer; color: var(--siap-blue); font-weight: 600; font-size: .9rem; }
   details.im-detail summary::-webkit-details-marker { display: none; }
   @media (max-width: 575px) { .im-dz { padding: 26px 14px; } }
 </style>
@@ -192,7 +192,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="nama" id="namaBerkas"></div>
           </label>
           <input type="file" name="file" id="berkas" accept=".csv,.xlsx" required hidden>
-          <button type="submit" class="btn btn-primary w-100 mt-3" id="btnImport" disabled><i class="bi bi-upload"></i> Import Sekarang</button>
+          <button type="submit" class="siap-btn siap-btn-blue siap-mono-xs w-100 mt-3" id="btnImport" disabled><i class="bi bi-upload"></i> Import Sekarang</button>
         </form>
       </div>
     </div>
@@ -210,7 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <span>tanggal_lahir</span><span class="wajib">kelas</span><span>jurusan</span><span>tahun_pelajaran</span>
         </div>
         <div class="d-flex flex-wrap gap-2 mb-3">
-          <button type="button" class="btn btn-light border btn-sm" id="btnTemplate"><i class="bi bi-download"></i> Unduh template</button>
+          <button type="button" class="siap-btn siap-btn-ghost siap-mono-xs btn-sm" id="btnTemplate"><i class="bi bi-download"></i> Unduh template</button>
         </div>
         <ul class="im-cat">
           <li><span class="text-danger">*</span> wajib diisi, kolom lain boleh kosong.</li>

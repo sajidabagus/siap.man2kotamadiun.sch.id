@@ -42,17 +42,17 @@ $ttl = trim(($siswa['tempat_lahir'] ?: '') . ($siswa['tanggal_lahir'] ? ($siswa[
 <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-3 mb-3">
   <h4 class="mb-0"><i class="bi bi-person-vcard"></i> Detail Siswa</h4>
   <div class="d-flex flex-wrap gap-2">
-    <a href="<?= e(modul_url('siswa')) ?>" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Kembali</a>
+    <a href="<?= e(modul_url('siswa')) ?>" class="siap-btn siap-btn-ghost siap-mono-xs"><i class="bi bi-arrow-left"></i> Kembali</a>
     <?php if (can('siswa.ubah')): ?>
     <a href="<?= e(modul_url('siswa_edit', ['nis' => $siswa['nis']])) ?>"
        data-popup="<?= e(modul_url('siswa_edit', ['nis' => $siswa['nis'], 'modal' => 1])) ?>" data-popup-title="Edit Siswa"
-       class="btn btn-primary"><i class="bi bi-pencil"></i> Edit</a>
+       class="siap-btn siap-btn-blue siap-mono-xs"><i class="bi bi-pencil"></i> Edit</a>
     <?php endif; ?>
     <?php if (can('qr_siswa.lihat')): ?>
-    <a href="<?= e(modul_url('qr_generate', ['nis' => $siswa['nis']])) ?>" class="btn btn-outline-primary"><i class="bi bi-qr-code"></i> QR Code</a>
+    <a href="<?= e(modul_url('qr_generate', ['nis' => $siswa['nis']])) ?>" class="siap-btn siap-btn-ghost siap-mono-xs"><i class="bi bi-qr-code"></i> QR Code</a>
     <?php endif; ?>
     <?php if (can('device.lihat')): ?>
-    <a href="<?= e(modul_url('device', ['siswa_id' => $id])) ?>" class="btn btn-outline-primary"><i class="bi bi-phone"></i> Perangkat</a>
+    <a href="<?= e(modul_url('device', ['siswa_id' => $id])) ?>" class="siap-btn siap-btn-ghost siap-mono-xs"><i class="bi bi-phone"></i> Perangkat</a>
     <?php endif; ?>
   </div>
 </div>
@@ -68,8 +68,8 @@ $ttl = trim(($siswa['tempat_lahir'] ?: '') . ($siswa['tanggal_lahir'] ? ($siswa[
         <?php endif; ?>
         <h5 class="mb-1"><?= e($siswa['nama']) ?></h5>
         <p class="text-muted mb-2">NIS <?= e($siswa['nis']) ?></p>
-        <span class="badge bg-<?= $aktif ? 'success' : 'secondary' ?>"><?= $aktif ? 'Aktif' : e(ucfirst((string) $siswa['status'])) ?></span>
-        <span class="badge bg-light text-dark border">Kelas <?= e($siswa['kelas']) ?></span>
+        <span class="siap-badge siap-badge-<?= $aktif ? 'success' : 'info' ?> siap-mono-xs"><?= $aktif ? 'Aktif' : e(ucfirst((string) $siswa['status'])) ?></span>
+        <span class="siap-badge siap-badge-info siap-mono-xs">Kelas <?= e($siswa['kelas']) ?></span>
       </div>
     </div>
   </div>
@@ -99,7 +99,7 @@ $ttl = trim(($siswa['tempat_lahir'] ?: '') . ($siswa['tanggal_lahir'] ? ($siswa[
         <?php if ($binding): ?>
           <dl class="row mb-0 small">
             <dt class="col-sm-5 text-muted fw-normal">Status</dt>
-            <dd class="col-sm-7"><span class="badge bg-<?= $warnaDevice[$binding['status']] ?? 'secondary' ?>"><?= e($binding['status']) ?></span></dd>
+            <dd class="col-sm-7"><span class="siap-badge siap-badge-<?= $warnaDevice[$binding['status']] ?? 'info' ?> siap-mono-xs"><?= e($binding['status']) ?></span></dd>
             <dt class="col-sm-5 text-muted fw-normal">Perangkat</dt><dd class="col-sm-7"><?= e($binding['device_name'] ?: '-') ?></dd>
             <dt class="col-sm-5 text-muted fw-normal">Browser / OS</dt><dd class="col-sm-7"><?= e(trim(($binding['browser'] ?: '-') . ' / ' . ($binding['os'] ?: '-'))) ?></dd>
             <dt class="col-sm-5 text-muted fw-normal">Terdaftar</dt><dd class="col-sm-7"><?= e($binding['registered_at']) ?></dd>
@@ -119,7 +119,7 @@ $ttl = trim(($siswa['tempat_lahir'] ?: '') . ($siswa['tanggal_lahir'] ? ($siswa[
         <h6 class="mb-3">Kehadiran Bulan Ini <small class="text-muted fw-normal">(sejak <?= e(format_tanggal_indonesia($awalBulan)) ?>)</small></h6>
         <div class="d-flex flex-wrap gap-2">
           <?php foreach ($rekap as $k => $n): ?>
-            <span class="badge bg-<?= $warnaStatus[$k] ?> fs-6 fw-normal"><?= e(ucfirst(strtolower($k))) ?>: <strong><?= $n ?></strong></span>
+            <span class="siap-badge siap-badge-<?= $warnaStatus[$k] ?? 'info' ?> fs-6 fw-normal siap-mono-xs"><?= e(ucfirst(strtolower($k))) ?>: <strong><?= $n ?></strong></span>
           <?php endforeach; ?>
         </div>
       </div>
@@ -143,7 +143,7 @@ $ttl = trim(($siswa['tempat_lahir'] ?: '') . ($siswa['tanggal_lahir'] ? ($siswa[
               <tr>
                 <td><?= e(format_tanggal_indonesia($r['tanggal'])) ?></td>
                 <td><?= e(substr((string) $r['jam_masuk'], 0, 5)) ?></td>
-                <td><span class="badge bg-<?= $warnaStatus[$r['status']] ?? 'secondary' ?>"><?= e($r['status']) ?></span></td>
+                <td><span class="siap-badge siap-badge-<?= $warnaStatus[$r['status']] ?? 'info' ?> siap-mono-xs"><?= e($r['status']) ?></span></td>
                 <td><?= e($r['kelas_saat_presensi']) ?></td>
                 <td><?= e($r['metode']) ?></td>
               </tr>

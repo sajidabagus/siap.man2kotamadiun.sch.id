@@ -32,21 +32,40 @@ function identify_siswa_by_token(string $qrToken): ?array
 }
 
 /**
- * Cari siswa yang device-nya (uuid+UA -> hash) sudah terdaftar dan aktif.
+ * Cari siswa yang device-nya sudah terdaftar dan aktif.
  * Dipakai untuk auto-identify tanpa perlu scan QR pribadi setiap hari.
+ * C1: pencocokan mencakup varian hash v3 (HMAC uuid+secret) dan v2 legacy.
  */
-function identify_siswa_by_device(string $installUuid): ?array
+function identify_siswa_by_device(string $installUuid, ?string $secret = null): ?array
 {
     if (!is_valid_install_uuid($installUuid)) return null;
-    $hash = build_device_hash($installUuid);
+    $adaV3 = siapkan_kolom_hash_v3();
+    $hashes = array_values(device_hash_variants($installUuid, $secret));
 
-    $stmt = getDB()->prepare(
-        'SELECT s.*, db.status AS device_status, db.device_hash
-         FROM device_bindings db
-         JOIN siswa s ON s.id = db.siswa_id
-         WHERE db.device_hash = :hash LIMIT 1'
-    );
-    $stmt->execute([':hash' => $hash]);
+    // Placeholder TERPISAH utk tiap klausa IN: PDO (emulasi prepare mati)
+    // menolak satu nama parameter dipakai dua kali dalam satu statement.
+    $phLegacy = [];
+    $params = [];
+    foreach ($hashes as $i => $h) {
+        $phLegacy[] = ":h$i";
+        $params[":h$i"] = $h;
+    }
+    $sql = 'SELECT s.*, db.status AS device_status, db.device_hash
+            FROM device_bindings db
+            JOIN siswa s ON s.id = db.siswa_id
+            WHERE db.device_hash IN (' . implode(', ', $phLegacy) . ')';
+    if ($adaV3) {
+        $phV3 = [];
+        foreach ($hashes as $i => $h) {
+            $phV3[] = ":g$i";
+            $params[":g$i"] = $h;
+        }
+        $sql .= ' OR db.device_hash_v3 IN (' . implode(', ', $phV3) . ')';
+    }
+    $sql .= ' LIMIT 1';
+
+    $stmt = getDB()->prepare($sql);
+    $stmt->execute($params);
     return $stmt->fetch() ?: null;
 }
 
@@ -105,7 +124,7 @@ function get_ringkasan_bulanan_siswa(int $siswaId, string $tanggalAcuan): array
  *
  * Return: ['success'=>bool, 'code'=>string, 'message'=>string, 'data'=>array|null]
  */
-function proses_simpan_presensi(int $siswaId, string $gateToken, string $installUuid, ?float $lat, ?float $lng): array
+function proses_simpan_presensi(int $siswaId, string $gateToken, string $installUuid, ?float $lat, ?float $lng, ?string $deviceSecret = null): array
 {
     $db = getDB();
 
@@ -147,9 +166,9 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
     if (!is_valid_install_uuid($installUuid)) {
         return ['success' => false, 'code' => 'DEVICE_INVALID', 'message' => 'Identitas perangkat tidak valid. Muat ulang halaman.'];
     }
-    $deviceResult = check_or_register_device($siswaId, $installUuid);
+    $deviceResult = check_or_register_device($siswaId, $installUuid, $deviceSecret);
     if (!$deviceResult['allowed']) {
-        security_log($siswaId, 'PRESENCE_REJECTED', build_device_hash($installUuid), 'Ditolak: ' . $deviceResult['code']);
+        security_log($siswaId, 'PRESENCE_REJECTED', device_hash_variants($installUuid, $deviceSecret)[$deviceSecret !== null && is_valid_device_secret($deviceSecret) ? 'v3' : 'v2'], 'Ditolak: ' . $deviceResult['code']);
         return ['success' => false, 'code' => $deviceResult['code'], 'message' => $deviceResult['message']];
     }
 
@@ -192,15 +211,29 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
 
     $statusPresensi = tentukan_status_presensi($jam);
 
-    // 9. Geolocation jika aktif
+    // 9. Geolocation. Wajib bila gps_aktif menyala. D2: QR KELAS (token
+    // permanen — bisa difoto lalu dipakai dari rumah) SELALU mewajibkan bukti
+    // lokasi. Validasi RADIUS hanya saat gps_aktif menyala (pasca-audit: jangan
+    // validasi radius terhadap koordinat contoh bawaan installer).
+    $qrKelas = !empty($qrRow['kelas_target']);
     if (!empty($settings['gps_aktif'])) {
         if ($lat === null || $lng === null) {
+            security_log($siswaId, 'PRESENCE_REJECTED', null, 'Lokasi perangkat tidak terdeteksi (GPS wajib).');
             return ['success' => false, 'code' => 'GPS_REQUIRED', 'message' => 'Lokasi perangkat tidak terdeteksi. Aktifkan GPS dan izinkan akses lokasi.'];
         }
         $jarak = distance_meter((float)$settings['latitude_sekolah'], (float)$settings['longitude_sekolah'], $lat, $lng);
         if ($jarak > (float)$settings['radius_meter']) {
             security_log($siswaId, 'PRESENCE_REJECTED', null, 'Di luar radius sekolah (' . round($jarak) . 'm).');
             return ['success' => false, 'code' => 'OUT_OF_RANGE', 'message' => 'Presensi hanya dapat dilakukan di area sekolah.'];
+        }
+    } elseif ($qrKelas) {
+        // D2 dipersempit pasca-audit: cukup WAJIB ADA lokasi (anti-replay).
+        // Radius tidak dicek di sini — radius hanya berlaku saat admin
+        // mengaktifkan gps_aktif (lihat cabang di atas), sehingga koordinat
+        // contoh bawaan tidak menolak siswa yang lokasinya benar.
+        if ($lat === null || $lng === null) {
+            security_log($siswaId, 'PRESENCE_REJECTED', null, 'QR kelas tanpa bukti lokasi.');
+            return ['success' => false, 'code' => 'GPS_REQUIRED', 'message' => 'Presensi melalui QR kelas wajib menyertakan lokasi. Aktifkan GPS / izin lokasi lalu coba lagi.'];
         }
     }
 
@@ -213,14 +246,32 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
         'INSERT INTO presensi (siswa_id, kelas_saat_presensi, tanggal, jam_masuk, status, metode, device_info, ip_address, latitude, longitude, created_at)
          VALUES (:sid, :kelas, :tgl, :jam, :status, "QR", :device_info, :ip, :lat, :lng, NOW())'
     );
-    $stmt->execute([
+    $params = [
         ':sid' => $siswaId, ':kelas' => $siswa['kelas'], ':tgl' => $tanggal, ':jam' => $jam, ':status' => $statusPresensi,
         ':device_info' => substr($ua, 0, 255), ':ip' => get_client_ip(),
         ':lat' => $lat, ':lng' => $lng,
-    ]);
+    ];
+    try {
+        $stmt->execute($params);
+    } catch (PDOException $e) {
+        // RACE CONDITION (fix C5): dua request nyaris bersamaan dari satu siswa
+        // (mis. double-tap tombol Konfirmasi) sama-sama lolos pengecekan di atas.
+        // uniq_siswa_tanggal menolak INSERT kedua (`23000`) — dulu ini meletup
+        // jadi HTTP 500 padahal presensi pertama sukses. Sekarang dijadikan
+        // jawaban "sudah presensi" yang normal, dengan data baris yang menang.
+        if (((int) $e->getCode() === 23000 || str_contains($e->getMessage(), 'Duplicate entry')) && ($existing = sudah_presensi_hari_ini($siswaId))) {
+            security_log($siswaId, 'PRESENCE_DUPLICATE_RACE', null, 'INSERT presensi ganda dicegah UNIQUE (siswa_id, tanggal).');
+            return [
+                'success' => false, 'code' => 'ALREADY_PRESENT',
+                'message' => 'Anda sudah melakukan presensi hari ini.',
+                'data' => ['jam' => $existing['jam_masuk'], 'status' => $existing['status']],
+            ];
+        }
+        throw $e;
+    }
 
     // 11. Security log
-    security_log($siswaId, 'PRESENCE_SUCCESS', build_device_hash($installUuid), "Presensi $statusPresensi jam $jam");
+    security_log($siswaId, 'PRESENCE_SUCCESS', device_hash_variants($installUuid, $deviceSecret)[$deviceSecret !== null && is_valid_device_secret($deviceSecret) ? 'v3' : 'v2'], "Presensi $statusPresensi jam $jam");
 
     return [
         'success' => true,

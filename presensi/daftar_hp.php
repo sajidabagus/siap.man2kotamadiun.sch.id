@@ -11,6 +11,9 @@ $token = strtolower(preg_replace('/[^0-9a-fA-F]/', '', (string) ($_GET['t'] ?? '
 <meta name="robots" content="noindex">
 <title>Daftarkan Perangkat</title>
 <?= favicon_tag() ?>
+<link rel="manifest" href="<?= BASE_URL ?>/manifest.json">
+<meta name="theme-color" content="<?= e($settings['warna_tema'] ?? '#0d6efd') ?>">
+<script src="<?= BASE_URL ?>/assets/js/pwa.js?v=<?= @filemtime(__DIR__ . '/../assets/js/pwa.js') ?: time() ?>" defer></script>
 <link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap.min.css" rel="stylesheet">
 <link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap-icons.min.css" rel="stylesheet">
 <link href="<?= BASE_URL ?>/assets/css/style.css" rel="stylesheet">
@@ -61,7 +64,7 @@ $token = strtolower(preg_replace('/[^0-9a-fA-F]/', '', (string) ($_GET['t'] ?? '
   </div>
 </div>
 
-<script src="<?= BASE_URL ?>/assets/js/device.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/device.js?v=<?= @filemtime(__DIR__ . '/../assets/js/device.js') ?: time() ?>"></script>
 <script>
 const token = <?= json_encode($token) ?>;
 function tampil(id) {
@@ -73,7 +76,7 @@ if (btn) btn.addEventListener('click', function () {
   fetch('<?= BASE_URL ?>/api/pasangan.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token: token, device_uuid: getOrCreateDeviceUuid() })
+    body: JSON.stringify({ token: token, device_uuid: getOrCreateDeviceUuid(), device_secret: (typeof getOrCreateDeviceSecret === 'function') ? getOrCreateDeviceSecret() : '' })
   })
   .then(r => r.json())
   .then(res => {

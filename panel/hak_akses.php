@@ -94,7 +94,7 @@ foreach ($rolesEditable as $role) {
     </div>
     <div class="tbl-foot">
       <span class="text-muted small">Perubahan berlaku pada login berikutnya atau saat halaman dimuat ulang.</span>
-      <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Simpan Hak Akses</button>
+      <button type="submit" class="siap-btn siap-btn-blue siap-mono-xs"><i class="bi bi-save"></i> Simpan Hak Akses</button>
     </div>
   </div>
 </form>

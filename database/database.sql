@@ -101,6 +101,7 @@ CREATE TABLE `settings` (
   `gps_aktif` tinyint(1) NOT NULL DEFAULT '0',
   `validasi_ip_aktif` tinyint(1) NOT NULL DEFAULT '0',
   `device_binding_aktif` tinyint(1) NOT NULL DEFAULT '1',
+  `device_wajib_kode` tinyint(1) NOT NULL DEFAULT '1',
   `qr_dinamis_durasi_detik` int UNSIGNED NOT NULL DEFAULT '120',
   `maks_reset_device_per_bulan` int UNSIGNED NOT NULL DEFAULT '2',
   `pesan_sukses` varchar(255) NOT NULL DEFAULT 'Presensi berhasil dicatat. Selamat belajar!',
@@ -250,11 +251,14 @@ CREATE TABLE IF NOT EXISTS `login_attempts` (
 INSERT INTO `users` (`nama`, `username`, `password`, `role`, `status`) VALUES
 ('Administrator', 'admin', '$2b$10$b41vg2ko8zqtu.jWTfT48eXiFP5YLFg8U8IxUn7HI76kcI5upq7Ha', 'admin', 'aktif');
 
+-- Koordinat sengaja NULL (belum diisi). JANGAN isi dummy seperti -7.1234567 /
+-- 111.1234567 — koordinat palsu yang terisi membuat validasi radius (saat GPS
+-- diaktifkan) menolak SEMUA siswa dari lokasi asli sekolah.
 INSERT INTO `settings`
   (`nama_sekolah`, `tahun_pelajaran`, `jam_masuk`, `batas_terlambat`,
    `latitude_sekolah`, `longitude_sekolah`, `radius_meter`, `gps_aktif`)
 VALUES
   ('SMA Negeri 1 Contoh', '2026/2027', '07:00:00', '07:15:00',
-   -7.1234567, 111.1234567, 100, 0);
+   NULL, NULL, 100, 0);
 
 SET FOREIGN_KEY_CHECKS = 1;

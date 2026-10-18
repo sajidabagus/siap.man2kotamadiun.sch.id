@@ -47,8 +47,8 @@ foreach ($kelasDicetak as $k) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Poster QR Kelas</title>
 <?= favicon_tag() ?>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap.min.css?v=<?= @filemtime(__DIR__ . '/../assets/css/vendor/bootstrap.min.css') ?: time() ?>" rel="stylesheet">
+<link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap-icons.min.css?v=<?= @filemtime(__DIR__ . '/../assets/css/vendor/bootstrap-icons.min.css') ?: time() ?>" rel="stylesheet">
 <style>
 @font-face {
   font-family: 'Baloo2Poster';
@@ -65,7 +65,7 @@ foreach ($kelasDicetak as $k) {
   font-display: swap;
 }
 
-body { background: #e9edf1; font-family: Arial, Helvetica, sans-serif; }
+body { background: var(--siap-bg); font-family: Arial, Helvetica, sans-serif; color: var(--siap-ink); }
 .toolbar { padding: 14px 20px; }
 
 .poster {
@@ -118,7 +118,7 @@ body { background: #e9edf1; font-family: Arial, Helvetica, sans-serif; }
 .qr-kelas-item-besar img { display: block; }
 
 .kelas-besar {
-  color: #2a9297; font-weight: 800; font-size: 34px; letter-spacing: 3px;
+  color: var(--siap-blue); font-weight: 800; font-size: 34px; letter-spacing: 3px;
   margin-top: 44px; font-family: Arial, Helvetica, sans-serif;
 }
 .website-line {
@@ -148,7 +148,7 @@ body { background: #e9edf1; font-family: Arial, Helvetica, sans-serif; }
 .mini-card {
   width: 6cm;
   height: 9cm;
-  border: 1px solid #dfe3e7;
+  border: 1px solid var(--siap-line);
   border-radius: 0.25cm;
   background: #fff;
   box-sizing: border-box;
@@ -161,20 +161,20 @@ body { background: #e9edf1; font-family: Arial, Helvetica, sans-serif; }
   page-break-inside: avoid;
 }
 .mini-pill {
-  background: #1f8f94; color: #fff; font-weight: 700; font-size: 9px;
+  background: var(--siap-blue); color: #fff; font-weight: 700; font-size: 9px;
   padding: 3px 12px; border-radius: 20px; white-space: nowrap;
   max-width: 5.4cm; overflow: hidden; text-overflow: ellipsis;
 }
 .mini-logo { width: 0.98cm; height: 0.98cm; object-fit: contain; margin-top: 0.15cm; }
 .mini-scan-here {
   font-family: 'Baloo2Poster', Arial, sans-serif;
-  font-weight: 800; font-size: 21px; color: #2a9297;
+  font-weight: 800; font-size: 21px; color: var(--siap-blue);
   letter-spacing: .75px; margin-top: 0.18cm; line-height: 1;
 }
 .mini-qr-frame {
   position: relative;
   width: 4.05cm; height: 4.05cm;
-  background: #fbdb57;
+  background: var(--siap-warning-bg);
   border-radius: 0.45cm;
   margin-top: 0.18cm;
   display: flex; align-items: center; justify-content: center;
@@ -183,7 +183,7 @@ body { background: #e9edf1; font-family: Arial, Helvetica, sans-serif; }
 .qr-kelas-item-mini { background: #fff; padding: 5px; border-radius: 6px; line-height: 0; }
 .qr-kelas-item-mini img { display: block; width: 3.15cm; height: 3.15cm; }
 .mini-kelas {
-  color: #2a9297; font-weight: 800; font-size: 18px; letter-spacing: 1.5px;
+  color: var(--siap-blue); font-weight: 800; font-size: 18px; letter-spacing: 1.5px;
   margin-top: 0.225cm; font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -230,9 +230,9 @@ body { background: #e9edf1; font-family: Arial, Helvetica, sans-serif; }
         <?php endforeach; ?>
       </select>
     </form>
-    <a href="<?= modul_url('qr_kelas') ?>" class="btn btn-outline-secondary btn-sm">Kembali</a>
+    <a href="<?= modul_url('qr_kelas') ?>" class="siap-btn siap-btn-ghost siap-mono-xs btn-sm">Kembali</a>
   </div>
-  <button class="btn btn-primary btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Cetak</button>
+  <button class="siap-btn siap-btn-blue siap-mono-xs btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Cetak</button>
 </div>
 
 <?php if ($mode === 'grid' && !empty($dataKelas)): ?>

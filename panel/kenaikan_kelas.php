@@ -149,7 +149,7 @@ $totalSiswaAktif = array_sum($jumlahPerKelas);
         <span class="text-muted">&middot; <span id="ringkasJumlahSiswa">0</span> siswa terdampak</span>
         <span class="text-muted">&middot; total <?= $totalSiswaAktif ?> siswa aktif di <?= count($kelasList) ?> kelas</span>
       </div>
-      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalKonfirmasi" onclick="siapkanRingkasan()">
+      <button type="button" class="siap-btn siap-btn-blue siap-mono-xs" data-bs-toggle="modal" data-bs-target="#modalKonfirmasi" onclick="siapkanRingkasan()">
         <i class="bi bi-arrow-up-square"></i> Proses Kenaikan Kelas
       </button>
     </div>
@@ -172,7 +172,7 @@ $totalSiswaAktif = array_sum($jumlahPerKelas);
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal, Cek Lagi</button>
-          <button type="button" class="btn btn-danger" onclick="document.getElementById('formKenaikan').submit()">
+          <button type="button" class="siap-btn siap-btn-danger siap-mono-xs" onclick="document.getElementById('formKenaikan').submit()">
             <i class="bi bi-check2-circle"></i> Ya, Proses Sekarang
           </button>
         </div>
@@ -186,12 +186,12 @@ $totalSiswaAktif = array_sum($jumlahPerKelas);
      layar saat di-scroll -- tanpa ini, kartu terakhir bertabrakan dgn bar. */
   .promo-kelas-list { padding-bottom: 84px; }
 
-  .promo-jenjang.card { border: 1px solid #e9edf3; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 3px rgba(20,33,61,.04); }
+  .promo-jenjang.card { border: 1px solid var(--siap-line); border-radius: var(--siap-radius-card); overflow: hidden; box-shadow: var(--siap-shadow-card); }
   .promo-jenjang-head {
     display: flex; justify-content: space-between; align-items: center;
-    margin: 0; padding: 14px 22px; background: #fff; border-bottom: 1px solid #eef1f6;
+    margin: 0; padding: 14px 22px; background: #fff; border-bottom: 1px solid var(--siap-line);
   }
-  .promo-jenjang .card-body { padding: 22px; background: #fafbfd; }
+  .promo-jenjang .card-body { padding: 22px; background: var(--siap-bg); }
   @media (max-width: 575px) { .promo-jenjang-head { padding: 12px 16px; } .promo-jenjang .card-body { padding: 16px; } }
   .promo-grid {
     display: grid;
@@ -205,24 +205,24 @@ $totalSiswaAktif = array_sum($jumlahPerKelas);
     padding: 14px;
     transition: box-shadow .15s ease, border-color .15s ease;
   }
-  .promo-card:hover { box-shadow: 0 6px 18px rgba(20,33,61,.08); border-color: #d7dce3; }
+  .promo-card:hover { box-shadow: 0 6px 18px rgba(20,33,61,.08); border-color: var(--siap-blue); }
   .promo-card-head {
     display: flex; justify-content: space-between; align-items: baseline;
     margin-bottom: 10px;
   }
-  .promo-kelas-name { font-weight: 700; font-size: 16px; color: #14213d; }
-  .promo-siswa-count { font-size: 12px; color: #8a93a3; }
+  .promo-kelas-name { font-weight: 700; font-size: 16px; color: var(--siap-ink); }
+  .promo-siswa-count { font-size: 12px; color: var(--siap-muted); }
   .promo-btn-group .btn { padding: 6px 0; font-size: 14px; }
   .promo-target-wrap { margin-top: 10px; }
   .promo-status {
     margin-top: 8px; font-size: 12px; font-weight: 600;
   }
-  .promo-status.status-pindah { color: #0d6efd; }
-  .promo-status.status-lulus { color: #198754; }
+  .promo-status.status-pindah { color: var(--siap-blue); }
+  .promo-status.status-lulus { color: var(--siap-success-text); }
 
   .promo-summary-bar {
     position: sticky; bottom: 12px;
-    background: #fff; border: 1px solid #e6e9ee; border-radius: 14px;
+    background: #fff; border: 1px solid var(--siap-line); border-radius: var(--siap-radius-mini);
     padding: 14px 18px; margin-top: 8px;
     display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
     box-shadow: 0 4px 20px rgba(20,33,61,.15);

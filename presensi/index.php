@@ -21,6 +21,11 @@ if ($gate !== '') {
 // Anggap gate token kedaluwarsa jika lebih dari 5 menit sejak diverifikasi di sesi ini
 $gateValidInSession = !empty($_SESSION['gate_token']) && (time() - ($_SESSION['gate_verified_at'] ?? 0) < 300)
     && validate_qr_dinamis($_SESSION['gate_token']);
+
+// D2: alur presensi kilat wajib mengambil lokasi juga saat gate berupa QR
+// KELAS (token permanen), bukan hanya ketika gps_aktif sekolah menyala.
+$infoGateSesi = $gateValidInSession ? get_active_qr_dinamis((string) $_SESSION['gate_token']) : null;
+$wajibGpsJs = !empty($settings['gps_aktif']) || ($infoGateSesi && !empty($infoGateSesi['kelas_target']));
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -29,6 +34,9 @@ $gateValidInSession = !empty($_SESSION['gate_token']) && (time() - ($_SESSION['g
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Absensi Siswa — <?= e($settings['nama_sekolah'] ?? '') ?></title>
 <?= favicon_tag() ?>
+<link rel="manifest" href="<?= BASE_URL ?>/manifest.json">
+<meta name="theme-color" content="<?= e($settings['warna_tema'] ?? '#0d6efd') ?>">
+<script src="<?= BASE_URL ?>/assets/js/pwa.js?v=<?= @filemtime(__DIR__ . '/../assets/js/pwa.js') ?: time() ?>" defer></script>
 <link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap.min.css" rel="stylesheet">
 <link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap-icons.min.css" rel="stylesheet">
 <link href="<?= BASE_URL ?>/assets/css/style.css" rel="stylesheet">
@@ -56,7 +64,7 @@ $gateValidInSession = !empty($_SESSION['gate_token']) && (time() - ($_SESSION['g
   </div>
 
   <?php if ($errorGate): ?>
-    <div class="ps-note danger" style="margin-top:0;margin-bottom:14px"><i class="bi bi-exclamation-triangle-fill"></i><div><?= e($errorGate) ?></div></div>
+    <div class="siap-note siap-note-red" style="margin-top:0;margin-bottom:14px"><i class="bi bi-exclamation-triangle-fill"></i><div><?= e($errorGate) ?></div></div>
   <?php endif; ?>
 
   <?php if (!$gateValidInSession): ?>
@@ -115,7 +123,7 @@ $gateValidInSession = !empty($_SESSION['gate_token']) && (time() - ($_SESSION['g
   <?php endif; ?>
 
   <div class="ps-alt d-none" id="altDaftar">
-    <button type="button" class="ps-btn polos" id="btnBukaDaftar"><i class="bi bi-phone"></i> Daftarkan Perangkat</button>
+    <button type="button" class="siap-btn siap-btn-ghost siap-mono-xs" id="btnBukaDaftar"><i class="bi bi-phone"></i> Daftarkan Perangkat</button>
     <div class="ket">Perangkat belum terdaftar? Masukkan Kode Pasangan dari admin, atau scan QR Pasangan dengan kamera perangkat.</div>
   </div>
   <div class="ps-foot">SIAP ABSEN &copy; <?= date('Y') ?></div>
@@ -123,48 +131,52 @@ $gateValidInSession = !empty($_SESSION['gate_token']) && (time() - ($_SESSION['g
 
 <!-- Daftarkan perangkat dengan Kode Pasangan -->
 <div id="ovDaftar" class="ov-daftar d-none" role="dialog" aria-modal="true" aria-labelledby="ovJudul">
-  <div class="ov-kotak">
+  <div class="siap-card siap-card-pad ov-kotak">
     <div class="d-flex justify-content-between align-items-start mb-2">
       <div>
-        <div class="text-muted small fw-bold" style="letter-spacing:.08em">PENDAFTARAN PERANGKAT</div>
-        <h5 class="mb-0" id="ovJudul">Daftarkan Perangkat</h5>
+        <div class="siap-eyebrow" style="letter-spacing:.08em">Pendaftaran Perangkat</div>
+        <h5 class="siap-h4 mb-0" id="ovJudul">Daftarkan Perangkat</h5>
       </div>
       <button type="button" class="btn-close" id="btnTutupDaftar" aria-label="Tutup"></button>
     </div>
 
     <div id="ovForm">
-      <p class="small text-muted mb-3">Minta admin membuat <strong>Kode Pasangan 6 angka</strong> untuk Anda. Kode berlaku 10 menit dan hanya bisa dipakai sekali.</p>
-      <label class="form-label small fw-bold mb-1">NIS / NISN</label>
-      <input type="text" id="inNis" class="form-control mb-3" inputmode="numeric" autocomplete="off" placeholder="contoh: 1311357700022xxxxx">
-      <label class="form-label small fw-bold mb-1">KODE PASANGAN</label>
-      <input type="text" id="inKode" class="form-control form-control-lg text-center fw-bold" inputmode="numeric" maxlength="6" autocomplete="one-time-code"
-             style="letter-spacing:.45em; font-size:1.5rem" placeholder="••••••">
-      <div id="ovErr" class="text-danger small mt-2 d-none"></div>
-      <button type="button" id="btnKirimDaftar" class="btn btn-primary w-100 mt-3" disabled><i class="bi bi-phone"></i> DAFTARKAN PERANGKAT INI</button>
+      <p class="siap-copy-sm" style="margin-bottom:0.75rem">Minta admin membuat <strong>Kode Pasangan 6 angka</strong> untuk Anda. Kode berlaku 10 menit dan hanya bisa dipakai sekali.</p>
+      <div class="bd-field siap-stack-sm">
+        <label for="inNis" class="siap-label">NIS / NISN</label>
+        <input type="text" id="inNis" class="siap-input mb-3" inputmode="numeric" autocomplete="off" placeholder="contoh: 1311357700022xxxxx">
+      </div>
+      <div class="bd-field siap-stack-sm pw">
+        <label for="inKode" class="siap-label">Kode Pasangan</label>
+        <input type="text" id="inKode" class="siap-input text-center fw-bold" inputmode="numeric" maxlength="6" autocomplete="one-time-code"
+               style="letter-spacing:.45em; font-size:1.5rem" placeholder="••••••">
+      </div>
+      <div id="ovErr" class="siap-note siap-note-red siap-copy-sm mt-2 d-none"></div>
+      <button type="button" id="btnKirimDaftar" class="siap-btn siap-btn-blue siap-mono-xs w-100 mt-3" disabled><i class="bi bi-phone"></i> Daftarkan Perangkat Ini</button>
     </div>
 
-    <div id="ovOk" class="text-center d-none">
-      <i class="bi bi-check-circle-fill display-4 text-success"></i>
-      <h5 class="mt-2 mb-1">Perangkat Berhasil Didaftarkan</h5>
+    <div id="ovOk" class="siap-stack text-center d-none">
+      <i class="bi bi-check-circle-fill siap-h1 text-success"></i>
+      <h5 class="siap-h3 mt-2 mb-1">Perangkat Berhasil Didaftarkan</h5>
       <p class="fw-bold mb-0" id="ovNama"></p>
-      <p class="text-muted small" id="ovKelas"></p>
-      <div class="alert alert-info small text-start">Sekarang scan QR gerbang/kelas di sekolah untuk presensi. Gunakan <strong>browser yang sama</strong> dengan yang Anda pakai sekarang.</div>
-      <button type="button" class="btn btn-primary w-100" id="btnSelesaiDaftar">Selesai</button>
+      <p class="siap-copy-sm" id="ovKelas"></p>
+      <div class="siap-note siap-note-info siap-copy-sm">Sekarang scan QR gerbang/kelas di sekolah untuk presensi. Gunakan <strong>browser yang sama</strong> dengan yang Anda pakai sekarang.</div>
+      <button type="button" class="siap-btn siap-btn-blue siap-mono-xs w-100" id="btnSelesaiDaftar">Selesai</button>
     </div>
   </div>
 </div>
 
 <style>
-  .ov-daftar { position: fixed; inset: 0; z-index: 2000; background: rgba(15, 23, 42, .55); display: flex; align-items: center; justify-content: center; padding: 18px; }
+  .ov-daftar { position: fixed; inset: 0; z-index: 2000; background: rgba(15, 23, 42, 0.55); display: flex; align-items: center; justify-content: center; padding: 1rem; }
   .ov-daftar.d-none { display: none !important; }
-  .ov-kotak { background: #fff; border-radius: 16px; width: 100%; max-width: 420px; padding: 22px; box-shadow: 0 20px 50px rgba(0,0,0,.3); max-height: 92vh; overflow-y: auto; }
+  .ov-kotak { max-width: 42rem; max-height: 92vh; overflow-y: auto; }
 </style>
 
 <div hidden>
 </div>
 
 <script src="<?= BASE_URL ?>/assets/js/vendor/html5-qrcode.min.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/device.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/device.js?v=<?= @filemtime(__DIR__ . '/../assets/js/device.js') ?: time() ?>"></script>
 <script>
 function extractGateToken(text) {
   try {
@@ -201,45 +213,79 @@ Html5Qrcode.getCameras().then(cams => {
 }).catch(() => { statusEl.textContent = 'Tidak dapat mengakses kamera pada perangkat ini.'; });
 
 <?php else: ?>
-// --- STEP 2: auto-identify by device ---
+// --- STEP 2: presensi kilat — identify + validasi + simpan dalam SATU request ---
 const deviceUuid = getOrCreateDeviceUuid();
+const gpsAktif = <?= $wajibGpsJs ? 'true' : 'false' ?>;
+const autoBox = document.getElementById('autoCheckBox');
 
-fetch('<?= BASE_URL ?>/api/scan.php', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ mode: 'device', device_uuid: deviceUuid, gate_token: <?= json_encode($_SESSION['gate_token']) ?> })
-})
-.then(r => r.json())
-.then(res => {
-  document.getElementById('autoCheckBox').classList.add('d-none');
-  if (res.code === 'MATCH') {
-    window.location.href = '<?= BASE_URL ?>/presensi/konfirmasi.php';
-  } else if (res.code === 'BLOCKED') {
-    document.getElementById('blockedBox').classList.remove('d-none');
-  } else {
-    // NEW / NOT_FOUND -> minta scan QR pribadi
-    document.getElementById('needPersonalBox').classList.remove('d-none');
-    const reader2Wrap = document.getElementById('reader2Wrap');
-    const processingBox2 = document.getElementById('processingBox2');
-    let scanner2Handled = false;
+function mulaiScanPribadi() {
+  document.getElementById('needPersonalBox').classList.remove('d-none');
+  const reader2Wrap = document.getElementById('reader2Wrap');
+  const processingBox2 = document.getElementById('processingBox2');
+  let scanner2Handled = false;
 
-    const scanner2 = new Html5Qrcode('reader2');
-    Html5Qrcode.getCameras().then(cams => {
-      if (!cams || !cams.length) return;
-      scanner2.start({ facingMode: 'environment' }, { fps: 10, qrbox: 230 }, (decodedText) => {
-        if (scanner2Handled) return;
-        try {
-          const url = new URL(decodedText);
-          scanner2Handled = true;
-          reader2Wrap.classList.add('d-none'); // langsung ganti tampilan SEBELUM stop() dipanggil
-          processingBox2.classList.remove('d-none');
-          scanner2.stop().then(() => { window.location.href = url.toString(); });
-        } catch (e) {}
-      }, () => {});
-    });
-  }
-})
-.catch(() => { document.getElementById('autoCheckBox').innerHTML = '<p class="text-danger">Gagal terhubung ke server. Coba lagi.</p>'; });
+  const scanner2 = new Html5Qrcode('reader2');
+  Html5Qrcode.getCameras().then(cams => {
+    if (!cams || !cams.length) return;
+    scanner2.start({ facingMode: 'environment' }, { fps: 10, qrbox: 230 }, (decodedText) => {
+      if (scanner2Handled) return;
+      try {
+        const url = new URL(decodedText);
+        scanner2Handled = true;
+        reader2Wrap.classList.add('d-none'); // langsung ganti tampilan SEBELUM stop() dipanggil
+        processingBox2.classList.remove('d-none');
+        scanner2.stop().then(() => { window.location.href = url.toString(); });
+      } catch (e) {}
+    }, () => {});
+  });
+}
+
+function kirimPresensiKilat(lat, lng) {
+  fetch('<?= BASE_URL ?>/api/quick.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ device_uuid: deviceUuid, device_secret: (typeof getOrCreateDeviceSecret === 'function') ? getOrCreateDeviceSecret() : '', gate_token: <?= json_encode($_SESSION['gate_token']) ?>, latitude: lat, longitude: lng })
+  })
+  .then(r => r.json())
+  .then(res => {
+    autoBox.classList.add('d-none');
+    if (res.success && res.code === 'OK') {
+      window.location.href = '<?= BASE_URL ?>/presensi/berhasil.php?status=ok&msg=' + encodeURIComponent(res.message || '');
+      return;
+    }
+    if (res.code === 'ALREADY_PRESENT') {
+      window.location.href = '<?= BASE_URL ?>/presensi/berhasil.php?status=already';
+      return;
+    }
+    if (res.code === 'BLOCKED') {
+      document.getElementById('blockedBox').classList.remove('d-none');
+      return;
+    }
+    if (res.code === 'NOT_FOUND' || res.code === 'INACTIVE') {
+      // Perangkat belum dikenali -> alur lama: scan QR pribadi.
+      mulaiScanPribadi();
+      return;
+    }
+    // Kegagalan lain (GATE_INVALID / GPS_REQUIRED / OUT_OF_RANGE / KELAS_MISMATCH / MISMATCH / dll)
+    window.location.href = '<?= BASE_URL ?>/presensi/berhasil.php?status=error&code=' + encodeURIComponent(res.code || '') + '&msg=' + encodeURIComponent(res.message || '');
+  })
+  .catch(() => {
+    autoBox.innerHTML = '<p class="text-danger">Gagal terhubung ke server. Coba lagi.</p>';
+  });
+}
+
+// Jalankan langsung setelah QR gerbang/kelas terverifikasi di sesi ini.
+if (gpsAktif && navigator.geolocation) {
+  const p = autoBox.querySelector('p');
+  if (p) p.textContent = 'Mengambil lokasi & mencatat presensi...';
+  navigator.geolocation.getCurrentPosition(
+    pos => kirimPresensiKilat(pos.coords.latitude, pos.coords.longitude),
+    () => kirimPresensiKilat(null, null),
+    { timeout: 15000, enableHighAccuracy: true, maximumAge: 0 }
+  );
+} else {
+  kirimPresensiKilat(null, null);
+}
 <?php endif; ?>
 
 // Tombol "Daftarkan Perangkat" hanya tampil bila perangkat ini BELUM terdaftar.
@@ -249,7 +295,7 @@ fetch('<?= BASE_URL ?>/api/scan.php', {
   fetch('<?= BASE_URL ?>/api/cek_perangkat.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ device_uuid: getOrCreateDeviceUuid() })
+    body: JSON.stringify({ device_uuid: getOrCreateDeviceUuid(), device_secret: (typeof getOrCreateDeviceSecret === 'function') ? getOrCreateDeviceSecret() : '' })
   })
   .then(r => r.json())
   .then(d => { if (!d.success || d.status === 'BELUM') alt.classList.remove('d-none'); })
@@ -282,7 +328,7 @@ fetch('<?= BASE_URL ?>/api/scan.php', {
     fetch('<?= BASE_URL ?>/api/pasangan.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nis: inNis.value.trim(), kode: inKode.value, device_uuid: getOrCreateDeviceUuid() })
+      body: JSON.stringify({ nis: inNis.value.trim(), kode: inKode.value, device_uuid: getOrCreateDeviceUuid(), device_secret: (typeof getOrCreateDeviceSecret === 'function') ? getOrCreateDeviceSecret() : '' })
     })
     .then(r => r.json())
     .then(res => {

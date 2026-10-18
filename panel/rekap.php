@@ -98,7 +98,7 @@ $extraParams = ['bulan' => $bulan, 'tahun' => $tahun, 'kelas' => $kelas, 'limit'
         <?php foreach ($kelasList as $k): ?><option value="<?= e($k) ?>" <?= $kelas === $k ? 'selected' : '' ?>><?= e($k) ?></option><?php endforeach; ?>
       </select>
       <?php if (can('rekap.cetak')): ?>
-      <button type="button" class="btn btn-light border" data-open-form="<?= modul_url('rekap_print') ?>" title="Cetak rekap bulan ini (semua siswa)"><i class="bi bi-printer"></i> Cetak</button>
+      <button type="button" class="siap-btn siap-btn-ghost siap-mono-xs" data-open-form="<?= modul_url('rekap_print') ?>" title="Cetak rekap bulan ini (semua siswa)"><i class="bi bi-printer"></i> Cetak</button>
       <?php endif; ?>
     </form>
   </div>

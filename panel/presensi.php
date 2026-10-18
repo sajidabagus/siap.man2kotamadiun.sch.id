@@ -61,17 +61,17 @@ $extraParams = compact('tanggal', 'kelas', 'jurusan', 'status') + ['limit' => $p
   <h4 class="mb-0"><i class="bi bi-calendar-check"></i> Data Presensi</h4>
   <div class="d-flex gap-2">
     <?php if (can('presensi.ekspor')): ?>
-    <a href="<?= e(modul_url('presensi_export', ['type' => 'csv'])) ?><?= $queryString !== '' ? '&amp;' . e($queryString) : '' ?>" data-live-href="<?= e(modul_url('presensi_export', ['type' => 'csv'])) ?>" data-live-from="#formFilter" class="btn btn-outline-success flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2">
+    <a href="<?= e(modul_url('presensi_export', ['type' => 'csv'])) ?><?= $queryString !== '' ? '&amp;' . e($queryString) : '' ?>" data-live-href="<?= e(modul_url('presensi_export', ['type' => 'csv'])) ?>" data-live-from="#formFilter" class="siap-btn siap-btn-ghost siap-mono-xs flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2">
       <i class="bi bi-filetype-csv"></i><span><span class="d-none d-sm-inline">Export </span>CSV</span>
     </a>
     <?php endif; ?>
     <?php if (can('presensi.ekspor')): ?>
-    <a href="<?= e(modul_url('presensi_export', ['type' => 'excel'])) ?><?= $queryString !== '' ? '&amp;' . e($queryString) : '' ?>" data-live-href="<?= e(modul_url('presensi_export', ['type' => 'excel'])) ?>" data-live-from="#formFilter" class="btn btn-outline-success flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2">
+    <a href="<?= e(modul_url('presensi_export', ['type' => 'excel'])) ?><?= $queryString !== '' ? '&amp;' . e($queryString) : '' ?>" data-live-href="<?= e(modul_url('presensi_export', ['type' => 'excel'])) ?>" data-live-from="#formFilter" class="siap-btn siap-btn-ghost siap-mono-xs flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2">
       <i class="bi bi-file-earmark-excel"></i><span><span class="d-none d-sm-inline">Export </span>Excel</span>
     </a>
     <?php endif; ?>
     <?php if (can('presensi.cetak')): ?>
-    <a href="<?= modul_url('presensi_print') ?><?= $queryString !== '' ? '?' . e($queryString) : '' ?>" data-live-href="<?= modul_url('presensi_print') ?>" data-live-from="#formFilter" target="_blank" class="btn btn-outline-secondary flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2">
+    <a href="<?= modul_url('presensi_print') ?><?= $queryString !== '' ? '?' . e($queryString) : '' ?>" data-live-href="<?= modul_url('presensi_print') ?>" data-live-from="#formFilter" target="_blank" class="siap-btn siap-btn-ghost siap-mono-xs flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2">
       <i class="bi bi-printer"></i><span>Print</span>
     </a>
     <?php endif; ?>
@@ -101,7 +101,7 @@ $extraParams = compact('tanggal', 'kelas', 'jurusan', 'status') + ['limit' => $p
             <option value="<?= $s ?>" <?= $status === $s ? 'selected' : '' ?>><?= $s ?></option>
           <?php endforeach; ?>
         </select>
-          <a href="<?= modul_url('presensi') ?>" class="btn btn-light border" title="Hapus semua filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
+          <a href="<?= modul_url('presensi') ?>" class="siap-btn siap-btn-ghost siap-mono-xs" title="Hapus semua filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
     </form>
   </div>
   <div id="hasil-live">
@@ -128,7 +128,7 @@ $extraParams = compact('tanggal', 'kelas', 'jurusan', 'status') + ['limit' => $p
             <td><?= e($r['kelas']) ?></td>
             <td><?= e($r['tanggal']) ?></td>
             <td><?= e($r['jam_masuk']) ?></td>
-            <td><span class="badge bg-<?= $r['status'] === 'HADIR' ? 'success' : ($r['status'] === 'TERLAMBAT' ? 'warning' : 'secondary') ?>"><?= e($r['status']) ?></span></td>
+            <td><span class="siap-badge siap-badge-<?= $r['status'] === 'HADIR' ? 'success' : ($r['status'] === 'TERLAMBAT' ? 'warning' : 'info') ?> siap-mono-xs"><?= e($r['status']) ?></span></td>
             <td><?= e($r['metode']) ?></td>
           </tr>
         <?php endforeach; ?>

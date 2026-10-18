@@ -17,8 +17,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // JANGAN biarkan GPS diaktifkan tanpa koordinat sekolah yang valid --
     // kalau ini lolos, koordinat akan tersimpan 0,0 (tengah laut) dan
     // SEMUA siswa akan ditolak presensi tanpa admin sadar kenapa.
-    if ($gpsAktif && ($latVal === null || $lngVal === null || ($latVal == 0.0 && $lngVal == 0.0))) {
-        $errors[] = 'Validasi lokasi GPS tidak bisa diaktifkan sebelum Latitude & Longitude sekolah diisi dengan benar (gunakan tombol "Ambil Lokasi Saat Ini" atau isi manual dari Google Maps).';
+    // Pasca-audit: koordinat CONTOH bawaan installer (database.sql, pasangan
+    // -7.1234567 / 111.1234567) diperlakukan sama seperti belum diisi supaya
+    // radius tidak divalidasi terhadap titik dummy.
+    $koordinatDummy = $latVal !== null && $lngVal !== null
+        && abs($latVal - (-7.1234567)) < 0.000001 && abs($lngVal - 111.1234567) < 0.000001;
+    if ($gpsAktif && ($latVal === null || $lngVal === null || ($latVal == 0.0 && $lngVal == 0.0) || $koordinatDummy)) {
+        $errors[] = 'Validasi lokasi GPS tidak bisa diaktifkan sebelum Latitude & Longitude sekolah diisi dengan benar — nilai 0,0 atau koordinat contoh bawaan tidak dihitung (gunakan tombol "Ambil Lokasi Saat Ini" atau isi manual dari Google Maps).';
     }
 
     // Hari efektif presensi (ISO 1=Senin ... 7=Minggu), minimal satu hari.
@@ -90,6 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       + array_combine(array_map(fn($k) => ":$k", array_keys($identitas)), array_values($identitas))
       + ($punyaKode ? [':wajibkode' => isset($_POST['device_wajib_kode']) ? 1 : 0] : []));
 
+    hapus_cache_settings();
     catat_aktivitas('UBAH', 'pengaturan', 'Menyimpan pengaturan sistem');
     set_flash('success', 'Pengaturan berhasil disimpan.');
     header('Location: ' . modul_url('pengaturan'));
@@ -242,7 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <input type="number" name="radius_meter" class="form-control" value="<?= e($settings['radius_meter']) ?>">
       </div>
       <div class="col-12">
-        <button type="button" class="btn btn-outline-primary btn-sm" onclick="ambilLokasiSaatIni()" id="btnAmbilLokasi">
+        <button type="button" class="siap-btn siap-btn-ghost siap-mono-xs btn-sm" onclick="ambilLokasiSaatIni()" id="btnAmbilLokasi">
           <i class="bi bi-geo-alt"></i> Ambil Lokasi Saat Ini
         </button>
         <span class="text-muted small ms-2">Berdiri di area sekolah lalu klik tombol ini untuk otomatis mengisi koordinat di atas (perlu izin lokasi browser).</span>
@@ -268,10 +274,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
       <div class="col-12">
         <div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" name="device_wajib_kode" id="devkode" <?= !empty($settings['device_wajib_kode']) ? 'checked' : '' ?>>
+          <input class="form-check-input" type="checkbox" name="device_wajib_kode" id="devkode" <?= device_wajib_kode_aktif($settings) ? 'checked' : '' ?>>
           <label class="form-check-label" for="devkode"><strong>Wajib Kode/QR Pasangan</strong> untuk mendaftarkan perangkat (lebih aman dari pendaftaran otomatis)</label>
         </div>
-        <div class="form-text">Bila aktif, perangkat siswa tidak lagi terdaftar otomatis saat scan pertama. Admin membuat QR Pasangan + Kode 6 angka (berlaku 10 menit, sekali pakai) dari menu Manajemen Perangkat atau Data Siswa; siswa memilih salah satu cara.</div>
+        <div class="form-text">Default: <strong>aktif</strong>. Bila aktif, perangkat siswa tidak lagi terdaftar otomatis saat scan pertama. Admin membuat QR Pasangan + Kode 6 angka (berlaku 10 menit, sekali pakai) dari menu Manajemen Perangkat atau Data Siswa; siswa memilih salah satu cara.</div>
       </div>
       <div class="col-md-6">
         <label class="form-label">Durasi Token QR Gerbang (detik)</label>
@@ -334,7 +340,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </div>
   </div>
 
-  <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Simpan Pengaturan</button>
+  <button type="submit" class="siap-btn siap-btn-blue siap-mono-xs"><i class="bi bi-save"></i> Simpan Pengaturan</button>
 </form>
 
 <script>

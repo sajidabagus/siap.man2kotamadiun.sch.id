@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php if (!$modal): ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h4 class="mb-0"><i class="bi bi-person-plus"></i> Tambah Siswa</h4>
-  <a href="<?= modul_url('siswa') ?>" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Kembali ke Data Siswa</a>
+  <a href="<?= modul_url('siswa') ?>" class="siap-btn siap-btn-ghost siap-mono-xs"><i class="bi bi-arrow-left"></i> Kembali ke Data Siswa</a>
 </div>
 <?php endif; ?>
 
@@ -162,11 +162,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
       <div class="mt-4<?= $modal ? ' d-flex justify-content-end gap-2' : '' ?>">
         <?php if ($modal): ?>
-          <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Simpan</button>
+          <button type="button" class="siap-btn siap-btn-ghost siap-mono-xs" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="siap-btn siap-btn-blue siap-mono-xs"><i class="bi bi-save"></i> Simpan</button>
         <?php else: ?>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Simpan</button>
-          <a href="<?= modul_url('siswa') ?>" class="btn btn-outline-secondary">Batal</a>
+          <button type="submit" class="siap-btn siap-btn-blue siap-mono-xs"><i class="bi bi-save"></i> Simpan</button>
+          <a href="<?= modul_url('siswa') ?>" class="siap-btn siap-btn-ghost siap-mono-xs">Batal</a>
         <?php endif; ?>
       </div>
     </form>

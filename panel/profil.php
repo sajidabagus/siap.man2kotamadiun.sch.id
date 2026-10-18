@@ -81,28 +81,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 <style>
-  .pf-card { background: #fff; border: 1px solid #e9edf3; border-radius: 14px; box-shadow: 0 1px 3px rgba(20,33,61,.04); overflow: hidden; }
+  .pf-card { background: #fff; border: 1px solid var(--siap-line); border-radius: var(--siap-radius-card); box-shadow: var(--siap-shadow-card); overflow: hidden; }
   .pf-hero { text-align: center; padding: 32px 24px 24px; }
   .pf-avatar { width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 18px; display: flex; align-items: center; justify-content: center;
-               font-size: 3rem; font-weight: 700; color: #fff; background: linear-gradient(135deg, #1f6feb, #0d4fc4); box-shadow: 0 10px 24px -10px rgba(13,79,196,.7); }
-  .pf-nama { font-size: 1.25rem; font-weight: 700; color: #14213d; line-height: 1.25; word-break: break-word; }
-  .pf-sub { color: #8a94a6; margin-top: 2px; text-transform: capitalize; }
-  .pf-chip { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; padding: 4px 12px; border-radius: 999px; font-size: .82rem; font-weight: 600; background: #eaf7ee; color: #2fb344; }
+               font-size: 3rem; font-weight: 700; color: #fff; background: linear-gradient(135deg, var(--siap-blue-start), var(--siap-blue-end)); box-shadow: 0 10px 24px -10px rgba(37, 99, 235, 0.55); }
+  .pf-nama { font-size: 1.25rem; font-weight: 700; color: var(--siap-ink); line-height: 1.25; word-break: break-word; }
+  .pf-sub { color: var(--siap-muted); margin-top: 2px; text-transform: capitalize; }
+  .pf-chip { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; padding: 4px 12px; border-radius: 999px; font-size: .82rem; font-weight: 600; background: var(--siap-success-bg); color: var(--siap-success-text); border: 1px solid var(--siap-success-border); }
   .pf-chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-  .pf-chip.mati { background: #f1f3f8; color: #8a94a6; }
-  .pf-info { border-top: 1px solid #eef1f6; padding: 18px 24px; }
+  .pf-chip.mati { background: var(--siap-bg); color: var(--siap-muted); }
+  .pf-info { border-top: 1px solid var(--siap-line); padding: 18px 24px; }
   .pf-info .row-info { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; font-size: .9rem; }
-  .pf-info .row-info span:first-child { color: #8a94a6; }
-  .pf-info .row-info span:last-child { color: #14213d; font-weight: 500; text-align: right; }
-  .pf-head { padding: 18px 24px; border-bottom: 1px solid #eef1f6; }
-  .pf-head h6 { margin: 0; font-weight: 700; color: #14213d; }
-  .pf-head .sub { color: #8a94a6; font-size: .86rem; }
+  .pf-info .row-info span:first-child { color: var(--siap-muted); }
+  .pf-info .row-info span:last-child { color: var(--siap-ink); font-weight: 500; text-align: right; }
+  .pf-head { padding: 18px 24px; border-bottom: 1px solid var(--siap-line); }
+  .pf-head h6 { margin: 0; font-weight: 700; color: var(--siap-ink); }
+  .pf-head .sub { color: var(--siap-muted); font-size: .86rem; }
   .pf-body { padding: 22px 24px; }
-  .pf-body .form-label { font-weight: 500; color: #14213d; font-size: .9rem; }
-  .pf-sect { margin: 26px 0 14px; padding-top: 22px; border-top: 1px solid #eef1f6; }
-  .pf-sect h6 { margin: 0; font-weight: 700; color: #14213d; }
-  .pf-sect .sub { color: #8a94a6; font-size: .86rem; }
-  .pf-foot { display: flex; justify-content: flex-end; gap: 10px; padding-top: 20px; margin-top: 22px; border-top: 1px solid #eef1f6; }
+  .pf-body .form-label { font-weight: 500; color: var(--siap-ink); font-size: .9rem; }
+  .pf-sect { margin: 26px 0 14px; padding-top: 22px; border-top: 1px solid var(--siap-line); }
+  .pf-sect h6 { margin: 0; font-weight: 700; color: var(--siap-ink); }
+  .pf-sect .sub { color: var(--siap-muted); font-size: .86rem; }
+  .pf-foot { display: flex; justify-content: flex-end; gap: 10px; padding-top: 20px; margin-top: 22px; border-top: 1px solid var(--siap-line); }
   .pf-foot .btn { border-radius: 8px; font-weight: 600; }
   @media (max-width: 575px) { .pf-body, .pf-head { padding-left: 16px; padding-right: 16px; } .pf-foot .btn { flex: 1; } }
 </style>
@@ -177,8 +177,8 @@ $aktifAkun = ($user['status'] ?? '') === 'aktif';
                     </div>
 
                     <div class="pf-foot">
-                        <a href="<?= modul_url('profil') ?>" class="btn btn-light border">Batal</a>
-                        <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Simpan Perubahan</button>
+                        <a href="<?= modul_url('profil') ?>" class="siap-btn siap-btn-ghost siap-mono-xs">Batal</a>
+                        <button type="submit" class="siap-btn siap-btn-blue siap-mono-xs"><i class="bi bi-save"></i> Simpan Perubahan</button>
                     </div>
                 </form>
             </div>

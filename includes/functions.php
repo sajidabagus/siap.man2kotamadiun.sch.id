@@ -421,14 +421,33 @@ function generate_token(int $bytes = 32): string
 // ---------------------------------------------------------------------
 function get_client_ip(): string
 {
-    $keys = ['HTTP_X_FORWARDED_FOR', 'HTTP_CLIENT_IP', 'REMOTE_ADDR'];
-    foreach ($keys as $key) {
-        if (!empty($_SERVER[$key])) {
-            $ip = explode(',', $_SERVER[$key])[0];
-            return trim($ip);
+    $remote = (string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+
+    /**
+     * SECURITY: X-Forwarded-For TIDAK dipercaya mentah-mentah.
+     * Header ini dikendalikan klien; tanpa whitelist, penyerang bisa
+     * memalsukan IP tiap request untuk (a) melewati batas percobaan login
+     * per-IP dan (b) memacukan isi security_logs.
+     *
+     * XFF hanya dipakai bila request benar-benar datang dari proxy
+     * internal yang terdaftar di TRUSTED_PROXIES (config/database.php),
+     * mis. Nginx/aaPanel di mesin yang sama atau Cloudflare.
+     */
+    $trusted = defined('TRUSTED_PROXIES')
+        ? array_filter(array_map('trim', explode(',', (string) TRUSTED_PROXIES)))
+        : [];
+
+    if ($trusted && in_array($remote, $trusted, true)) {
+        $xff = (string) ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? '');
+        if ($xff !== '') {
+            // Ambil IP pertama (origin klien rill) yang bentuknya valid.
+            $cand = trim(explode(',', $xff)[0]);
+            if (filter_var($cand, FILTER_VALIDATE_IP)) return $cand;
         }
+        $cf = (string) ($_SERVER['HTTP_CF_CONNECTING_IP'] ?? '');
+        if ($cf !== '' && filter_var($cf, FILTER_VALIDATE_IP)) return $cf;
     }
-    return '0.0.0.0';
+    return filter_var($remote, FILTER_VALIDATE_IP) ? $remote : '0.0.0.0';
 }
 
 // ---------------------------------------------------------------------
@@ -445,41 +464,106 @@ function distance_meter(float $lat1, float $lon1, float $lat2, float $lon2): flo
 }
 
 // ---------------------------------------------------------------------
-// SETTINGS (cache ringan per-request)
+// SETTINGS (cache lintas-request: APCu bila ada, fallback berkas + TTL)
 // ---------------------------------------------------------------------
+const SETTINGS_CACHE_KEY = 'siap_settings';
+const SETTINGS_CACHE_TTL = 60; // detik
+
+/** Lokasi berkas cache settings (fallback saat APCu tidak tersedia). */
+function settings_cache_file(): string
+{
+    return __DIR__ . '/../var/cache/settings.json';
+}
+
+/** Baca settings dari cache lintas-request; null bila kosong/kedaluwarsa. */
+function ambil_cache_settings(): ?array
+{
+    if (function_exists('apcu_fetch') && apcu_enabled()) {
+        $ok = false;
+        $data = apcu_fetch(SETTINGS_CACHE_KEY, $ok);
+        if ($ok && is_array($data) && $data) return $data;
+    }
+    $file = settings_cache_file();
+    if (is_file($file) && (time() - (int) @filemtime($file)) < SETTINGS_CACHE_TTL) {
+        $data = json_decode((string) @file_get_contents($file), true);
+        if (is_array($data) && $data) return $data;
+    }
+    return null;
+}
+
+/** Tulis settings ke cache lintas-request. */
+function simpan_cache_settings(array $settings): void
+{
+    if (!$settings) return;
+    if (function_exists('apcu_store') && apcu_enabled()) {
+        @apcu_store(SETTINGS_CACHE_KEY, $settings, SETTINGS_CACHE_TTL);
+        return;
+    }
+    $json = json_encode($settings);
+    if ($json === false) return; // jangan simpan cache yang rusak
+    $dir = dirname(settings_cache_file());
+    if (!is_dir($dir)) @mkdir($dir, 0755, true);
+    @file_put_contents(settings_cache_file(), $json, LOCK_EX);
+}
+
+/** Hapus cache settings -- WAJIB dipanggil setiap baris tabel settings diubah. */
+function hapus_cache_settings(): void
+{
+    if (function_exists('apcu_delete')) @apcu_delete(SETTINGS_CACHE_KEY);
+    $file = settings_cache_file();
+    if (is_file($file)) @unlink($file);
+}
+
 function get_settings(): array
 {
     static $settings = null;
-    if ($settings === null) {
-        $stmt = getDB()->query('SELECT * FROM settings ORDER BY id ASC LIMIT 1');
-        $settings = $stmt->fetch() ?: [];
+    if ($settings !== null) return $settings;
 
-        // Auto-migrasi kolom tambahan di tabel settings bila belum ada.
-        // Butuh hak ALTER; kalau gagal, fitur memakai nilai default dan SQL manual
-        // ada di folder database/ (migrasi_hari_efektif.sql, migrasi_identitas_sekolah.sql).
-        if ($settings) {
-            $kolomBaru = [
-                'hari_efektif'   => "VARCHAR(20) NOT NULL DEFAULT '1,2,3,4,5'",
-                'device_wajib_kode' => 'TINYINT(1) NOT NULL DEFAULT 0',
-                'alamat_sekolah' => 'TEXT NULL',
-                'nama_kepala'    => 'VARCHAR(150) NULL',
-            ];
-            $berubah = false;
-            foreach ($kolomBaru as $kolom => $definisi) {
-                if (array_key_exists($kolom, $settings)) continue;
-                try {
-                    getDB()->exec("ALTER TABLE settings ADD COLUMN $kolom $definisi");
-                    $berubah = true;
-                } catch (Throwable $e) {
-                    // dibiarkan: dipakai nilai default
-                }
-            }
-            if ($berubah) {
-                $settings = getDB()->query('SELECT * FROM settings ORDER BY id ASC LIMIT 1')->fetch() ?: $settings;
+    $settings = ambil_cache_settings();
+    if ($settings !== null) return $settings;
+
+    $stmt = getDB()->query('SELECT * FROM settings ORDER BY id ASC LIMIT 1');
+    $settings = $stmt->fetch() ?: [];
+
+    // Auto-migrasi kolom tambahan di tabel settings bila belum ada.
+    // Butuh hak ALTER; kalau gagal, fitur memakai nilai default dan SQL manual
+    // ada di folder database/ (migrasi_hari_efektif.sql, migrasi_identitas_sekolah.sql).
+    if ($settings) {
+        $kolomBaru = [
+            'hari_efektif'   => "VARCHAR(20) NOT NULL DEFAULT '1,2,3,4,5'",
+            'device_wajib_kode' => 'TINYINT(1) NOT NULL DEFAULT 1',
+            'alamat_sekolah' => 'TEXT NULL',
+            'nama_kepala'    => 'VARCHAR(150) NULL',
+        ];
+        $berubah = false;
+        foreach ($kolomBaru as $kolom => $definisi) {
+            if (array_key_exists($kolom, $settings)) continue;
+            try {
+                getDB()->exec("ALTER TABLE settings ADD COLUMN $kolom $definisi");
+                $berubah = true;
+            } catch (Throwable $e) {
+                // dibiarkan: dipakai nilai default
             }
         }
+        if ($berubah) {
+            $settings = getDB()->query('SELECT * FROM settings ORDER BY id ASC LIMIT 1')->fetch() ?: $settings;
+        }
+        simpan_cache_settings($settings);
     }
     return $settings;
+}
+
+/**
+ * Mode "Wajib Kode Pasangan" untuk pendaftaran perangkat baru (GLM #4).
+ * Kebijakan default = AKTIF: pairing selalu lewat admin. Hanya nilai 0 yang
+ * disimpan eksplisit dari Pengaturan yang mematikannya; kolom yang belum ada
+ * (ALTER dibatasi hosting) tetap dianggap AKTIF agar default berlaku penuh.
+ */
+function device_wajib_kode_aktif(?array $settings = null): bool
+{
+    $settings = $settings ?? get_settings();
+    if (!array_key_exists('device_wajib_kode', $settings)) return true;
+    return !empty($settings['device_wajib_kode']);
 }
 
 const NAMA_HARI = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
@@ -757,6 +841,9 @@ function jalankan_pembersihan_log_otomatis(): void
     }
     $db->prepare('UPDATE settings SET log_terakhir_dibersihkan = NOW() WHERE id = :id')
        ->execute([':id' => $settings['id']]);
+
+    // Baris settings berubah -> buang cache agar throttle 24 jam memakai nilai terbaru.
+    hapus_cache_settings();
 }
 
 // ---------------------------------------------------------------------

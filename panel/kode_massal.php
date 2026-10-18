@@ -10,7 +10,7 @@ $admin = current_admin();
 
 $opsiMasa = [
   '10' => '10 menit', '30' => '30 menit', '60' => '1 jam', '360' => '6 jam',
-  '1440' => '1 hari', '10080' => '7 hari', '0' => 'Tanpa batas waktu',
+  '1440' => '1 hari', '10080' => '7 hari (maksimum)',
 ];
 $masaPilih = '1440';
 $sasaran = ['jenjang' => '', 'kelas' => '', 'daftar' => ''];
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'batalka
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'buat') {
   csrf_require();
   $masaPilih = isset($opsiMasa[$_POST['masa'] ?? '']) ? (string) $_POST['masa'] : '1440';
-  $menit = $masaPilih === '0' ? null : (int) $masaPilih;
+  $menit = (int) $masaPilih;
   $sasaranPilih = (string) ($_POST['sasaran'] ?? 'semua');
   if ($sasaranPilih === 'daftar') {
     $sasaran['daftar'] = trim((string) ($_POST['daftar'] ?? ''));
@@ -115,7 +115,7 @@ $settingsKode = get_settings();
   <div class="alert alert-danger"><ul class="mb-0"><?php foreach ($errors as $err) echo '<li>' . e($err) . '</li>'; ?></ul></div>
 <?php endif; ?>
 
-<?php if (empty($settingsKode['device_wajib_kode'])): ?>
+<?php if (!device_wajib_kode_aktif($settingsKode)): ?>
   <div class="text-muted small mb-3"><i class="bi bi-info-circle"></i> Mode <strong>Wajib Kode Pasangan</strong> belum aktif. <a href="<?= modul_url('pengaturan') ?>">Aktifkan di Pengaturan</a> agar kode ini diperlukan.</div>
 <?php endif; ?>
 
@@ -148,7 +148,7 @@ $settingsKode = get_settings();
         </select>
       </div>
       <div class="col-md-2">
-        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-key"></i> Buat</button>
+        <button type="submit" class="siap-btn siap-btn-blue siap-mono-xs w-100"><i class="bi bi-key"></i> Buat</button>
       </div>
       <div class="col-12 d-none" id="boxDaftar">
         <textarea name="daftar" class="form-control" rows="3" placeholder="Tempel NIS/NISN, satu per baris"><?= e($sasaran['daftar']) ?></textarea>
@@ -169,9 +169,9 @@ $settingsKode = get_settings();
       </div>
       <?php if ($hasil['baris']): ?>
       <div class="d-flex flex-wrap gap-2">
-        <button type="button" class="btn btn-light border btn-sm" onclick="salinSemua(this)"><i class="bi bi-clipboard"></i> Salin</button>
-        <button type="button" class="btn btn-light border btn-sm" onclick="unduhExcel()"><i class="bi bi-file-earmark-excel"></i> Excel</button>
-        <button type="button" class="btn btn-primary btn-sm" onclick="cetakKode()"><i class="bi bi-printer"></i> Cetak</button>
+        <button type="button" class="siap-btn siap-btn-ghost siap-mono-xs btn-sm" onclick="salinSemua(this)"><i class="bi bi-clipboard"></i> Salin</button>
+        <button type="button" class="siap-btn siap-btn-ghost siap-mono-xs btn-sm" onclick="unduhExcel()"><i class="bi bi-file-earmark-excel"></i> Excel</button>
+        <button type="button" class="siap-btn siap-btn-blue siap-mono-xs btn-sm" onclick="cetakKode()"><i class="bi bi-printer"></i> Cetak</button>
       </div>
       <?php endif; ?>
     </div>
@@ -219,7 +219,7 @@ $settingsKode = get_settings();
     <?= csrf_field() ?>
     <input type="hidden" name="aksi" value="batalkan">
     <span><strong><?= $aktifCount ?></strong> siswa masih punya kode aktif.</span>
-    <button type="submit" class="btn btn-link btn-sm text-danger p-0">Batalkan semua kode</button>
+    <button type="submit" class="siap-btn siap-btn-danger siap-mono-xs btn-sm">Batalkan semua kode</button>
   </form>
 <?php endif; ?>
 

@@ -1,12 +1,21 @@
 /* =====================================================================
    HALAMAN SISWA (scan absen, konfirmasi, hasil) — tampilan profesional
+   Adaptasi SIPIKET dengan variabel desain SIAP (--siap-*)
    ===================================================================== */
-:root { --ps-biru: #0d6efd; --ps-navy: #14213d; --ps-abu: #8a94a6; --ps-garis: #e9edf3; --ps-hijau: #2fb344; --ps-oranye: #f08c1a; --ps-merah: #e03e4a; }
+:root {
+  --ps-biru: var(--siap-blue);
+  --ps-navy: var(--siap-ink);
+  --ps-abu: var(--siap-muted);
+  --ps-garis: var(--siap-line);
+  --ps-hijau: var(--siap-success-text);
+  --ps-oranye: var(--siap-warning-text);
+  --ps-merah: var(--siap-danger-text);
+}
 
 body.presensi-page, .ps-page {
-  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
-  color: var(--ps-navy);
-  background: radial-gradient(800px 380px at 8% -8%, #dbe8ff, transparent 60%), radial-gradient(700px 360px at 100% 0, #e6e0ff, transparent 55%), #f4f6fb;
+  font-family: var(--siap-font-sans);
+  color: var(--siap-body);
+  background-color: var(--siap-bg);
   -webkit-text-size-adjust: 100%;
 }
 body.presensi-page { padding: 18px 14px 36px; overscroll-behavior: none; }
@@ -14,12 +23,12 @@ body.presensi-page { padding: 18px 14px 36px; overscroll-behavior: none; }
 
 /* ---- header merek ---- */
 .ps-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-.ps-logo { width: 50px; height: 50px; flex: none; display: grid; place-items: center; font-size: 30px; color: var(--ps-biru); background: transparent; }
+.ps-logo { width: 50px; height: 50px; flex: none; display: grid; place-items: center; font-size: 30px; color: var(--siap-blue); background: transparent; }
 .ps-logo img { width: 100%; height: 100%; object-fit: contain; }
-.ps-brand .n { font-weight: 800; line-height: 1.15; text-transform: uppercase; font-size: .98rem; }
-.ps-brand .s { font-size: .72rem; font-weight: 800; letter-spacing: .14em; color: var(--ps-biru); }
-.ps-home { margin-left: auto; width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: 12px; background: #fff; border: 1px solid #dfe4ec; color: var(--ps-navy); text-decoration: none; font-size: 1.1rem; }
-.ps-home:hover { color: var(--ps-biru); border-color: var(--ps-biru); }
+.ps-brand .n { font-weight: 800; line-height: 1.15; text-transform: uppercase; font-size: .98rem; color: var(--siap-ink); }
+.ps-brand .s { font-size: .72rem; font-weight: 800; letter-spacing: .14em; color: var(--siap-blue); }
+.ps-home { margin-left: auto; width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: 12px; background: #fff; border: 1px solid var(--siap-line); color: var(--siap-ink); text-decoration: none; font-size: 1.1rem; }
+.ps-home:hover { color: var(--siap-blue); border-color: var(--siap-blue); }
 
 /* ---- langkah (tanpa garis penghubung) ---- */
 .ps-steps { display: flex; align-items: flex-start; gap: 6px; margin: 0 4px 16px; }

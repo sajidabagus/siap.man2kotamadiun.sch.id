@@ -28,7 +28,7 @@ $dataSiswaAktif = array_map(fn($s) => [
 <div class="konten-biasa" id="kontenBiasaSiswa">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0"><i class="bi bi-qr-code"></i> QR Siswa</h4>
-    <?php if (can('qr_siswa.cetak')): ?><button type="button" class="btn btn-outline-secondary" onclick="previewCetakSiswa(null, null)"><i class="bi bi-printer"></i> Cetak Semua Siswa</button><?php endif; ?>
+    <?php if (can('qr_siswa.cetak')): ?><button type="button" class="siap-btn siap-btn-ghost siap-mono-xs" onclick="previewCetakSiswa(null, null)"><i class="bi bi-printer"></i> Cetak Semua Siswa</button><?php endif; ?>
   </div>
 
   <?php if (empty($kelasList)): ?>
@@ -44,7 +44,7 @@ $dataSiswaAktif = array_map(fn($s) => [
             <h6>Jenjang <?= e($jenjang) ?></h6>
             <div class="sub"><?= count($daftarKelasJenjang) ?> kelas &middot; <?= $jumlahSiswaJenjang ?> siswa</div>
           </div>
-          <?php if (can('qr_siswa.cetak')): ?><button type="button" class="btn btn-light border btn-sm" onclick="previewCetakSiswa('jenjang', '<?= e($jenjang) ?>')">
+          <?php if (can('qr_siswa.cetak')): ?><button type="button" class="siap-btn siap-btn-ghost siap-mono-xs btn-sm" onclick="previewCetakSiswa('jenjang', '<?= e($jenjang) ?>')">
             <i class="bi bi-printer"></i> Cetak Semua Jenjang <?= e($jenjang) ?>
           </button><?php endif; ?>
         </div>
@@ -80,10 +80,10 @@ $dataSiswaAktif = array_map(fn($s) => [
       <span class="text-muted">— <span id="jumlahPreviewSiswa">0</span> kartu QR siswa akan dicetak (ukuran 6&times;9 cm)</span>
     </div>
     <div class="d-flex gap-2">
-      <button type="button" class="btn btn-outline-secondary btn-sm" onclick="tutupPreviewSiswa()">
+      <button type="button" class="siap-btn siap-btn-ghost siap-mono-xs btn-sm" onclick="tutupPreviewSiswa()">
         <i class="bi bi-arrow-left"></i> Kembali
       </button>
-      <?php if (can('qr_siswa.cetak')): ?><button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+      <?php if (can('qr_siswa.cetak')): ?><button type="button" class="siap-btn siap-btn-blue siap-mono-xs btn-sm" onclick="window.print()">
         <i class="bi bi-printer"></i> Cetak Sekarang
       </button><?php endif; ?>
     </div>
@@ -122,20 +122,20 @@ $dataSiswaAktif = array_map(fn($s) => [
 @media (max-width: 992px) { .col-kelas { width: calc(100% / 3); } }
 @media (max-width: 768px) { .col-kelas { width: calc(100% / 2); } }
 .kelas-card {
-  border-radius: 14px;
-  border: 1px solid #e3e6ea;
+  border-radius: var(--siap-radius-card);
+  border: 1px solid var(--siap-line);
   transition: box-shadow .15s ease, transform .15s ease;
 }
 .kelas-card:hover {
   box-shadow: 0 8px 20px rgba(0,0,0,.08);
   transform: translateY(-3px);
-  border-color: #1f8f94;
+  border-color: var(--siap-blue);
 }
 .siswa-thumb {
   width: 74px; height: 74px; border-radius: 10px;
-  background: #fff; border: 1px solid #eef0f2;
+  background: #fff; border: 1px solid var(--siap-line);
   display: flex; align-items: center; justify-content: center; overflow: hidden;
-  font-size: 28px; color: #1f8f94;
+  font-size: 28px; color: var(--siap-blue);
 }
 
 /* ===== Preview cetak di layar (SEBELUM klik "Cetak Sekarang") ========= */
@@ -215,7 +215,7 @@ const DATA_SISWA = JSON.parse(document.getElementById('dataSiswaAktif').textCont
 const NAMA_SEKOLAH = <?= json_encode($settings['nama_sekolah'] ?? 'SEKOLAH') ?>;
 const LOGO_HTML = <?= json_encode($logoFile ? '<img class="mini-logo" src="' . BASE_URL . '/uploads/siswa/' . e($logoFile) . '" alt="Logo">' : '') ?>;
 const SVG_BRACKETS = `<svg class="brackets" viewBox="0 0 460 460">
-  <g stroke="#1f8f94" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" fill="none">
+  <g stroke="var(--siap-blue)" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" fill="none">
    
   </g>
 </svg>`;

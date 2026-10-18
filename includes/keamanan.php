@@ -10,7 +10,19 @@ function https_aktif(): bool
 {
     if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') return true;
     if ((string) ($_SERVER['SERVER_PORT'] ?? '') === '443') return true;
-    return strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+
+    // D6: X-Forwarded-Proto adalah header yang dikendalikan klien — hanya
+    // dipercaya bila request benar-benar datang dari proxy terdaftar di
+    // TRUSTED_PROXIES (pola sama dengan get_client_ip() di functions.php).
+    // Tanpa ini, XFP palsu bisa mengubah keputusan cookie Secure & HSTS.
+    $trusted = defined('TRUSTED_PROXIES')
+        ? array_filter(array_map('trim', explode(',', (string) TRUSTED_PROXIES)))
+        : [];
+    $remote = (string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+    if ($trusted && in_array($remote, $trusted, true)) {
+        return strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+    }
+    return false;
 }
 
 /**

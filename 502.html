@@ -5,6 +5,13 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>502 Bad Gateway</title>
 		<style>
+			:root {
+			  --siap-ink: #020617;
+			  --siap-body: #475569;
+			  --siap-muted: #64748B;
+			  --siap-blue: #3B82F6;
+			  --siap-success-text: #065F46;
+			}
 			* {
 				margin: 0;
 				padding: 0;
@@ -16,6 +23,7 @@
 			body {
 				height: 100%;
 				font-size: 14px;
+				color: var(--siap-body);
 			}
 			.container {
 				display: flex;
@@ -34,12 +42,12 @@
 			.title {
 				margin-top: 24px;
 				font-size: 110px;
-				color: #333;
+				color: var(--siap-ink);
 				letter-spacing: 10px;
 			}
 			.desc {
 				font-size: 16px;
-				color: #777;
+				color: var(--siap-muted);
 				text-align: center;
 				line-height: 24px;
 			}
@@ -53,7 +61,7 @@
 				font-size: 12px;
 			}
 			.footer .btlink {
-				color: #20a53a;
+				color: var(--siap-success-text);
 				text-decoration: none;
 			}
 		</style>

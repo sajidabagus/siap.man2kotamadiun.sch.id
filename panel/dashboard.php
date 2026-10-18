@@ -65,6 +65,17 @@ $persenHadir = $totalSiswa ? (int) round($hadirTotal / $totalSiswa * 100) : 0;
 $efektifHariIni = is_hari_efektif();
 $warnaPersen = $persenHadir >= 90 ? '#2fb344' : ($persenHadir >= 70 ? '#d9631e' : ($persenHadir >= 50 ? '#e8a200' : '#e03e4a'));
 
+// GLM #4 — notifikasi in-app antrean keamanan perangkat (lihat Log Keamanan):
+// anomali perangkat 30 hari terakhir + percobaan kode pasangan gagal (indikasi
+// brute-force; >= 5x/24 jam baru diberitahukan supaya tidak bising).
+$reviewAnomali = (int) $db->query(
+  "SELECT COUNT(*) FROM security_logs WHERE event = 'DEVICE_ANOMALY_REVIEW' AND created_at > (NOW() - INTERVAL 30 DAY)"
+)->fetchColumn();
+$reviewPairing = (int) $db->query(
+  "SELECT COUNT(*) FROM security_logs WHERE event = 'DEVICE_PAIRING_FAILED' AND created_at > (NOW() - INTERVAL 24 HOUR)"
+)->fetchColumn();
+if ($reviewPairing < 5) $reviewPairing = 0;
+
 // Total siswa aktif per jenjang
 $jenjangTotal = [];
 foreach ($db->query("SELECT kelas, COUNT(*) c FROM siswa WHERE status='aktif' GROUP BY kelas")->fetchAll() as $r) {
@@ -86,7 +97,7 @@ $namaAdmin = (current_admin()['nama'] ?? '') ?: 'Admin';
 
 <style>
   .dash-hero { border: 0; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 10px rgba(20,33,61,.06); }
-  .dash-hero-top { background: linear-gradient(135deg, #2bb673, #46d08c); color: #fff; padding: 26px 26px 96px; position: relative; }
+  .dash-hero-top { background: linear-gradient(135deg, var(--siap-blue-start), var(--siap-blue-end)); color: #fff; padding: 26px 26px 96px; position: relative; }
   .dash-hero-top h3 { font-weight: 700; margin: 0 0 4px; }
   .dash-hero-top p { margin: 0; opacity: .95; }
   .dash-hero-top p b { border-bottom: 2px solid rgba(255,255,255,.7); }
@@ -113,7 +124,7 @@ $namaAdmin = (current_admin()['nama'] ?? '') ?: 'Admin';
   .dash-card .list-group-item { border-color: #eef1f6; }
   .dash-card .table > :not(caption) > * > * { border-color: #eef1f6; }
   .dash-card thead th { color: #9aa3b5; font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
-  .ring { --p: 0; --c: #0d6efd; width: 96px; height: 96px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  .ring { --p: 0; --c: var(--siap-blue); width: 96px; height: 96px; border-radius: 50%; flex: none; display: grid; place-items: center;
           background: conic-gradient(var(--c) calc(var(--p) * 1%), #e9edf5 0); }
   .ring::before { content: ""; grid-area: 1/1; width: 74px; height: 74px; border-radius: 50%; background: #fff; }
   .ring span { grid-area: 1/1; z-index: 1; font-weight: 700; font-size: 1.25rem; color: #1b2437; }
@@ -121,13 +132,13 @@ $namaAdmin = (current_admin()['nama'] ?? '') ?: 'Admin';
   .meta-list { list-style: none; padding: 0; margin: 0; font-size: .92rem; color: #5b6580; }
   .meta-list li { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-weight: 600; }
   .meta-list .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
-  .pesan-banner { background: #1c2f5a; color: #fff; border-radius: 16px; padding: 26px 28px; position: relative; overflow: hidden; }
+  .pesan-banner { background: linear-gradient(135deg, var(--siap-blue-start), var(--siap-blue-end)); color: #fff; border-radius: 16px; padding: 26px 28px; position: relative; overflow: hidden; box-shadow: var(--siap-shadow-btn-blue); }
   .pesan-banner h5 { font-weight: 700; line-height: 1.4; margin-bottom: 8px; }
   .pesan-banner .hl { color: #ff3b6b; border-bottom: 2px solid #b0294d; padding-bottom: 1px; }
   .pesan-banner p { color: #c9d3ea; margin-bottom: 16px; }
   .pesan-banner .bg-icon { position: absolute; right: -10px; bottom: -22px; font-size: 130px; color: rgba(255,255,255,.07); }
-  .btn-pink { background: #ff2d63; color: #fff; border: 0; } .btn-pink:hover { background: #e8235a; color: #fff; }
-  .btn-slate { background: #3a4d78; color: #fff; border: 0; } .btn-slate:hover { background: #46598a; color: #fff; }
+  .btn-pink { background: var(--siap-danger-text); color: #fff; border: 0; } .btn-pink:hover { background: var(--siap-danger-border); color: #fff; }
+  .btn-slate { background: var(--siap-muted); color: #fff; border: 0; } .btn-slate:hover { background: var(--siap-faint); color: #fff; }
   .info-item { display: flex; gap: 12px; align-items: flex-start; padding: 9px 0; border-bottom: 1px dashed #e6eaf2; }
   .info-item:last-child { border-bottom: 0; }
   .info-item i { font-size: 18px; margin-top: 1px; }
@@ -146,10 +157,10 @@ $namaAdmin = (current_admin()['nama'] ?? '') ?: 'Admin';
         <p>Sudah presensi: <b><?= (int) $sudahPresensi ?></b> dari <?= (int) $totalSiswa ?> siswa</p>
       </div>
       <div class="dash-tiles">
-        <div class="dash-tile"><i class="bi bi-check-circle-fill" style="color:#2fb344"></i><div class="angka"><?= (int) $hadirTotal ?></div><div class="ket">Hadir</div></div>
-        <div class="dash-tile"><i class="bi bi-clock-fill" style="color:#f08c1a"></i><div class="angka"><?= (int) $rekapHariIni['TERLAMBAT'] ?></div><div class="ket">Terlambat</div></div>
-        <div class="dash-tile"><i class="bi bi-hourglass-split" style="color:#6c7a96"></i><div class="angka"><?= (int) $belumPresensi ?></div><div class="ket">Belum Presensi</div></div>
-        <div class="dash-tile"><i class="bi bi-x-circle-fill" style="color:#e03e4a"></i><div class="angka"><?= (int) $tidakHadir ?></div><div class="ket">Tidak Hadir <span style="font-size:.75rem">(izin, sakit, alpa)</span></div></div>
+        <div class="dash-tile"><i class="bi bi-check-circle-fill" style="color:var(--siap-success-text)"></i><div class="angka"><?= (int) $hadirTotal ?></div><div class="ket">Hadir</div></div>
+        <div class="dash-tile"><i class="bi bi-clock-fill" style="color:var(--siap-warning-text)"></i><div class="angka"><?= (int) $rekapHariIni['TERLAMBAT'] ?></div><div class="ket">Terlambat</div></div>
+        <div class="dash-tile"><i class="bi bi-hourglass-split" style="color:var(--siap-muted)"></i><div class="angka"><?= (int) $belumPresensi ?></div><div class="ket">Belum Presensi</div></div>
+        <div class="dash-tile"><i class="bi bi-x-circle-fill" style="color:var(--siap-danger-text)"></i><div class="angka"><?= (int) $tidakHadir ?></div><div class="ket">Tidak Hadir <span style="font-size:.75rem">(izin, sakit, alpa)</span></div></div>
       </div>
     </div>
   </div>
@@ -211,6 +222,12 @@ $namaAdmin = (current_admin()['nama'] ?? '') ?: 'Admin';
       <div class="col-md-5">
         <div class="card dash-card h-100"><div class="card-body">
           <h6 class="mb-2">Info &amp; Pengingat</h6>
+          <?php if ($reviewAnomali > 0): ?>
+          <div class="info-item"><i class="bi bi-shield-exclamation text-danger"></i><div class="small"><b><?= (int) $reviewAnomali ?> anomali perangkat</b> perlu review (30 hari terakhir). <a href="<?= e(modul_url('security_log', ['event' => 'DEVICE_ANOMALY_REVIEW'])) ?>">Lihat</a></div></div>
+          <?php endif; ?>
+          <?php if ($reviewPairing > 0): ?>
+          <div class="info-item"><i class="bi bi-key text-danger"></i><div class="small"><b><?= (int) $reviewPairing ?> percobaan kode pasangan gagal</b> (24 jam terakhir). <a href="<?= e(modul_url('security_log', ['event' => 'DEVICE_PAIRING_FAILED'])) ?>">Lihat</a></div></div>
+          <?php endif; ?>
           <div class="info-item"><i class="bi bi-alarm text-primary"></i><div class="small">Presensi mulai <b><?= e(substr((string) ($cfg['jam_masuk'] ?? '07:00'), 0, 5)) ?></b>, terlambat setelah <b><?= e(substr((string) ($cfg['batas_terlambat'] ?? '07:15'), 0, 5)) ?></b>.</div></div>
           <div class="info-item"><i class="bi bi-geo-alt <?= !empty($cfg['gps_aktif']) ? 'text-success' : 'text-secondary' ?>"></i><div class="small">Validasi lokasi GPS <?= !empty($cfg['gps_aktif']) ? '<b>aktif</b>' : '<b>nonaktif</b>' ?>.</div></div>
           <div class="info-item"><i class="bi bi-phone <?= !empty($cfg['device_binding_aktif']) ? 'text-success' : 'text-secondary' ?>"></i><div class="small">Device binding <?= !empty($cfg['device_binding_aktif']) ? '<b>aktif</b>' : '<b>nonaktif</b>' ?>.</div></div>
@@ -413,10 +430,10 @@ $warnaStatus = ['HADIR' => 'success', 'TERLAMBAT' => 'warning', 'IZIN' => 'info'
   /* Persentase rekap per kelas: titik berwarna + angka tebal (hijau / oranye / kuning / merah) */
   .pct-badge { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.05rem; white-space: nowrap; }
   .pct-badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
-  .pct-hijau  { color: #2fb344; }
-  .pct-oranye { color: #d9631e; }
-  .pct-kuning { color: #e8a200; }
-  .pct-merah  { color: #e03e4a; }
+  .pct-hijau  { color: var(--siap-success-text); }
+  .pct-oranye { color: var(--siap-warning-text); }
+  .pct-kuning { color: var(--siap-warning-text); }
+  .pct-merah  { color: var(--siap-danger-text); }
 </style>
 <script>
 // Paginasi rekap per kelas (di sisi browser, tanpa reload). Jumlah baris per
@@ -454,7 +471,7 @@ $warnaStatus = ['HADIR' => 'success', 'TERLAMBAT' => 'warning', 'IZIN' => 'info'
 })();
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/vendor/chart.umd.min.js?v=<?= @filemtime(__DIR__ . '/../assets/js/vendor/chart.umd.min.js') ?: time() ?>"></script>
 <script>
   (function () {
     var labels = <?= json_encode($labels7) ?>;

@@ -106,11 +106,11 @@ $warnaJenjangCard = [
 ];
 ?>
 <style>
-  .stat-card { display: flex; align-items: center; gap: 16px; background: #fff; border: 1px solid #e9edf3; border-radius: 14px; padding: 18px 20px; height: 100%; box-shadow: 0 1px 3px rgba(20,33,61,.04); }
-  .stat-card .ikon { width: 50px; height: 50px; border-radius: 12px; flex: none; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; }
-  .stat-card .label { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #8a94a6; }
-  .stat-card .angka { font-size: 1.9rem; font-weight: 700; line-height: 1.1; color: #14213d; }
-  .stat-card .ket { font-size: .85rem; color: #8a94a6; }
+  .stat-card { display: flex; align-items: center; gap: 16px; background: #fff; border: 1px solid var(--siap-line); border-radius: var(--siap-radius-card); padding: 18px 20px; height: 100%; box-shadow: var(--siap-shadow-card); }
+  .stat-card .ikon { width: 50px; height: 50px; border-radius: var(--siap-radius-mini); flex: none; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; }
+  .stat-card .label { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--siap-muted); }
+  .stat-card .angka { font-size: 1.9rem; font-weight: 700; line-height: 1.1; color: var(--siap-ink); }
+  .stat-card .ket { font-size: .85rem; color: var(--siap-muted); }
 </style>
 <div class="row g-3 mb-3">
   <?php foreach ($ringkasJenjang as $j => $r): ?>
@@ -221,8 +221,8 @@ $warnaJenjangCard = [
             </p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-            <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle"></i> Simpan</button>
+            <button type="button" class="siap-btn siap-btn-ghost siap-mono-xs" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="siap-btn siap-btn-blue siap-mono-xs"><i class="bi bi-check2-circle"></i> Simpan</button>
           </div>
         </form>
       </div>
