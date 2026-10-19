@@ -139,10 +139,10 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
 </style>
 </head>
 <body class="siap-page login-page">
-  <div class="siap-glow-top"></div>
+  <div class="siap-glow-ios17"></div>
 
   <div class="siap-shell-narrow login-shell">
-    <div class="siap-card login-card">
+    <div class="siap-card-ios17 login-card">
       <div class="login-brand">
         <div class="siap-tile"><i class="bi bi-qr-code-scan" aria-hidden="true"></i></div>
         <div class="login-brand-text">
@@ -177,13 +177,13 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
           </div>
 
           <div class="login-actions">
-            <button type="submit" class="siap-btn siap-btn-blue siap-mono-xs" id="btnMasuk">Masuk</button>
+            <button type="submit" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs" id="btnMasuk">Masuk</button>
           </div>
         </form>
 
         <div class="login-footer">
           <p class="siap-copy-sm">
-            <a href="index.php" class="siap-nav-link siap-btn-ghost siap-mono-xs" style="padding: 0; background: none; border: none;">← Kembali ke beranda</a>
+            <a href="index.php" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" style="padding: 0; background: none; border: none;">← Kembali ke beranda</a>
           </p>
           <p class="siap-copy-sm"><?= e($namaSekolah) ?> · SIAP ABSEN &copy; <?= date('Y') ?></p>
         </div>

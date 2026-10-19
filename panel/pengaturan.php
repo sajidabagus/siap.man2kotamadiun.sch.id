@@ -127,10 +127,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ]);
 }
 ?>
-<h4 class="mb-3"><i class="bi bi-gear"></i> Pengaturan</h4>
+<div class="siap-eyebrow siap-stack-sm">Sistem &amp; Keamanan</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-gear"></i> Pengaturan</h2>
 
 <?php if ($errors): ?>
-  <div class="alert alert-danger">
+  <div class="siap-note siap-note-danger">
     <ul class="mb-0"><?php foreach ($errors as $err) echo '<li>' . e($err) . '</li>'; ?></ul>
   </div>
 <?php endif; ?>
@@ -156,28 +157,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="card-header">Identitas Sekolah</div>
     <div class="card-body row g-3">
       <div class="col-md-6">
-        <label class="form-label">Nama Sekolah</label>
-        <input type="text" name="nama_sekolah" class="form-control" value="<?= e($settings['nama_sekolah']) ?>">
+        <label class="siap-label siap-label-ios17">Nama Sekolah</label>
+        <input type="text" name="nama_sekolah" class="siap-input siap-input-ios17" value="<?= e($settings['nama_sekolah']) ?>">
       </div>
       <div class="col-md-3">
-        <label class="form-label">Tahun Pelajaran</label>
-        <input type="text" name="tahun_pelajaran" class="form-control" value="<?= e($settings['tahun_pelajaran']) ?>">
+        <label class="siap-label siap-label-ios17">Tahun Pelajaran</label>
+        <input type="text" name="tahun_pelajaran" class="siap-input siap-input-ios17" value="<?= e($settings['tahun_pelajaran']) ?>">
       </div>
       <div class="col-12">
-        <label class="form-label">Alamat Sekolah</label>
-        <textarea name="alamat_sekolah" class="form-control" rows="2" maxlength="500" placeholder="Jalan, kelurahan/desa, kecamatan, kota, kode pos"><?= e($settings['alamat_sekolah'] ?? '') ?></textarea>
+        <label class="siap-label siap-label-ios17">Alamat Sekolah</label>
+        <textarea name="alamat_sekolah" class="siap-input siap-input-ios17" rows="2" maxlength="500" placeholder="Jalan, kelurahan/desa, kecamatan, kota, kode pos"><?= e($settings['alamat_sekolah'] ?? '') ?></textarea>
       </div>
       <div class="col-md-6">
-        <label class="form-label">Nama Kepala Madrasah/Sekolah</label>
-        <input type="text" name="nama_kepala" class="form-control" maxlength="150" value="<?= e($settings['nama_kepala'] ?? '') ?>" placeholder="Nama lengkap beserta gelar">
+        <label class="siap-label siap-label-ios17">Nama Kepala Madrasah/Sekolah</label>
+        <input type="text" name="nama_kepala" class="siap-input siap-input-ios17" maxlength="150" value="<?= e($settings['nama_kepala'] ?? '') ?>" placeholder="Nama lengkap beserta gelar">
         <div class="form-text">Tampil pada kop dan kolom tanda tangan hasil cetak.</div>
       </div>
       <div class="col-md-3">
-        <label class="form-label">Warna Tema</label>
-        <input type="color" name="warna_tema" class="form-control form-control-color" value="<?= e($settings['warna_tema']) ?>">
+        <label class="siap-label siap-label-ios17">Warna Tema</label>
+        <input type="color" name="warna_tema" class="siap-input siap-input-ios17 form-control-color" value="<?= e($settings['warna_tema']) ?>">
       </div>
       <div class="col-md-6">
-        <label class="form-label">Logo Sekolah</label>
+        <label class="siap-label siap-label-ios17">Logo Sekolah</label>
         <?php if (!empty($settings['logo'])): ?>
           <div class="d-flex align-items-center gap-3 mb-2">
             <img id="previewLogo" src="<?= BASE_URL ?>/uploads/siswa/<?= e($settings['logo']) ?>" alt="Logo saat ini"
@@ -191,7 +192,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <img id="previewLogo" src="" alt="" class="d-none mb-2" style="width:72px;height:72px;object-fit:contain;border:1px solid #dee2e6;border-radius:8px;background:#fff;padding:4px;">
           <p class="text-muted small mb-2">Belum ada logo tersimpan.</p>
         <?php endif; ?>
-        <input type="file" name="logo" id="inputLogo" class="form-control" accept="image/*" onchange="previewLogoBaru(this)">
+        <input type="file" name="logo" id="inputLogo" class="siap-input siap-input-ios17" accept="image/*" onchange="previewLogoBaru(this)">
         <small class="text-muted">Maks 2MB, format JPG/PNG/WEBP. Biarkan kosong kalau tidak ingin mengganti logo.</small>
       </div>
     </div>
@@ -204,18 +205,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="card-header">Jam & Status Kehadiran</div>
     <div class="card-body row g-3">
       <div class="col-md-4">
-        <label class="form-label">Jam Masuk</label>
-        <input type="time" name="jam_masuk" class="form-control" value="<?= e(substr($settings['jam_masuk'],0,5)) ?>">
+        <label class="siap-label siap-label-ios17">Jam Masuk</label>
+        <input type="time" name="jam_masuk" class="siap-input siap-input-ios17" value="<?= e(substr($settings['jam_masuk'],0,5)) ?>">
         <small class="text-muted">Presensi ditolak jika dilakukan sebelum jam ini (mencegah scan jauh di luar jam sekolah).</small>
       </div>
       <div class="col-md-4">
-        <label class="form-label">Batas Terlambat</label>
-        <input type="time" name="batas_terlambat" class="form-control" value="<?= e(substr($settings['batas_terlambat'],0,5)) ?>">
+        <label class="siap-label siap-label-ios17">Batas Terlambat</label>
+        <input type="time" name="batas_terlambat" class="siap-input siap-input-ios17" value="<?= e(substr($settings['batas_terlambat'],0,5)) ?>">
         <small class="text-muted">Presensi setelah jam ini otomatis berstatus TERLAMBAT.</small>
       </div>
       <div class="col-md-4">
-        <label class="form-label">Pesan Presensi Berhasil</label>
-        <input type="text" name="pesan_sukses" class="form-control" value="<?= e($settings['pesan_sukses']) ?>">
+        <label class="siap-label siap-label-ios17">Pesan Presensi Berhasil</label>
+        <input type="text" name="pesan_sukses" class="siap-input siap-input-ios17" value="<?= e($settings['pesan_sukses']) ?>">
         <small class="text-muted">Ditampilkan ke siswa di halaman hasil presensi setelah berhasil.</small>
       </div>
     </div>
@@ -236,19 +237,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
       </div>
       <div class="col-md-4">
-        <label class="form-label">Latitude Sekolah</label>
-        <input type="text" name="latitude_sekolah" id="latSekolah" class="form-control" value="<?= e($settings['latitude_sekolah']) ?>" placeholder="mis. -7.5311234">
+        <label class="siap-label siap-label-ios17">Latitude Sekolah</label>
+        <input type="text" name="latitude_sekolah" id="latSekolah" class="siap-input siap-input-ios17" value="<?= e($settings['latitude_sekolah']) ?>" placeholder="mis. -7.5311234">
       </div>
       <div class="col-md-4">
-        <label class="form-label">Longitude Sekolah</label>
-        <input type="text" name="longitude_sekolah" id="lngSekolah" class="form-control" value="<?= e($settings['longitude_sekolah']) ?>" placeholder="mis. 111.5231234">
+        <label class="siap-label siap-label-ios17">Longitude Sekolah</label>
+        <input type="text" name="longitude_sekolah" id="lngSekolah" class="siap-input siap-input-ios17" value="<?= e($settings['longitude_sekolah']) ?>" placeholder="mis. 111.5231234">
       </div>
       <div class="col-md-4">
-        <label class="form-label">Radius (meter)</label>
-        <input type="number" name="radius_meter" class="form-control" value="<?= e($settings['radius_meter']) ?>">
+        <label class="siap-label siap-label-ios17">Radius (meter)</label>
+        <input type="number" name="radius_meter" class="siap-input siap-input-ios17" value="<?= e($settings['radius_meter']) ?>">
       </div>
       <div class="col-12">
-        <button type="button" class="siap-btn siap-btn-ghost siap-mono-xs btn-sm" onclick="ambilLokasiSaatIni()" id="btnAmbilLokasi">
+        <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs btn-sm" onclick="ambilLokasiSaatIni()" id="btnAmbilLokasi">
           <i class="bi bi-geo-alt"></i> Ambil Lokasi Saat Ini
         </button>
         <span class="text-muted small ms-2">Berdiri di area sekolah lalu klik tombol ini untuk otomatis mengisi koordinat di atas (perlu izin lokasi browser).</span>
@@ -280,13 +281,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="form-text">Default: <strong>aktif</strong>. Bila aktif, perangkat siswa tidak lagi terdaftar otomatis saat scan pertama. Admin membuat QR Pasangan + Kode 6 angka (berlaku 10 menit, sekali pakai) dari menu Manajemen Perangkat atau Data Siswa; siswa memilih salah satu cara.</div>
       </div>
       <div class="col-md-6">
-        <label class="form-label">Durasi Token QR Gerbang (detik)</label>
-        <input type="number" name="qr_dinamis_durasi_detik" class="form-control" value="<?= e($settings['qr_dinamis_durasi_detik']) ?>">
+        <label class="siap-label siap-label-ios17">Durasi Token QR Gerbang (detik)</label>
+        <input type="number" name="qr_dinamis_durasi_detik" class="siap-input siap-input-ios17" value="<?= e($settings['qr_dinamis_durasi_detik']) ?>">
         <small class="text-muted">QR yang ditampilkan di monitor sekolah berganti otomatis setiap durasi ini.</small>
       </div>
       <div class="col-md-6">
-        <label class="form-label">Maksimal Reset Perangkat per Siswa / Bulan</label>
-        <input type="number" name="maks_reset_device_per_bulan" class="form-control" value="<?= e($settings['maks_reset_device_per_bulan']) ?>">
+        <label class="siap-label siap-label-ios17">Maksimal Reset Perangkat per Siswa / Bulan</label>
+        <input type="number" name="maks_reset_device_per_bulan" class="siap-input siap-input-ios17" value="<?= e($settings['maks_reset_device_per_bulan']) ?>">
       </div>
     </div>
   </div>
@@ -340,7 +341,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </div>
   </div>
 
-  <button type="submit" class="siap-btn siap-btn-blue siap-mono-xs"><i class="bi bi-save"></i> Simpan Pengaturan</button>
+  <button type="submit" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs"><i class="bi bi-save"></i> Simpan Pengaturan</button>
 </form>
 
 <script>

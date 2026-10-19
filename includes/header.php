@@ -92,8 +92,8 @@ if (can_any_modul(['device', 'kode_massal', 'security_log', 'log_aktivitas', 'pe
   <!-- Glow biru puncak halaman -->
   <div class="siap-glow-top"></div>
 
-  <!-- Topbar / Nav sticky (spesifikasi SIPIKET §4.2) -->
-  <nav class="siap-nav siap-window">
+  <!-- Topbar / Nav sticky (gaya iOS 17: radius besar, shadow halus, border lembut) -->
+  <nav class="siap-nav siap-card-ios17">
     <div class="siap-shell d-flex align-items-center justify-content-between flex-wrap gap-2">
       <!-- Brand -->
       <a href="<?= modul_url('dashboard') ?>" class="siap-brand d-flex align-items-center gap-2 text-decoration-none">

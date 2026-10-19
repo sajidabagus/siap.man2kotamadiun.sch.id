@@ -18,7 +18,7 @@ $qr = generate_qr_dinamis($lokasi);
 <style>
   body { background:var(--siap-bg); color:var(--siap-ink); height:100vh; display:flex; align-items:center; justify-content:center; }
   .box { text-align:center; }
-  #qrHolder { background:#fff; padding:16px; border-radius:12px; display:inline-flex; }
+  #qrHolder { background:rgba(255,255,255,0.9); padding:24px; border-radius:var(--siap-radius-window); box-shadow:var(--siap-shadow-card); display:inline-flex; border:1px solid var(--siap-line); }
   #countdown { font-size: 2rem; font-weight:bold; }
 </style>
 </head>
@@ -30,7 +30,7 @@ $qr = generate_qr_dinamis($lokasi);
     <div id="countdown"><?= (int)$qr['durasi_detik'] ?></div>
     <p class="text-muted small">Kode ini otomatis berganti secara berkala untuk keamanan.</p>
     <div class="no-print mt-3">
-      <a href="<?= e(modul_url('qr_gerbang', ['lokasi' => $lokasi])) ?>" class="siap-btn siap-btn-ghost siap-mono-xs btn-sm">Muat Ulang Sekarang</a>
+      <a href="<?= e(modul_url('qr_gerbang', ['lokasi' => $lokasi])) ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs btn-sm">Muat Ulang Sekarang</a>
     </div>
   </div>
 

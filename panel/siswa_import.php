@@ -150,10 +150,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   @media (max-width: 575px) { .im-dz { padding: 26px 14px; } }
 </style>
 
-<h4 class="mb-3"><i class="bi bi-upload"></i> Import Siswa</h4>
+<div class="siap-eyebrow siap-stack-sm">Data &amp; Kelas</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-upload"></i> Import Siswa</h2>
 
 <?php if ($errors): ?>
-  <div class="alert alert-danger"><?php foreach ($errors as $err) echo e($err) . '<br>'; ?></div>
+  <div class="siap-note siap-note-danger"><?php foreach ($errors as $err) echo e($err) . '<br>'; ?></div>
 <?php endif; ?>
 
 <?php if ($hasil): ?>
@@ -177,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="row g-3">
   <div class="col-lg-7">
-    <div class="tbl-card h-100">
+    <div class="ps-card ps-card-pad h-100">
       <div class="tbl-head">
         <h6>Unggah file</h6>
         <div class="sub">Format .csv atau .xlsx, maksimal data sesuai batas server.</div>
@@ -192,14 +193,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="nama" id="namaBerkas"></div>
           </label>
           <input type="file" name="file" id="berkas" accept=".csv,.xlsx" required hidden>
-          <button type="submit" class="siap-btn siap-btn-blue siap-mono-xs w-100 mt-3" id="btnImport" disabled><i class="bi bi-upload"></i> Import Sekarang</button>
+          <button type="submit" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs w-100 mt-3" id="btnImport" disabled><i class="bi bi-upload"></i> Import Sekarang</button>
         </form>
       </div>
     </div>
   </div>
 
   <div class="col-lg-5">
-    <div class="tbl-card h-100">
+    <div class="ps-card ps-card-pad h-100">
       <div class="tbl-head">
         <h6>Format kolom</h6>
         <div class="sub">Baris pertama harus header (dilewati otomatis).</div>
@@ -210,7 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <span>tanggal_lahir</span><span class="wajib">kelas</span><span>jurusan</span><span>tahun_pelajaran</span>
         </div>
         <div class="d-flex flex-wrap gap-2 mb-3">
-          <button type="button" class="siap-btn siap-btn-ghost siap-mono-xs btn-sm" id="btnTemplate"><i class="bi bi-download"></i> Unduh template</button>
+          <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs btn-sm" id="btnTemplate"><i class="bi bi-download"></i> Unduh template</button>
         </div>
         <ul class="im-cat">
           <li><span class="text-danger">*</span> wajib diisi, kolom lain boleh kosong.</li>

@@ -39,15 +39,16 @@ if (!$siswa) {
 $qrContent = BASE_URL . '/presensi/scan.php?token=' . $siswa['qr_token'];
 $logoFile = !empty($settings['logo']) ? $settings['logo'] : null;
 ?>
-<div class="konten-biasa">
+<div class="siap-eyebrow siap-stack-sm">QR Code</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-qr-code"></i> QR Code Siswa</h2>
+
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h4 class="mb-0"><i class="bi bi-qr-code"></i> QR Code Siswa</h4>
-  <a href="<?= modul_url('siswa') ?>" class="siap-btn siap-btn-ghost siap-mono-xs"><i class="bi bi-arrow-left"></i> Kembali ke Data Siswa</a>
+  <a href="<?= modul_url('siswa') ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs"><i class="bi bi-arrow-left"></i> Kembali ke Data Siswa</a>
 </div>
 
 <div class="row">
   <div class="col-md-5">
-    <div class="card text-center">
+    <div class="ps-card ps-card-pad text-center">
       <div class="card-body">
         <div id="qrHolder" class="mb-3 d-flex justify-content-center"></div>
         <h5 class="mb-1"><?= e($siswa['nama']) ?></h5>
@@ -55,12 +56,12 @@ $logoFile = !empty($settings['logo']) ? $settings['logo'] : null;
         <span class="siap-badge siap-badge-<?= $siswa['status'] === 'aktif' ? 'success' : 'info' ?> siap-mono-xs"><?= e($siswa['status']) ?></span>
 
         <div class="d-flex gap-2 justify-content-center mt-3">
-          <button class="siap-btn siap-btn-ghost siap-mono-xs" id="btnDownload"><i class="bi bi-download"></i> Download Gambar</button>
-          <?php if (can('qr_siswa.cetak')): ?><button type="button" class="siap-btn siap-btn-ghost siap-mono-xs" onclick="window.print()"><i class="bi bi-printer"></i> Cetak Kartu</button><?php endif; ?>
+          <button class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" id="btnDownload"><i class="bi bi-download"></i> Download Gambar</button>
+          <?php if (can('qr_siswa.cetak')): ?><button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" onclick="window.print()"><i class="bi bi-printer"></i> Cetak Kartu</button><?php endif; ?>
         </div>
         <?php if (can('qr_siswa.generate')): ?><form method="post" class="mt-3" onsubmit="return confirm('Yakin? QR Code lama tidak akan berlaku lagi.')">
           <?= csrf_field() ?>
-          <button type="submit" name="regenerate" value="1" class="siap-btn siap-btn-danger siap-mono-xs btn-sm">
+          <button type="submit" name="regenerate" value="1" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs btn-sm" style="background:var(--siap-danger-text);border:none">
             <i class="bi bi-arrow-repeat"></i> Regenerate QR Code
           </button>
         </form><?php endif; ?>
@@ -68,7 +69,7 @@ $logoFile = !empty($settings['logo']) ? $settings['logo'] : null;
     </div>
   </div>
   <div class="col-md-7">
-    <div class="card">
+    <div class="ps-card ps-card-pad">
       <div class="card-body">
         <h6>Catatan Keamanan</h6>
         <ul class="small text-muted mb-0">

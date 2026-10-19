@@ -57,21 +57,23 @@ $jurusanList = $db->query('SELECT DISTINCT jurusan FROM siswa WHERE jurusan IS N
 $queryString = bangun_query(compact('tanggal', 'kelas', 'jurusan', 'status'));
 $extraParams = compact('tanggal', 'kelas', 'jurusan', 'status') + ['limit' => $perPage];
 ?>
+<div class="siap-eyebrow siap-stack-sm">Presensi</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-calendar-check"></i> Data Presensi</h2>
+
 <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-3 mb-3">
-  <h4 class="mb-0"><i class="bi bi-calendar-check"></i> Data Presensi</h4>
   <div class="d-flex gap-2">
     <?php if (can('presensi.ekspor')): ?>
-    <a href="<?= e(modul_url('presensi_export', ['type' => 'csv'])) ?><?= $queryString !== '' ? '&amp;' . e($queryString) : '' ?>" data-live-href="<?= e(modul_url('presensi_export', ['type' => 'csv'])) ?>" data-live-from="#formFilter" class="siap-btn siap-btn-ghost siap-mono-xs flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2">
+    <a href="<?= e(modul_url('presensi_export', ['type' => 'csv'])) ?><?= $queryString !== '' ? '&amp;' . e($queryString) : '' ?>" data-live-href="<?= e(modul_url('presensi_export', ['type' => 'csv'])) ?>" data-live-from="#formFilter" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2" style="padding:0.375rem 0.875rem">
       <i class="bi bi-filetype-csv"></i><span><span class="d-none d-sm-inline">Export </span>CSV</span>
     </a>
     <?php endif; ?>
     <?php if (can('presensi.ekspor')): ?>
-    <a href="<?= e(modul_url('presensi_export', ['type' => 'excel'])) ?><?= $queryString !== '' ? '&amp;' . e($queryString) : '' ?>" data-live-href="<?= e(modul_url('presensi_export', ['type' => 'excel'])) ?>" data-live-from="#formFilter" class="siap-btn siap-btn-ghost siap-mono-xs flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2">
+    <a href="<?= e(modul_url('presensi_export', ['type' => 'excel'])) ?><?= $queryString !== '' ? '&amp;' . e($queryString) : '' ?>" data-live-href="<?= e(modul_url('presensi_export', ['type' => 'excel'])) ?>" data-live-from="#formFilter" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2" style="padding:0.375rem 0.875rem">
       <i class="bi bi-file-earmark-excel"></i><span><span class="d-none d-sm-inline">Export </span>Excel</span>
     </a>
     <?php endif; ?>
     <?php if (can('presensi.cetak')): ?>
-    <a href="<?= modul_url('presensi_print') ?><?= $queryString !== '' ? '?' . e($queryString) : '' ?>" data-live-href="<?= modul_url('presensi_print') ?>" data-live-from="#formFilter" target="_blank" class="siap-btn siap-btn-ghost siap-mono-xs flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2">
+    <a href="<?= modul_url('presensi_print') ?><?= $queryString !== '' ? '?' . e($queryString) : '' ?>" data-live-href="<?= modul_url('presensi_print') ?>" data-live-from="#formFilter" target="_blank" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2" style="padding:0.375rem 0.875rem">
       <i class="bi bi-printer"></i><span>Print</span>
     </a>
     <?php endif; ?>
@@ -86,22 +88,22 @@ $extraParams = compact('tanggal', 'kelas', 'jurusan', 'status') + ['limit' => $p
   <div class="tbl-tools no-print">
     <form method="get" data-live data-live-target="#hasil-live" id="formFilter"><?= hidden_modul() ?>
       <?= render_per_page_field($perPage, false) ?>
-        <input type="date" name="tanggal" class="form-control" value="<?= e($tanggal) ?>">
-        <select name="kelas" class="form-select">
+        <input type="date" name="tanggal" class="siap-input siap-input-ios17" value="<?= e($tanggal) ?>">
+        <select name="kelas" class="siap-input siap-input-ios17">
           <option value="">Semua Kelas</option>
           <?php foreach ($kelasList as $k): ?><option value="<?= e($k) ?>" <?= $kelas === $k ? 'selected' : '' ?>><?= e($k) ?></option><?php endforeach; ?>
         </select>
-        <select name="jurusan" class="form-select">
+        <select name="jurusan" class="siap-input siap-input-ios17">
           <option value="">Semua Jurusan</option>
           <?php foreach ($jurusanList as $j): ?><option value="<?= e($j) ?>" <?= $jurusan === $j ? 'selected' : '' ?>><?= e($j) ?></option><?php endforeach; ?>
         </select>
-        <select name="status" class="form-select">
+        <select name="status" class="siap-input siap-input-ios17">
           <option value="">Semua Status</option>
           <?php foreach (['HADIR', 'TERLAMBAT', 'IZIN', 'SAKIT', 'ALPA'] as $s): ?>
             <option value="<?= $s ?>" <?= $status === $s ? 'selected' : '' ?>><?= $s ?></option>
           <?php endforeach; ?>
         </select>
-          <a href="<?= modul_url('presensi') ?>" class="siap-btn siap-btn-ghost siap-mono-xs" title="Hapus semua filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
+          <a href="<?= modul_url('presensi') ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" title="Hapus semua filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
     </form>
   </div>
   <div id="hasil-live">

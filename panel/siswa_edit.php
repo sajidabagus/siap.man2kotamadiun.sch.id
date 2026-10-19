@@ -108,19 +108,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $kelasList = $db->query('SELECT DISTINCT kelas FROM siswa ORDER BY kelas')->fetchAll(PDO::FETCH_COLUMN);
 ?>
 <?php if (!$modal): ?>
+<div class="siap-eyebrow siap-stack-sm">Data &amp; Kelas</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-pencil-square"></i> Edit Siswa</h2>
+
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Edit Siswa</h4>
-  <a href="<?= modul_url('siswa') ?>" class="siap-btn siap-btn-ghost siap-mono-xs"><i class="bi bi-arrow-left"></i> Kembali ke Data Siswa</a>
+  <a href="<?= modul_url('siswa') ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs"><i class="bi bi-arrow-left"></i> Kembali ke Data Siswa</a>
 </div>
 <?php endif; ?>
 
 <?php if ($errors): ?>
-  <div class="alert alert-danger">
+  <div class="siap-note siap-note-danger">
     <ul class="mb-0"><?php foreach ($errors as $err) echo '<li>' . e($err) . '</li>'; ?></ul>
   </div>
 <?php endif; ?>
 
-<?php if (!$modal): ?><div class="card">
+<?php if (!$modal): ?><div class="ps-card ps-card-pad">
   <div class="card-body"><?php endif; ?>
     <form method="post" enctype="multipart/form-data" data-dirty-guard<?= $modal ? ' action="' . e(modul_url('siswa_edit', ['id' => (int) $id, 'modal' => 1])) . '" data-popup-form' : '' ?>>
       <?= csrf_field() ?>
@@ -135,37 +137,37 @@ $kelasList = $db->query('SELECT DISTINCT kelas FROM siswa ORDER BY kelas')->fetc
         <div class="col-md-9">
           <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label">NIS *</label>
-              <input type="text" name="nis" class="form-control" value="<?= e($siswa['nis']) ?>" required>
+              <label class="siap-label siap-label-ios17">NIS *</label>
+              <input type="text" name="nis" class="siap-input siap-input-ios17" value="<?= e($siswa['nis']) ?>" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label">NISN</label>
-              <input type="text" name="nisn" class="form-control" value="<?= e($siswa['nisn']) ?>">
+              <label class="siap-label siap-label-ios17">NISN</label>
+              <input type="text" name="nisn" class="siap-input siap-input-ios17" value="<?= e($siswa['nisn']) ?>">
             </div>
           </div>
         </div>
         <div class="col-md-4">
-          <label class="form-label">Nama Lengkap *</label>
-          <input type="text" name="nama" class="form-control" value="<?= e($siswa['nama']) ?>" required>
+          <label class="siap-label siap-label-ios17">Nama Lengkap *</label>
+          <input type="text" name="nama" class="siap-input siap-input-ios17" value="<?= e($siswa['nama']) ?>" required>
         </div>
         <div class="col-md-4">
-          <label class="form-label">Jenis Kelamin</label>
-          <select name="jenis_kelamin" class="form-select">
+          <label class="siap-label siap-label-ios17">Jenis Kelamin</label>
+          <select name="jenis_kelamin" class="siap-input siap-input-ios17">
             <option value="L" <?= $siswa['jenis_kelamin'] === 'L' ? 'selected' : '' ?>>Laki-laki</option>
             <option value="P" <?= $siswa['jenis_kelamin'] === 'P' ? 'selected' : '' ?>>Perempuan</option>
           </select>
         </div>
         <div class="col-md-4">
-          <label class="form-label">Tempat Lahir</label>
-          <input type="text" name="tempat_lahir" class="form-control" value="<?= e($siswa['tempat_lahir']) ?>">
+          <label class="siap-label siap-label-ios17">Tempat Lahir</label>
+          <input type="text" name="tempat_lahir" class="siap-input siap-input-ios17" value="<?= e($siswa['tempat_lahir']) ?>">
         </div>
         <div class="col-md-4">
-          <label class="form-label">Tanggal Lahir</label>
-          <input type="date" name="tanggal_lahir" class="form-control" value="<?= e($siswa['tanggal_lahir']) ?>">
+          <label class="siap-label siap-label-ios17">Tanggal Lahir</label>
+          <input type="date" name="tanggal_lahir" class="siap-input siap-input-ios17" value="<?= e($siswa['tanggal_lahir']) ?>">
         </div>
         <div class="col-md-4">
-          <label class="form-label">Kelas *</label>
-          <select name="kelas" id="selectKelas" class="form-select" required onchange="document.getElementById('wrapKelasBaru').classList.toggle('d-none', this.value !== '__baru__')">
+          <label class="siap-label siap-label-ios17">Kelas *</label>
+          <select name="kelas" id="selectKelas" class="siap-input siap-input-ios17" required onchange="document.getElementById('wrapKelasBaru').classList.toggle('d-none', this.value !== '__baru__')">
             <?php $kelasSekarang = $siswa['kelas']; $adaDiList = in_array($kelasSekarang, $kelasList, true); ?>
             <?php foreach ($kelasList as $k): ?>
               <option value="<?= e($k) ?>" <?= $kelasSekarang === $k ? 'selected' : '' ?>><?= e($k) ?></option>
@@ -176,21 +178,21 @@ $kelasList = $db->query('SELECT DISTINCT kelas FROM siswa ORDER BY kelas')->fetc
             <option value="__baru__">+ Kelas baru...</option>
           </select>
           <div id="wrapKelasBaru" class="d-none mt-2">
-            <input type="text" name="kelas_baru" class="form-control" placeholder="Ketik nama kelas baru, mis. XI-A">
+            <input type="text" name="kelas_baru" class="siap-input siap-input-ios17" placeholder="Ketik nama kelas baru, mis. XI-A">
           </div>
           <div class="form-text">Mengubah kelas akan tercatat di Log Keamanan. Riwayat presensi lama siswa tidak akan berubah.</div>
         </div>
         <div class="col-md-4">
-          <label class="form-label">Jurusan</label>
-          <input type="text" name="jurusan" class="form-control" value="<?= e($siswa['jurusan']) ?>">
+          <label class="siap-label siap-label-ios17">Jurusan</label>
+          <input type="text" name="jurusan" class="siap-input siap-input-ios17" value="<?= e($siswa['jurusan']) ?>">
         </div>
         <div class="col-md-6">
-          <label class="form-label">Ganti Foto</label>
-          <input type="file" name="foto" class="form-control" accept=".jpg,.jpeg,.png,.webp">
+          <label class="siap-label siap-label-ios17">Ganti Foto</label>
+          <input type="file" name="foto" class="siap-input siap-input-ios17" accept=".jpg,.jpeg,.png,.webp">
         </div>
         <div class="col-md-6">
-          <label class="form-label">Status</label>
-          <select name="status" class="form-select">
+          <label class="siap-label siap-label-ios17">Status</label>
+          <select name="status" class="siap-input siap-input-ios17">
             <option value="aktif" <?= $siswa['status'] === 'aktif' ? 'selected' : '' ?>>Aktif</option>
             <option value="nonaktif" <?= $siswa['status'] === 'nonaktif' ? 'selected' : '' ?>>Nonaktif</option>
           </select>
@@ -198,11 +200,11 @@ $kelasList = $db->query('SELECT DISTINCT kelas FROM siswa ORDER BY kelas')->fetc
       </div>
       <div class="mt-4<?= $modal ? ' d-flex justify-content-end gap-2' : '' ?>">
         <?php if ($modal): ?>
-          <button type="button" class="siap-btn siap-btn-ghost siap-mono-xs" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="siap-btn siap-btn-blue siap-mono-xs"><i class="bi bi-save"></i> Simpan Perubahan</button>
+          <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs"><i class="bi bi-save"></i> Simpan Perubahan</button>
         <?php else: ?>
-          <button type="submit" class="siap-btn siap-btn-blue siap-mono-xs"><i class="bi bi-save"></i> Simpan Perubahan</button>
-          <a href="<?= modul_url('siswa') ?>" class="siap-btn siap-btn-ghost siap-mono-xs">Batal</a>
+          <button type="submit" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs"><i class="bi bi-save"></i> Simpan Perubahan</button>
+          <a href="<?= modul_url('siswa') ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs">Batal</a>
         <?php endif; ?>
       </div>
     </form>

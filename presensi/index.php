@@ -64,7 +64,7 @@ $wajibGpsJs = !empty($settings['gps_aktif']) || ($infoGateSesi && !empty($infoGa
   </div>
 
   <?php if ($errorGate): ?>
-    <div class="siap-note siap-note-red" style="margin-top:0;margin-bottom:14px"><i class="bi bi-exclamation-triangle-fill"></i><div><?= e($errorGate) ?></div></div>
+    <div class="siap-note siap-note-danger" style="margin-top:0;margin-bottom:14px"><i class="bi bi-exclamation-triangle-fill"></i><div><?= e($errorGate) ?></div></div>
   <?php endif; ?>
 
   <?php if (!$gateValidInSession): ?>
@@ -123,7 +123,7 @@ $wajibGpsJs = !empty($settings['gps_aktif']) || ($infoGateSesi && !empty($infoGa
   <?php endif; ?>
 
   <div class="ps-alt d-none" id="altDaftar">
-    <button type="button" class="siap-btn siap-btn-ghost siap-mono-xs" id="btnBukaDaftar"><i class="bi bi-phone"></i> Daftarkan Perangkat</button>
+    <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" id="btnBukaDaftar"><i class="bi bi-phone"></i> Daftarkan Perangkat</button>
     <div class="ket">Perangkat belum terdaftar? Masukkan Kode Pasangan dari admin, atau scan QR Pasangan dengan kamera perangkat.</div>
   </div>
   <div class="ps-foot">SIAP ABSEN &copy; <?= date('Y') ?></div>
@@ -152,7 +152,7 @@ $wajibGpsJs = !empty($settings['gps_aktif']) || ($infoGateSesi && !empty($infoGa
                style="letter-spacing:.45em; font-size:1.5rem" placeholder="••••••">
       </div>
       <div id="ovErr" class="siap-note siap-note-red siap-copy-sm mt-2 d-none"></div>
-      <button type="button" id="btnKirimDaftar" class="siap-btn siap-btn-blue siap-mono-xs w-100 mt-3" disabled><i class="bi bi-phone"></i> Daftarkan Perangkat Ini</button>
+      <button type="button" id="btnKirimDaftar" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs w-100 mt-3" disabled><i class="bi bi-phone"></i> Daftarkan Perangkat Ini</button>
     </div>
 
     <div id="ovOk" class="siap-stack text-center d-none">
@@ -161,7 +161,7 @@ $wajibGpsJs = !empty($settings['gps_aktif']) || ($infoGateSesi && !empty($infoGa
       <p class="fw-bold mb-0" id="ovNama"></p>
       <p class="siap-copy-sm" id="ovKelas"></p>
       <div class="siap-note siap-note-info siap-copy-sm">Sekarang scan QR gerbang/kelas di sekolah untuk presensi. Gunakan <strong>browser yang sama</strong> dengan yang Anda pakai sekarang.</div>
-      <button type="button" class="siap-btn siap-btn-blue siap-mono-xs w-100" id="btnSelesaiDaftar">Selesai</button>
+      <button type="button" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs w-100" id="btnSelesaiDaftar">Selesai</button>
     </div>
   </div>
 </div>

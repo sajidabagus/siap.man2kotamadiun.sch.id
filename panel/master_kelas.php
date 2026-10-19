@@ -88,7 +88,8 @@ foreach ($dataKelas as $k) {
     $perJenjang[ambil_jenjang($k['kelas'])][] = $k;
 }
 ?>
-<h4 class="mb-3"><i class="bi bi-tags"></i> Master Kelas</h4>
+<div class="siap-eyebrow siap-stack-sm">Data &amp; Kelas</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-tags"></i> Master Kelas</h2>
 
 <?php
 // Ringkasan jumlah siswa aktif & jumlah kelas per jenjang (X, XI, XII)
@@ -106,8 +107,8 @@ $warnaJenjangCard = [
 ];
 ?>
 <style>
-  .stat-card { display: flex; align-items: center; gap: 16px; background: #fff; border: 1px solid var(--siap-line); border-radius: var(--siap-radius-card); padding: 18px 20px; height: 100%; box-shadow: var(--siap-shadow-card); }
-  .stat-card .ikon { width: 50px; height: 50px; border-radius: var(--siap-radius-mini); flex: none; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; }
+  .stat-card { display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.9); border: 1px solid var(--siap-line); border-radius: var(--siap-radius-window); padding: 18px 20px; height: 100%; box-shadow: var(--siap-shadow-card); }
+  .stat-card .ikon { width: 50px; height: 50px; border-radius: var(--siap-radius-window); flex: none; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; }
   .stat-card .label { font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--siap-muted); }
   .stat-card .angka { font-size: 1.9rem; font-weight: 700; line-height: 1.1; color: var(--siap-ink); }
   .stat-card .ket { font-size: .85rem; color: var(--siap-muted); }
@@ -128,12 +129,12 @@ $warnaJenjangCard = [
 </div>
 
 <?php if ($errors): ?>
-  <div class="alert alert-danger"><?php foreach ($errors as $err) echo e($err) . '<br>'; ?></div>
+  <div class="siap-note siap-note-danger"><?php foreach ($errors as $err) echo e($err) . '<br>'; ?></div>
 <?php endif; ?>
 
 <?php if (empty($dataKelas)): ?>
-  <div class="card"><div class="card-body">
-    <p class="text-muted mb-0">Belum ada data kelas.</p>
+  <div class="ps-card"><div class="ps-body text-center">
+    <p class="siap-copy-sm mb-0">Belum ada data kelas.</p>
   </div></div>
 <?php else: ?>
   <?php
@@ -215,14 +216,14 @@ $warnaJenjangCard = [
           </div>
           <div class="modal-body">
             <p class="mb-2">Mengganti nama kelas <strong id="labelNamaLama"></strong> menjadi:</p>
-            <input type="text" class="form-control" name="nama_baru" id="inputNamaBaru" placeholder="mis. XI-A" required>
-            <p id="peringatanGabung" class="text-warning small mt-2 d-none">
+            <input type="text" class="siap-input siap-input-ios17" name="nama_baru" id="inputNamaBaru" placeholder="mis. XI-A" required>
+            <p id="peringatanGabung" class="siap-copy-sm mt-2 d-none" style="color:var(--siap-warning-text)">
               <i class="bi bi-exclamation-triangle"></i> Nama ini sudah dipakai kelas lain — siswa akan otomatis digabung ke kelas tersebut.
             </p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="siap-btn siap-btn-ghost siap-mono-xs" data-bs-dismiss="modal">Batal</button>
-            <button type="submit" class="siap-btn siap-btn-blue siap-mono-xs"><i class="bi bi-check2-circle"></i> Simpan</button>
+            <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs"><i class="bi bi-check2-circle"></i> Simpan</button>
           </div>
         </form>
       </div>

@@ -57,7 +57,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   .bd-hero {
     background: #fff;
     border: 1px solid var(--siap-line);
-    border-radius: var(--siap-radius-card);
+    border-radius: var(--siap-radius-window);
     box-shadow: var(--siap-shadow-card);
     padding: 1.5rem 1.25rem;
     margin-bottom: 1rem;
@@ -117,7 +117,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   .bd-card {
     background: #fff;
     border: 1px solid var(--siap-line);
-    border-radius: var(--siap-radius-card);
+    border-radius: var(--siap-radius-window);
     box-shadow: var(--siap-shadow-card);
     padding: 1.25rem 1rem;
   }
@@ -200,7 +200,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
     padding: 0.625rem; border-radius: var(--siap-radius-mini); cursor: pointer;
     color: var(--siap-muted); display: flex; align-items: center; justify-content: center; gap: 0.5rem;
   }
-  .bd-tab button.aktif { background: #fff; color: var(--siap-ink2); box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08); }
+  .bd-tab button.aktif { background: #fff; color: var(--siap-ink2); box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08); border-radius: var(--siap-radius-window); }
   .bd-field { margin-bottom: 1rem; position: relative; }
   .bd-field .siap-label { margin-bottom: 0.375rem; }
   .bd-field .siap-input { min-height: var(--siap-tap-target); padding: 0.625rem 1rem; }
@@ -243,7 +243,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
           <div class="siap-copy-sm">Absensi Siswa</div>
         </div>
       </a>
-      <a href="<?= BASE_URL ?>/login.php" class="bd-btn-masuk"><i class="bi bi-box-arrow-in-right"></i> Masuk</a>
+      <a href="<?= BASE_URL ?>/login.php" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs"><i class="bi bi-box-arrow-in-right"></i> Masuk</a>
     </div>
 
     <div class="bd-hero">
@@ -257,9 +257,9 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
         </div>
       </div>
       <div class="bd-aksi">
-        <button type="button" class="bd-btn bd-btn-blue" id="btnScan"><i class="bi bi-qr-code-scan"></i> Scan Absen</button>
+        <button type="button" class="siap-btn-ios17 siap-btn-ios17-blue" id="btnScan" style="width:100%"><i class="bi bi-qr-code-scan"></i> Scan Absen</button>
         <div class="siap-copy-sm" id="statusHp" style="text-align:center">Memeriksa perangkat…</div>
-        <button type="button" class="bd-btn bd-btn-ghost bd-hide" id="btnDaftar"><i class="bi bi-phone"></i> Daftarkan Perangkat</button>
+        <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost bd-hide" id="btnDaftar" style="width:100%"><i class="bi bi-phone"></i> Daftarkan Perangkat</button>
       </div>
     </div>
 
@@ -307,8 +307,8 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
     <h3 id="belumJudul">Perangkat Belum Terdaftar</h3>
     <p class="siap-copy-sm" id="belumIsi">Untuk absensi, perangkat ini harus terlebih dahulu dihubungkan dengan akun siswa.</p>
     <div class="bd-baris-tombol">
-      <button type="button" class="siap-btn siap-btn-blue siap-mono-xs" id="belumDaftar"><i class="bi bi-phone"></i> Daftarkan Perangkat</button>
-      <button type="button" class="siap-btn siap-btn-ghost siap-mono-xs" id="belumBatal">Batal</button>
+      <button type="button" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs" id="belumDaftar"><i class="bi bi-phone"></i> Daftarkan Perangkat</button>
+      <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" id="belumBatal">Batal</button>
     </div>
   </div>
 </div>
@@ -342,14 +342,14 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
           <button type="button" class="bd-eye" id="toggleKode" aria-label="Tampilkan kode"><i class="bi bi-eye-slash-fill"></i></button>
         </div>
         <div class="bd-err" id="errKode"></div>
-        <button type="button" class="siap-btn siap-btn-blue siap-mono-xs" id="btnKirim" style="width:100%;margin-top:1rem" disabled><i class="bi bi-phone"></i> Daftarkan Perangkat Ini</button>
+        <button type="button" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs" id="btnKirim" style="width:100%;margin-top:1rem" disabled><i class="bi bi-phone"></i> Daftarkan Perangkat Ini</button>
       </div>
 
       <div id="paneQr" class="bd-hide">
         <p class="siap-copy-sm" style="margin:0 0 0.75rem">Arahkan kamera ke <strong>QR Pasangan</strong> yang ditampilkan admin.</p>
         <div id="bdQrBox"><div><i class="bi bi-camera" style="font-size:2rem"></i><div style="margin-top:0.5rem">Kamera belum aktif</div></div></div>
         <div class="bd-err" id="errQr"></div>
-        <button type="button" class="siap-btn siap-btn-blue siap-mono-xs" id="btnKamera" style="width:100%;margin-top:0.75rem"><i class="bi bi-camera-video"></i> Aktifkan Kamera</button>
+        <button type="button" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs" id="btnKamera" style="width:100%;margin-top:0.75rem"><i class="bi bi-camera-video"></i> Aktifkan Kamera</button>
         <div class="bd-info">Bisa juga memindai QR Pasangan dengan <strong>kamera bawaan perangkat</strong>, lalu ketuk <em>Daftarkan Perangkat Ini</em>.</div>
       </div>
     </div>
@@ -360,7 +360,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
       <p style="font-weight:800;margin-top:0.5rem" id="okNama"></p>
       <p style="color:var(--siap-muted);font-size:0.875rem" id="okKelas"></p>
       <div class="bd-info">Sekarang tekan <strong>Scan Absen</strong> untuk presensi. Gunakan <strong>browser yang sama</strong> dengan yang Anda pakai sekarang.</div>
-      <button type="button" class="siap-btn siap-btn-blue siap-mono-xs" id="dfSelesai" style="width:100%;margin-top:1rem">Selesai</button>
+      <button type="button" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs" id="dfSelesai" style="width:100%;margin-top:1rem">Selesai</button>
     </div>
   </div>
 </div>

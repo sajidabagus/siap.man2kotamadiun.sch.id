@@ -210,14 +210,14 @@ $logoFile = !empty($settings['logo']) ? $settings['logo'] : null;
   <div class="container py-4 no-print">
     <div class="d-flex justify-content-between mb-3">
       <form method="get" class="d-flex gap-2"><?= hidden_modul() ?>
-        <select name="kelas" class="form-select form-select-sm" onchange="this.form.submit()">
+        <select name="kelas" class="siap-input siap-input-ios17 form-select-sm" onchange="this.form.submit()">
           <option value="">-- Cetak Massal per Kelas --</option>
           <?php foreach ($kelasList as $k): ?>
             <option value="<?= e($k) ?>" <?= $kelas === $k ? 'selected' : '' ?>><?= e($k) ?></option>
           <?php endforeach; ?>
         </select>
       </form>
-      <button class="siap-btn siap-btn-blue siap-mono-xs btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Cetak</button>
+      <button class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Cetak</button>
     </div>
     <p class="text-muted small mb-0">
       <?= count($daftar) ?> kartu QR siswa &middot; ukuran kartu 6 &times; 9 cm &middot; 9 kartu/halaman A4 Potrait (susunan 3&times;3) &middot; otomatis lanjut ke halaman berikutnya jika tidak muat

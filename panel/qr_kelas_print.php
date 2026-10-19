@@ -215,7 +215,7 @@ body { background: var(--siap-bg); font-family: Arial, Helvetica, sans-serif; co
 <div class="toolbar d-flex justify-content-between align-items-center flex-wrap gap-2">
   <div class="d-flex gap-2 flex-wrap">
     <form method="get" class="d-flex gap-2"><?= hidden_modul() ?>
-      <select name="jenjang" class="form-select form-select-sm" onchange="this.form.submit()">
+      <select name="jenjang" class="siap-input siap-input-ios17 form-select-sm" onchange="this.form.submit()">
         <option value="">-- Per Jenjang --</option>
         <?php foreach (['X', 'XI', 'XII', 'Lainnya'] as $j): ?>
           <option value="<?= e($j) ?>" <?= $jenjangFilter === $j ? 'selected' : '' ?>>Jenjang <?= e($j) ?></option>
@@ -223,16 +223,16 @@ body { background: var(--siap-bg); font-family: Arial, Helvetica, sans-serif; co
       </select>
     </form>
     <form method="get" class="d-flex gap-2"><?= hidden_modul() ?>
-      <select name="kelas" class="form-select form-select-sm" onchange="this.form.submit()">
+      <select name="kelas" class="siap-input siap-input-ios17 form-select-sm" onchange="this.form.submit()">
         <option value="">-- Cetak Semua Kelas --</option>
         <?php foreach ($kelasList as $k): ?>
           <option value="<?= e($k) ?>" <?= $kelasFilter === $k ? 'selected' : '' ?>>Kelas <?= e($k) ?></option>
         <?php endforeach; ?>
       </select>
     </form>
-    <a href="<?= modul_url('qr_kelas') ?>" class="siap-btn siap-btn-ghost siap-mono-xs btn-sm">Kembali</a>
+    <a href="<?= modul_url('qr_kelas') ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs btn-sm">Kembali</a>
   </div>
-  <button class="siap-btn siap-btn-blue siap-mono-xs btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Cetak</button>
+  <button class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Cetak</button>
 </div>
 
 <?php if ($mode === 'grid' && !empty($dataKelas)): ?>

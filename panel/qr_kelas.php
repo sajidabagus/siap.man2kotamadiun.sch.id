@@ -47,7 +47,7 @@ if ($kelas !== '') {
 
       body { background:var(--siap-bg); color:var(--siap-ink); min-height:100vh; display:flex; align-items:center; justify-content:center; padding: 24px; }
       .box { text-align:center; max-width: 420px; }
-      #qrHolder { background:#fff; padding:16px; border-radius:12px; display:inline-flex; }
+      #qrHolder { background:rgba(255,255,255,0.9); padding:24px; border-radius:var(--siap-radius-window); box-shadow:var(--siap-shadow-card); display:inline-flex; border:1px solid var(--siap-line); }
       .badge-kelas { font-size: 1.1rem; padding: 8px 18px; }
 
       /* ===== Area cetak (poster, format sama dgn versi cetak lama) =====
@@ -101,9 +101,9 @@ if ($kelas !== '') {
         <p class="text-muted small mb-3">QR permanen untuk kelas ini — hanya berlaku bagi siswa kelas <?= e($kelas) ?>, aman dicetak dan ditempel.</p>
 
         <div class="d-flex gap-2 justify-content-center mt-3 flex-wrap">
-          <a href="<?= modul_url('qr_kelas') ?>" class="siap-btn siap-btn-ghost siap-mono-xs btn-sm">Ganti Kelas</a>
-          <?php if (can('qr_kelas.cetak')): ?><button type="button" class="siap-btn siap-btn-ghost siap-mono-xs btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Cetak Kartu Ini</button><?php endif; ?>
-          <?php if (can('qr_kelas.generate')): ?><button type="button" class="siap-btn siap-btn-danger siap-mono-xs btn-sm" data-bs-toggle="modal" data-bs-target="#modalRegen">
+          <a href="<?= modul_url('qr_kelas') ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs btn-sm">Ganti Kelas</a>
+          <?php if (can('qr_kelas.cetak')): ?><button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Cetak Kartu Ini</button><?php endif; ?>
+          <?php if (can('qr_kelas.generate')): ?><button type="button" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs btn-sm" data-bs-toggle="modal" data-bs-target="#modalRegen" style="background:var(--siap-danger-text);border:none">
             <i class="bi bi-arrow-repeat"></i> Regenerate QR Ini
           </button><?php endif; ?>
         </div>
@@ -125,8 +125,8 @@ if ($kelas !== '') {
                 <strong>langsung tidak berlaku</strong> setelah ini. Pastikan Anda akan mengganti QR fisiknya juga.</p>
               </div>
               <div class="modal-footer">
-                <button type="button" class="siap-btn siap-btn-ghost siap-mono-xs" data-bs-dismiss="modal">Batal</button>
-                <button type="submit" name="regenerate" value="1" class="siap-btn siap-btn-danger siap-mono-xs">Ya, Regenerate</button>
+                <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" name="regenerate" value="1" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs" style="background:var(--siap-danger-text);border:none">Ya, Regenerate</button>
               </div>
             </form>
           </div>
@@ -204,15 +204,18 @@ foreach ($kelasList as $k) {
     if (!isset($tokenPerKelas[$k])) $tokenPerKelas[$k] = get_or_create_qr_kelas($k)['token'];
 }
 ?>
+<div class="siap-eyebrow siap-stack-sm">QR Code</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-easel2"></i> QR Kelas</h2>
+
 <div class="konten-biasa">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-0"><i class="bi bi-easel2"></i> QR Kelas</h4>
-    <?php if (can('qr_kelas.cetak')): ?><button type="button" class="siap-btn siap-btn-ghost siap-mono-xs" onclick="cetakKelasGrid(null)"><i class="bi bi-printer"></i> Cetak Semua QR Kelas</button><?php endif; ?>
+    <div></div>
+    <?php if (can('qr_kelas.cetak')): ?><button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" onclick="cetakKelasGrid(null)"><i class="bi bi-printer"></i> Cetak Semua QR Kelas</button><?php endif; ?>
   </div>
 
   <?php if (empty($kelasList)): ?>
-    <div class="card"><div class="card-body">
-      <p class="text-muted mb-0">Belum ada data kelas. Tambahkan siswa terlebih dahulu di menu Data Siswa.</p>
+    <div class="ps-card"><div class="ps-body text-center">
+      <p class="siap-copy-sm mb-0">Belum ada data kelas. Tambahkan siswa terlebih dahulu di menu Data Siswa.</p>
     </div></div>
   <?php else: ?>
     <?php foreach ($perJenjang as $jenjang => $daftarKelasJenjang): ?>
@@ -295,8 +298,8 @@ foreach ($kelasList as $k) {
 @media (max-width: 992px) { .col-kelas { width: calc(100% / 3); } }
 @media (max-width: 768px) { .col-kelas { width: calc(100% / 2); } }
 .kelas-card {
-  border-radius: 14px;
-  border: 1px solid #e3e6ea;
+  border-radius: var(--siap-radius-window);
+  border: 1px solid var(--siap-line);
   transition: box-shadow .15s ease, transform .15s ease;
 }
 .kelas-card:hover {
@@ -305,7 +308,7 @@ foreach ($kelasList as $k) {
   border-color: #1f8f94;
 }
 .qr-thumb {
-  width: 74px; height: 74px; border-radius: 10px;
+  width: 74px; height: 74px; border-radius: var(--siap-radius-mini);
   background: #fff; border: 1px solid #eef0f2;
   display: flex; align-items: center; justify-content: center; overflow: hidden;
 }

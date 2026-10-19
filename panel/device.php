@@ -187,7 +187,8 @@ $perJenjangAktif = kelompokkan_per_jenjang($kelasAktif);
 $sasaranAwal = ($kelas !== '' && isset($massal['kelas:' . $kelas])) ? 'kelas:' . $kelas
   : (($jenjang !== '' && isset($massal['jenjang:' . $jenjang])) ? 'jenjang:' . $jenjang : '');
 ?>
-<h4 class="mb-3"><i class="bi bi-phone"></i> Manajemen Perangkat</h4>
+<div class="siap-eyebrow siap-stack-sm">Sistem &amp; Keamanan</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-phone"></i> Manajemen Perangkat</h2>
 
 <div class="tbl-card">
   <div class="tbl-head d-flex flex-wrap justify-content-between align-items-center gap-2">
@@ -219,18 +220,18 @@ $sasaranAwal = ($kelas !== '' && isset($massal['kelas:' . $kelas])) ? 'kelas:' .
           <option value="BLOCKED" <?= $statusFilter === 'BLOCKED' ? 'selected' : '' ?>>BLOCKED</option>
         </select>
       <?php if ($bolehKelola): ?>
-        <button type="button" id="btnResetTerpilih" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#resetMassalModal" disabled
-                title="Reset perangkat siswa yang dicentang pada tabel">
-          <i class="bi bi-arrow-repeat"></i> Reset <span class="badge bg-dark ms-1" id="btnResetN">0</span>
+        <button type="button" id="btnResetTerpilih" class="siap-btn-ios17 siap-btn-ios17-blue" data-bs-toggle="modal" data-bs-target="#resetMassalModal" disabled
+                title="Reset perangkat siswa yang dicentang pada tabel" style="width:auto">
+          <i class="bi bi-arrow-repeat"></i> Reset <span class="siap-badge siap-badge-info ms-1" id="btnResetN">0</span>
         </button>
       <?php endif; ?>
     </form>
     <?php if ($bolehKelola): ?>
       <!-- Bilah pilihan (di luar #hasil-live supaya tidak tergantikan saat pencarian langsung) -->
-      <div id="barPilih" class="alert alert-warning py-2 px-3 small mb-0 w-100 d-none">
+      <div id="barPilih" class="siap-note siap-note-warning py-2 px-3 small mb-0 w-100 d-none">
         <b id="barN">0</b> siswa dipilih untuk direset.
-        <button type="button" id="barSemuaFilter" class="btn btn-link btn-sm p-0 ms-2 d-none text-decoration-none">Pilih semua <span id="barM"></span> hasil filter</button>
-        <button type="button" id="barKosong" class="btn btn-link btn-sm p-0 ms-2 text-decoration-none">Kosongkan pilihan</button>
+        <button type="button" id="barSemuaFilter" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs p-0 ms-2 d-none text-decoration-none" style="padding:0">Pilih semua <span id="barM"></span> hasil filter</button>
+        <button type="button" id="barKosong" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs p-0 ms-2 text-decoration-none" style="padding:0">Kosongkan pilihan</button>
       </div>
     <?php endif; ?>
   </div>
@@ -260,7 +261,7 @@ $sasaranAwal = ($kelas !== '' && isset($massal['kelas:' . $kelas])) ? 'kelas:' .
                 <?php endif; ?>
               </td>
             <?php endif; ?>
-            <td><?= e($d['nama']) ?><?= $d['siswa_status'] !== 'aktif' ? ' <span class="badge bg-light text-muted border">nonaktif</span>' : '' ?><br><small class="text-muted">NISN: <?= e($d['nisn'] ?: '-') ?></small></td>
+            <td><?= e($d['nama']) ?><?= $d['siswa_status'] !== 'aktif' ? ' <span class="siap-badge siap-badge-info siap-mono-xs">nonaktif</span>' : '' ?><br><small class="text-muted">NISN: <?= e($d['nisn'] ?: '-') ?></small></td>
             <td><?= e($d['kelas']) ?></td>
             <td class="d-none d-md-table-cell"><?= e($d['device_name'] ?? '-') ?></td>
             <td class="d-none d-lg-table-cell"><?= $d['registered_at'] ? e(date('d/m/Y', strtotime($d['registered_at']))) . '<br><small class="text-muted">' . e(date('H:i', strtotime($d['registered_at']))) . '</small>' : '-' ?></td>
@@ -280,12 +281,12 @@ $sasaranAwal = ($kelas !== '' && isset($massal['kelas:' . $kelas])) ? 'kelas:' .
                   <?= csrf_field() ?>
                   <input type="hidden" name="siswa_id" value="<?= $d['siswa_id'] ?>">
                   <?php if ($d['device_status'] === 'ACTIVE'): ?>
-                    <button type="submit" name="aksi" value="blokir" class="btn btn-sm btn-outline-danger" onclick="return confirm(<?= e(json_encode('Blokir perangkat ' . $d['nama'] . '?', JSON_UNESCAPED_UNICODE)) ?>)">Blokir</button>
+                    <button type="submit" name="aksi" value="blokir" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" onclick="return confirm(<?= e(json_encode('Blokir perangkat ' . $d['nama'] . '?', JSON_UNESCAPED_UNICODE)) ?>)">Blokir</button>
                   <?php else: ?>
-                    <button type="submit" name="aksi" value="aktifkan" class="btn btn-sm btn-outline-success">Aktifkan</button>
+                    <button type="submit" name="aksi" value="aktifkan" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs">Aktifkan</button>
                   <?php endif; ?>
                 </form>
-                <button type="button" class="siap-btn siap-btn-ghost siap-mono-xs" data-bs-toggle="modal" data-bs-target="#resetModal<?= $d['siswa_id'] ?>">Reset</button>
+                <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" data-bs-toggle="modal" data-bs-target="#resetModal<?= $d['siswa_id'] ?>">Reset</button>
 
                 <div class="modal fade" id="resetModal<?= $d['siswa_id'] ?>" tabindex="-1">
                   <div class="modal-dialog">
@@ -293,17 +294,14 @@ $sasaranAwal = ($kelas !== '' && isset($massal['kelas:' . $kelas])) ? 'kelas:' .
                       <form method="post">
                         <?= csrf_field() ?>
                         <input type="hidden" name="siswa_id" value="<?= $d['siswa_id'] ?>">
-                        <div class="modal-header bg-danger text-white">
+                        <div class="modal-header" style="background:var(--siap-danger-text);color:#fff;border-radius:var(--siap-radius-window) var(--siap-radius-window) 0 0">
                           <h6 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-1"></i> Peringatan: Reset Perangkat</h6>
                           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
                         </div>
                         <div class="modal-body">
-                          <div class="alert alert-danger small">
-                           Perangkat terdaftar milik <b><?= e($d['nama']) ?></b> akan <b>dihapus</b> dan tidak dapat dipulihkan.
-                            Siswa harus mendaftarkan perangkat baru pada presensi berikutnya, dan reset ini dihitung dalam batas reset bulanan.
-                          </div>
-                          <label class="form-label small">Alasan reset</label>
-                          <input type="text" name="reason" class="form-control mb-3" maxlength="200" placeholder="Perangkat hilang / rusak / ganti perangkat" required>
+                          <div class="siap-note siap-note-danger" style="margin-bottom:1rem"><i class="bi bi-exclamation-triangle-fill"></i><div>Perangkat terdaftar milik <b><?= e($d['nama']) ?></b> akan <b>dihapus</b> dan tidak dapat dipulihkan. Siswa harus mendaftarkan perangkat baru pada presensi berikutnya, dan reset ini dihitung dalam batas reset bulanan.</div></div>
+                          <label class="siap-label siap-label-ios17">Alasan reset</label>
+                          <input type="text" name="reason" class="siap-input siap-input-ios17 mb-3" maxlength="200" placeholder="Perangkat hilang / rusak / ganti perangkat" required>
                           <div class="form-check">
                             <input class="form-check-input js-setuju-reset" type="checkbox" name="setuju" value="1" id="setuju<?= (int) $d['siswa_id'] ?>" required>
                             <label class="form-check-label small" for="setuju<?= (int) $d['siswa_id'] ?>">
@@ -312,15 +310,15 @@ $sasaranAwal = ($kelas !== '' && isset($massal['kelas:' . $kelas])) ? 'kelas:' .
                           </div>
                         </div>
                         <div class="modal-footer">
-                          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                          <button type="submit" name="aksi" value="reset" class="btn btn-danger js-kirim-reset" disabled>Ya, Reset Perangkat</button>
+                          <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" data-bs-dismiss="modal">Batal</button>
+                          <button type="submit" name="aksi" value="reset" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs js-kirim-reset" disabled>Ya, Reset Perangkat</button>
                         </div>
                       </form>
                     </div>
                   </div>
                 </div>
               <?php else: ?>
-                <a href="#" data-popup="<?= e(modul_url('kode_pasangan', ['siswa_id' => (int) $d['siswa_id']])) ?>" data-popup-title="Kode Pasangan — <?= e($d['nama']) ?>" class="siap-btn siap-btn-ghost siap-mono-xs"><i class="bi bi-key"></i> Kode Pasangan</a>
+                <a href="#" data-popup="<?= e(modul_url('kode_pasangan', ['siswa_id' => (int) $d['siswa_id']])) ?>" data-popup-title="Kode Pasangan — <?= e($d['nama']) ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs"><i class="bi bi-key"></i> Kode Pasangan</a>
               <?php endif; ?>
               <?php endif; ?>
             </div>
@@ -387,34 +385,34 @@ $sasaranAwal = ($kelas !== '' && isset($massal['kelas:' . $kelas])) ? 'kelas:' .
 
           <!-- Checklist siswa -->
           <div id="rmDaftarWrap" class="d-none mb-2">
-            <input type="text" id="rmCari" class="form-control form-control-sm mb-2" placeholder="Cari nama atau NISN di daftar..." autocomplete="off">
+            <input type="text" id="rmCari" class="siap-input siap-input-ios17 mb-2" placeholder="Cari nama atau NISN di daftar..." autocomplete="off">
             <div class="d-flex justify-content-between align-items-center mb-1 small">
               <span id="rmHitung" class="text-muted"></span>
               <span>
-                <button type="button" id="rmPilihSemua" class="btn btn-link btn-sm p-0 me-3 text-decoration-none">Pilih semua</button>
-                <button type="button" id="rmKosongkan" class="btn btn-link btn-sm p-0 text-decoration-none">Kosongkan</button>
+                <button type="button" id="rmPilihSemua" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs p-0 me-3 text-decoration-none" style="padding:0">Pilih semua</button>
+                <button type="button" id="rmKosongkan" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs p-0 text-decoration-none" style="padding:0">Kosongkan</button>
               </span>
             </div>
             <div id="rmDaftar" class="border rounded bg-white" style="max-height:250px;overflow:auto"></div>
             <div class="form-text">"Pilih semua" dan "Kosongkan" hanya berlaku untuk siswa yang sedang tampil (sesuai pencarian).</div>
           </div>
           <input type="hidden" name="siswa_ids" id="rmIds" value="">
-          <div id="rmRingkasan" class="alert alert-secondary py-2 small mb-3">Pilih sasaran untuk menampilkan daftar siswa.</div>
+          <div id="rmRingkasan" class="siap-note siap-note-info py-2 small mb-3">Pilih sasaran untuk menampilkan daftar siswa.</div>
 
           <label class="form-label small">Alasan reset</label>
           <input type="text" name="reason" class="form-control" maxlength="200" placeholder="Mis. Awal semester ganjil 2026/2027" required>
           <div class="form-text">Reset massal tidak mengurangi jatah reset bulanan masing-masing siswa. Setiap siswa tetap tercatat di log reset.</div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-          <button type="button" class="btn btn-warning" id="rmLanjut" disabled>Lanjut ke Konfirmasi <i class="bi bi-arrow-right"></i></button>
+          <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" data-bs-dismiss="modal">Batal</button>
+          <button type="button" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs" id="rmLanjut" disabled>Lanjut ke Konfirmasi <i class="bi bi-arrow-right"></i></button>
         </div>
         </div>
 
         <!-- LANGKAH 2: peringatan & persetujuan akhir -->
         <div id="rmLangkah2" class="d-none">
           <div class="modal-body">
-            <div class="alert alert-danger">
+            <div class="siap-note siap-note-danger">
               <div class="fw-bold mb-1"><i class="bi bi-exclamation-octagon-fill"></i> Tindakan ini berbahaya dan TIDAK DAPAT DIBATALKAN</div>
               Perangkat terdaftar akan <b>dihapus</b>. Setiap siswa terkait harus mendaftarkan perangkat baru sebelum bisa presensi lagi.
             </div>
@@ -426,11 +424,11 @@ $sasaranAwal = ($kelas !== '' && isset($massal['kelas:' . $kelas])) ? 'kelas:' .
               <tr><th>Alasan</th><td id="rmKonAlasan"></td></tr>
             </table>
             <label class="form-label small" for="rmKonfirmasi">Untuk menyetujui, ketik <b class="text-danger">RESET</b> (huruf besar) lalu tekan tombol:</label>
-            <input type="text" name="konfirmasi" id="rmKonfirmasi" class="form-control" autocomplete="off" placeholder="RESET">
+            <input type="text" name="konfirmasi" id="rmKonfirmasi" class="siap-input siap-input-ios17" autocomplete="off" placeholder="RESET">
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" id="rmKembali"><i class="bi bi-arrow-left"></i> Kembali</button>
-            <button type="submit" class="btn btn-danger" id="rmKirim" disabled>Ya, Reset Sekarang</button>
+            <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" id="rmKembali"><i class="bi bi-arrow-left"></i> Kembali</button>
+            <button type="submit" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs" id="rmKirim" disabled>Ya, Reset Sekarang</button>
           </div>
         </div>
       </form>
@@ -577,7 +575,7 @@ $sasaranAwal = ($kelas !== '' && isset($massal['kelas:' . $kelas])) ? 'kelas:' .
       baris.appendChild(c); baris.appendChild(isi);
       if (x.b) {
         var lb = teks(document.createElement('span'), cek.checked ? 'BLOCKED' : 'BLOCKED – dilewati');
-        lb.className = 'badge bg-danger align-self-center'; baris.appendChild(lb);
+        lb.className = 'siap-badge siap-badge-danger align-self-center'; baris.appendChild(lb);
       }
       wadah.appendChild(baris);
     });

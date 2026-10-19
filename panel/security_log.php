@@ -55,7 +55,8 @@ $resetLogs = $db->query(
      ORDER BY rl.created_at DESC LIMIT " . $perPage . " OFFSET $offset2"
 )->fetchAll();
 ?>
-<h4 class="mb-3"><i class="bi bi-shield-exclamation"></i> Log Keamanan</h4>
+<div class="siap-eyebrow siap-stack-sm">Sistem &amp; Keamanan</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-shield-exclamation"></i> Log Keamanan</h2>
 
 <ul class="nav nav-pills mb-3 flex-nowrap overflow-auto pb-1" role="tablist" style="white-space:nowrap">
   <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tabSecurity" type="button" role="tab"><i class="bi bi-shield-exclamation"></i> Aktivitas Keamanan</button></li>
@@ -73,13 +74,13 @@ $resetLogs = $db->query(
   <div class="tbl-tools">
     <form method="get" data-live data-live-target="#hasil-live"><?= hidden_modul() ?>
       <?= render_per_page_field($perPage, false) ?>
-              <div class="tbl-search"><i class="bi bi-search"></i><input type="text" name="siswa" class="form-control" placeholder="Cari NISN siswa..." value="<?= e($siswaQ) ?>"></div>
-              <select name="event" class="form-select">
+              <div class="tbl-search"><i class="bi bi-search"></i><input type="text" name="siswa" class="siap-input siap-input-ios17" placeholder="Cari NISN siswa..." value="<?= e($siswaQ) ?>"></div>
+              <select name="event" class="siap-input siap-input-ios17">
           <option value="">Semua Event</option>
           <?php foreach ($eventList as $ev): ?><option value="<?= $ev ?>" <?= $event===$ev?'selected':'' ?>><?= $ev ?></option><?php endforeach; ?>
         </select>
-        <input type="date" name="tanggal" class="form-control" value="<?= e($tanggal) ?>">
-          <a href="<?= modul_url('security_log') ?>" class="siap-btn siap-btn-ghost siap-mono-xs" title="Hapus semua filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
+        <input type="date" name="tanggal" class="siap-input siap-input-ios17" value="<?= e($tanggal) ?>">
+          <a href="<?= modul_url('security_log') ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" title="Hapus semua filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
     </form>
   </div>
   <div id="hasil-live">

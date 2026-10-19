@@ -87,11 +87,12 @@ sort($kelasList);
 $perJenjang = kelompokkan_per_jenjang($kelasList);
 $totalSiswaAktif = array_sum($jumlahPerKelas);
 ?>
-<h4 class="mb-3"><i class="bi bi-arrow-up-square"></i> Kenaikan Kelas</h4>
+<div class="siap-eyebrow siap-stack-sm">Data &amp; Kelas</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-arrow-up-square"></i> Kenaikan Kelas</h2>
 
 <?php if (empty($kelasList)): ?>
-  <div class="card"><div class="card-body">
-    <p class="text-muted mb-0">Belum ada data siswa aktif.</p>
+  <div class="ps-card"><div class="ps-body text-center">
+    <p class="siap-copy-sm mb-0">Belum ada data siswa aktif.</p>
   </div></div>
 <?php else: ?>
   <form method="post" id="formKenaikan">
@@ -99,10 +100,10 @@ $totalSiswaAktif = array_sum($jumlahPerKelas);
 
     <div class="promo-kelas-list">
     <?php foreach ($perJenjang as $jenjang => $daftarKelasJenjang): ?>
-      <div class="promo-jenjang card mb-4">
+      <div class="promo-jenjang ps-card mb-4">
         <div class="card-header promo-jenjang-head">
           <h6 class="mb-0">Jenjang <?= e($jenjang) ?> <span class="text-muted fw-normal">(<?= count($daftarKelasJenjang) ?> kelas)</span></h6>
-          <button type="button" class="btn btn-link btn-sm text-decoration-none p-0" onclick="terapkanSaranJenjang('<?= e($jenjang) ?>')">
+          <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs text-decoration-none p-0" onclick="terapkanSaranJenjang('<?= e($jenjang) ?>')" style="padding:0.25rem 0.625rem;font-size:0.875rem">
             <i class="bi bi-magic"></i> Terapkan saran ke semua
           </button>
         </div>
@@ -119,19 +120,19 @@ $totalSiswaAktif = array_sum($jumlahPerKelas);
               <div class="btn-group w-100 promo-btn-group" role="group">
                 <input type="radio" class="btn-check" autocomplete="off" name="aksi[<?= e($k) ?>]" id="tetap_<?= $hash ?>" value="tetap" checked
                        onchange="ubahAksiKartu('<?= $hash ?>', 'tetap')">
-                <label class="btn btn-outline-secondary" for="tetap_<?= $hash ?>" title="Tidak ada perubahan"><i class="bi bi-dash-lg"></i></label>
+                <label class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" for="tetap_<?= $hash ?>" title="Tidak ada perubahan" style="padding:0.375rem 0.5rem"><i class="bi bi-dash-lg"></i></label>
 
                 <input type="radio" class="btn-check" autocomplete="off" name="aksi[<?= e($k) ?>]" id="pindah_<?= $hash ?>" value="pindah"
                        onchange="ubahAksiKartu('<?= $hash ?>', 'pindah')">
-                <label class="btn btn-outline-primary" for="pindah_<?= $hash ?>" title="Naik/pindah kelas"><i class="bi bi-arrow-right"></i></label>
+                <label class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs" for="pindah_<?= $hash ?>" title="Naik/pindah kelas" style="padding:0.375rem 0.5rem"><i class="bi bi-arrow-right"></i></label>
 
                 <input type="radio" class="btn-check" autocomplete="off" name="aksi[<?= e($k) ?>]" id="lulus_<?= $hash ?>" value="lulus"
                        onchange="ubahAksiKartu('<?= $hash ?>', 'lulus')">
-                <label class="btn btn-outline-success" for="lulus_<?= $hash ?>" title="Luluskan/nonaktifkan"><i class="bi bi-mortarboard"></i></label>
+                <label class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" for="lulus_<?= $hash ?>" title="Luluskan/nonaktifkan" style="padding:0.375rem 0.5rem"><i class="bi bi-mortarboard"></i></label>
               </div>
 
               <div class="promo-target-wrap d-none" id="wrap_<?= $hash ?>">
-                <input type="text" class="form-control form-control-sm" name="target[<?= e($k) ?>]" id="<?= $inputId ?>"
+                <input type="text" class="siap-input siap-input-ios17" name="target[<?= e($k) ?>]" id="<?= $inputId ?>"
                        value="<?= e($saran) ?>" placeholder="mis. XI-A">
               </div>
               <div class="promo-status text-muted" id="status_<?= $hash ?>">Tidak ada perubahan</div>
@@ -149,7 +150,7 @@ $totalSiswaAktif = array_sum($jumlahPerKelas);
         <span class="text-muted">&middot; <span id="ringkasJumlahSiswa">0</span> siswa terdampak</span>
         <span class="text-muted">&middot; total <?= $totalSiswaAktif ?> siswa aktif di <?= count($kelasList) ?> kelas</span>
       </div>
-      <button type="button" class="siap-btn siap-btn-blue siap-mono-xs" data-bs-toggle="modal" data-bs-target="#modalKonfirmasi" onclick="siapkanRingkasan()">
+      <button type="button" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs" data-bs-toggle="modal" data-bs-target="#modalKonfirmasi" onclick="siapkanRingkasan()">
         <i class="bi bi-arrow-up-square"></i> Proses Kenaikan Kelas
       </button>
     </div>
@@ -168,11 +169,11 @@ $totalSiswaAktif = array_sum($jumlahPerKelas);
           <p>Perubahan berikut akan diterapkan ke <strong>seluruh siswa aktif</strong> di kelas terkait:</p>
           <ul id="daftarRingkasan" class="mb-3"></ul>
           <p id="pesanTanpaPerubahan" class="text-muted d-none">Tidak ada perubahan yang dipilih — semua kelas dibiarkan "Tidak ada perubahan".</p>
-          <div class="alert alert-warning small mb-0">Aksi ini tidak bisa di-undo otomatis. Pastikan pemetaan di atas sudah benar sebelum melanjutkan.</div>
+          <div class="siap-note siap-note-warning small mb-0">Aksi ini tidak bisa di-undo otomatis. Pastikan pemetaan di atas sudah benar sebelum melanjutkan.</div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal, Cek Lagi</button>
-          <button type="button" class="siap-btn siap-btn-danger siap-mono-xs" onclick="document.getElementById('formKenaikan').submit()">
+          <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" data-bs-dismiss="modal">Batal, Cek Lagi</button>
+          <button type="button" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs" onclick="document.getElementById('formKenaikan').submit()">
             <i class="bi bi-check2-circle"></i> Ya, Proses Sekarang
           </button>
         </div>
@@ -186,7 +187,7 @@ $totalSiswaAktif = array_sum($jumlahPerKelas);
      layar saat di-scroll -- tanpa ini, kartu terakhir bertabrakan dgn bar. */
   .promo-kelas-list { padding-bottom: 84px; }
 
-  .promo-jenjang.card { border: 1px solid var(--siap-line); border-radius: var(--siap-radius-card); overflow: hidden; box-shadow: var(--siap-shadow-card); }
+  .promo-jenjang.card { border: 1px solid var(--siap-line); border-radius: var(--siap-radius-window); overflow: hidden; box-shadow: var(--siap-shadow-card); }
   .promo-jenjang-head {
     display: flex; justify-content: space-between; align-items: center;
     margin: 0; padding: 14px 22px; background: #fff; border-bottom: 1px solid var(--siap-line);
@@ -199,10 +200,10 @@ $totalSiswaAktif = array_sum($jumlahPerKelas);
     gap: 14px;
   }
   .promo-card {
-    background: #fff;
-    border: 1px solid #e6e9ee;
-    border-radius: 14px;
-    padding: 14px;
+    background: rgba(255,255,255,0.9);
+    border: 1px solid var(--siap-line);
+    border-radius: var(--siap-radius-window);
+    padding: 1rem;
     transition: box-shadow .15s ease, border-color .15s ease;
   }
   .promo-card:hover { box-shadow: 0 6px 18px rgba(20,33,61,.08); border-color: var(--siap-blue); }
@@ -222,7 +223,7 @@ $totalSiswaAktif = array_sum($jumlahPerKelas);
 
   .promo-summary-bar {
     position: sticky; bottom: 12px;
-    background: #fff; border: 1px solid var(--siap-line); border-radius: var(--siap-radius-mini);
+    background: #fff; border: 1px solid var(--siap-line); border-radius: var(--siap-radius-window);
     padding: 14px 18px; margin-top: 8px;
     display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
     box-shadow: 0 4px 20px rgba(20,33,61,.15);

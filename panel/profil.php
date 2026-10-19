@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 <style>
-  .pf-card { background: #fff; border: 1px solid var(--siap-line); border-radius: var(--siap-radius-card); box-shadow: var(--siap-shadow-card); overflow: hidden; }
+  .pf-card { background: rgba(255,255,255,0.9); border: 1px solid var(--siap-line); border-radius: var(--siap-radius-window); box-shadow: var(--siap-shadow-card); overflow: hidden; }
   .pf-hero { text-align: center; padding: 32px 24px 24px; }
   .pf-avatar { width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 18px; display: flex; align-items: center; justify-content: center;
                font-size: 3rem; font-weight: 700; color: #fff; background: linear-gradient(135deg, var(--siap-blue-start), var(--siap-blue-end)); box-shadow: 0 10px 24px -10px rgba(37, 99, 235, 0.55); }
@@ -111,10 +111,11 @@ $inisialProfil = mb_strtoupper(mb_substr(trim((string) $user['nama']) !== '' ? t
 $tglIndo = function ($v) { return $v ? date('d/m/Y H:i', strtotime($v)) : '-'; };
 $aktifAkun = ($user['status'] ?? '') === 'aktif';
 ?>
-<h4 class="mb-3"><i class="bi bi-person-gear"></i> Profil Saya</h4>
+<div class="siap-eyebrow siap-stack-sm">Akun</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-person-gear"></i> Profil Saya</h2>
 
 <?php if ($errors): ?>
-    <div class="alert alert-danger">
+    <div class="siap-note siap-note-danger">
         <ul class="mb-0"><?php foreach ($errors as $err) echo '<li>' . e($err) . '</li>'; ?></ul>
     </div>
 <?php endif; ?>
@@ -147,12 +148,12 @@ $aktifAkun = ($user['status'] ?? '') === 'aktif';
                     <?= csrf_field() ?>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Nama Lengkap</label>
-                            <input type="text" name="nama" class="form-control" value="<?= e($user['nama']) ?>" required>
+                            <label class="siap-label siap-label-ios17">Nama Lengkap</label>
+                            <input type="text" name="nama" class="siap-input siap-input-ios17" value="<?= e($user['nama']) ?>" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Username</label>
-                            <input type="text" name="username" class="form-control" value="<?= e($user['username']) ?>" required>
+                            <label class="siap-label siap-label-ios17">Username</label>
+                            <input type="text" name="username" class="siap-input siap-input-ios17" value="<?= e($user['username']) ?>" required>
                         </div>
                     </div>
 
@@ -162,23 +163,23 @@ $aktifAkun = ($user['status'] ?? '') === 'aktif';
                     </div>
                     <div class="row g-3">
                         <div class="col-12">
-                            <label class="form-label">Password Saat Ini <span class="text-danger">*</span></label>
-                            <input type="password" name="password_saat_ini" class="form-control" required>
+                            <label class="siap-label siap-label-ios17">Password Saat Ini <span class="text-danger">*</span></label>
+                            <input type="password" name="password_saat_ini" class="siap-input siap-input-ios17" required>
                             <div class="form-text">Wajib diisi untuk mengonfirmasi setiap perubahan.</div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Password Baru</label>
-                            <input type="password" name="password_baru" class="form-control" placeholder="Minimal 6 karakter">
+                            <label class="siap-label siap-label-ios17">Password Baru</label>
+                            <input type="password" name="password_baru" class="siap-input siap-input-ios17" placeholder="Minimal 6 karakter">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Konfirmasi Password Baru</label>
-                            <input type="password" name="password_konfirmasi" class="form-control">
+                            <label class="siap-label siap-label-ios17">Konfirmasi Password Baru</label>
+                            <input type="password" name="password_konfirmasi" class="siap-input siap-input-ios17">
                         </div>
                     </div>
 
                     <div class="pf-foot">
-                        <a href="<?= modul_url('profil') ?>" class="siap-btn siap-btn-ghost siap-mono-xs">Batal</a>
-                        <button type="submit" class="siap-btn siap-btn-blue siap-mono-xs"><i class="bi bi-save"></i> Simpan Perubahan</button>
+                        <a href="<?= modul_url('profil') ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs">Batal</a>
+                        <button type="submit" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs"><i class="bi bi-save"></i> Simpan Perubahan</button>
                     </div>
                 </form>
             </div>

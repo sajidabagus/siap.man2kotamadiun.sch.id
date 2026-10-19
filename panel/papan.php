@@ -98,7 +98,7 @@ $kelasPilih = clean($_GET['kelas'] ?? '');
   }
   .bp-wrap { color: var(--siap-body); }
   .bp-wrap:fullscreen { background-color: var(--siap-bg); padding: 28px; overflow: auto; }
-  .bp-card { background: #fff; border: 1px solid var(--siap-line); border-radius: var(--siap-radius-card); box-shadow: var(--siap-shadow-card); }
+  .bp-card { background: rgba(255,255,255,0.9); border: 1px solid var(--siap-line); border-radius: var(--siap-radius-window); box-shadow: var(--siap-shadow-card); }
   .bp-hero { padding: 22px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 18px; align-items: center; justify-content: space-between; }
   .bp-jam { font-size: 2.6rem; font-weight: 800; letter-spacing: .02em; font-variant-numeric: tabular-nums; line-height: 1; color: var(--siap-ink); }
   .bp-tgl { color: var(--siap-muted); font-weight: 600; margin-top: 6px; }
@@ -146,7 +146,7 @@ $kelasPilih = clean($_GET['kelas'] ?? '');
   .bp-sect .ket { color: var(--siap-muted); font-size: .84rem; margin: 2px 0 0; }
   .bp-jj { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
   .bp-jt { --ac: var(--siap-blue); position: relative; display: flex; align-items: center; gap: 18px; padding: 20px 22px; border-radius: var(--siap-radius-card); overflow: hidden;
-           border: 1px solid var(--siap-line); background: linear-gradient(135deg, color-mix(in srgb, var(--ac) 9%, #fff), #fff 70%); box-shadow: var(--siap-shadow-card); }
+           border: 1px solid var(--siap-line); border-radius: var(--siap-radius-window); background: linear-gradient(135deg, color-mix(in srgb, var(--ac) 9%, #fff), #fff 70%); box-shadow: var(--siap-shadow-card); }
   .bp-jt .ring { position: relative; width: 92px; height: 92px; flex: none; }
   .bp-jt .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
   .bp-jt .ring circle { fill: none; stroke-width: 9; }
@@ -176,7 +176,7 @@ $kelasPilih = clean($_GET['kelas'] ?? '');
         <option value="">Semua Kelas</option>
         <?php foreach ($kelasList as $k): ?><option value="<?= e($k) ?>" <?= $kelasPilih === $k ? 'selected' : '' ?>><?= e($k) ?></option><?php endforeach; ?>
       </select>
-      <button type="button" class="siap-btn siap-btn-ghost siap-mono-xs" id="btnLayar" title="Layar penuh"><i class="bi bi-arrows-fullscreen"></i> Layar penuh</button>
+      <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" id="btnLayar" title="Layar penuh"><i class="bi bi-arrows-fullscreen"></i> Layar penuh</button>
     </div>
   </div>
 

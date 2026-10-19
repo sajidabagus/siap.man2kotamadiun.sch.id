@@ -90,8 +90,8 @@ $tot = ['hadir' => 0, 'terlambat' => 0, 'izin' => 0, 'sakit' => 0, 'alpa' => 0];
 </head>
 <body>
 <div class="toolbar">
-  <button type="button" onclick="window.print()">Cetak</button>
-  <a href="javascript:window.close()">Tutup</a>
+  <button type="button" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs" onclick="window.print()">Cetak</button>
+  <a href="javascript:window.close()" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs">Tutup</a>
   <span style="color:var(--siap-muted)">Rekap <?= e($namaBulan[$bulan] . ' ' . $tahun) ?> — <?= e($judulKelas) ?></span>
 </div>
 

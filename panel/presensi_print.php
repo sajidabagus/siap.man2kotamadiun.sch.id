@@ -87,8 +87,8 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/../uploads/siswa/' . $logo)) ? B
 </head>
 <body>
 <div class="toolbar">
-  <button type="button" onclick="window.print()">Cetak</button>
-  <a href="javascript:window.close()">Tutup</a>
+  <button type="button" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs" onclick="window.print()">Cetak</button>
+  <a href="javascript:window.close()" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs">Tutup</a>
   <span style="color:var(--siap-muted)"><?= e($tglIndo) ?> — <?= e($filterTxt) ?></span>
 </div>
 

@@ -38,10 +38,12 @@ foreach ($rolesEditable as $role) {
   $dimiliki[$role] = array_flip($st->fetchAll(PDO::FETCH_COLUMN));
 }
 ?>
+<div class="siap-eyebrow siap-stack-sm">Sistem &amp; Keamanan</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-shield-lock"></i> Hak Akses</h2>
+
 <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-3 mb-3">
-  <h4 class="mb-0"><i class="bi bi-shield-lock"></i> Hak Akses</h4>
   <div class="d-flex gap-2">
-    <a href="<?= modul_url('pengguna') ?>" class="btn btn-outline-secondary flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2"><i class="bi bi-person-badge"></i><span>Pengguna</span></a>
+    <a href="<?= modul_url('pengguna') ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2" style="padding:0.375rem 0.875rem"><i class="bi bi-person-badge"></i><span>Pengguna</span></a>
   </div>
 </div>
 
@@ -68,7 +70,7 @@ foreach ($rolesEditable as $role) {
               <td class="text-center" style="background:#fafbfc"></td>
               <?php foreach ($rolesEditable as $role): ?>
                 <td class="text-center" style="background:#fafbfc">
-                  <button type="button" class="btn btn-link btn-sm p-0 pilih-grup" data-grup="<?= $gi ?>" data-role="<?= e($role) ?>">pilih semua</button>
+                  <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs pilih-grup" data-grup="<?= $gi ?>" data-role="<?= e($role) ?>" style="padding:0.25rem 0.625rem;font-size:0.75rem">pilih semua</button>
                 </td>
               <?php endforeach; ?>
             </tr>
@@ -94,7 +96,7 @@ foreach ($rolesEditable as $role) {
     </div>
     <div class="tbl-foot">
       <span class="text-muted small">Perubahan berlaku pada login berikutnya atau saat halaman dimuat ulang.</span>
-      <button type="submit" class="siap-btn siap-btn-blue siap-mono-xs"><i class="bi bi-save"></i> Simpan Hak Akses</button>
+      <button type="submit" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs"><i class="bi bi-save"></i> Simpan Hak Akses</button>
     </div>
   </div>
 </form>

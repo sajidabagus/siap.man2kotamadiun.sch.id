@@ -96,27 +96,27 @@ $autoKonfirmasi = $infoGate && !empty($infoGate['kelas_target']);
     </div>
 
     <div class="ps-aksi">
-      <div id="autoBox" class="siap-note siap-note-green d-none" style="align-items:center">
+      <div id="autoBox" class="siap-note siap-note-success d-none" style="align-items:center">
         <span class="spinner-border spinner-border-sm text-success flex-none"></span>
         <div><strong>Perangkat terverifikasi.</strong><br>Mencatat presensi Anda…<?= (!empty($settings['gps_aktif']) || $autoKonfirmasi) ? ' Izinkan akses lokasi bila diminta.' : '' ?></div>
       </div>
-      <div id="warnBox" class="siap-note siap-note-amber d-none">
+      <div id="warnBox" class="siap-note siap-note-warning d-none">
         <i class="bi bi-phone"></i>
         <div><strong>Perangkat baru terdeteksi.</strong><br>Perangkat ini akan didaftarkan sebagai perangkat utama Anda. Setelah didaftarkan, presensi hanya dapat dilakukan dari perangkat ini.</div>
       </div>
-      <div id="mismatchBox" class="siap-note siap-note-red d-none">
+      <div id="mismatchBox" class="siap-note siap-note-danger d-none">
         <i class="bi bi-x-octagon-fill"></i>
         <div><strong>Perangkat tidak dikenali</strong><br>Perangkat ini bukan perangkat yang terdaftar untuk siswa tersebut. Silakan gunakan perangkat yang telah didaftarkan.</div>
       </div>
-      <div id="claimedBox" class="siap-note siap-note-red d-none">
+      <div id="claimedBox" class="siap-note siap-note-danger d-none">
         <i class="bi bi-x-octagon-fill"></i>
         <div><strong>Perangkat sudah dipakai siswa lain</strong><br>Satu perangkat hanya boleh dipakai satu siswa. Hubungi admin sekolah kalau menurut Anda ini keliru.</div>
       </div>
-      <div id="blockedBox" class="siap-note siap-note-red d-none">
+      <div id="blockedBox" class="siap-note siap-note-danger d-none">
         <i class="bi bi-slash-circle-fill"></i>
         <div>Perangkat ini diblokir. Silakan hubungi administrator sekolah.</div>
       </div>
-      <div id="errBox" class="siap-note siap-note-red d-none"></div>
+      <div id="errBox" class="siap-note siap-note-danger d-none"></div>
 
       <div id="pairBox" class="d-none">
         <div class="siap-note siap-note-blue">
@@ -124,17 +124,17 @@ $autoKonfirmasi = $infoGate && !empty($infoGate['kelas_target']);
           <div><strong>Daftarkan perangkat ini.</strong><br>Minta admin membuat <strong>Kode Pasangan 6 angka</strong> untuk Anda (berlaku 10 menit, sekali pakai), lalu masukkan di bawah.<br>Atau scan <strong>QR Pasangan</strong> dari admin memakai kamera perangkat.</div>
         </div>
         <input id="pairKode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*"
-               class="form-control form-control-lg text-center fw-bold mt-3" style="letter-spacing:.45em; font-size:1.6rem; border-radius:14px" placeholder="••••••">
+               class="siap-input siap-input-ios17 text-center fw-bold mt-3" style="letter-spacing:.45em; font-size:1.6rem;" placeholder="••••••">
         <div id="pairErr" class="text-danger small mt-2 d-none"></div>
-        <button id="btnPair" class="siap-btn siap-btn-blue siap-mono-xs" style="margin-top:14px" disabled>
+        <button id="btnPair" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs" style="margin-top:14px" disabled>
           <i class="bi bi-phone"></i> <span>DAFTARKAN PERANGKAT &amp; PRESENSI</span>
         </button>
       </div>
 
-      <button id="btnConfirm" class="siap-btn siap-btn-blue siap-mono-xs d-none" style="margin-top:16px">
+      <button id="btnConfirm" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs d-none" style="margin-top:16px">
         <i class="bi bi-check-circle-fill"></i> <span id="btnLabel">KONFIRMASI PRESENSI</span>
       </button>
-      <a href="<?= BASE_URL ?>/presensi/index.php" class="siap-btn siap-btn-ghost siap-mono-xs" id="btnBack" style="margin-top:10px">Kembali</a>
+      <a href="<?= BASE_URL ?>/presensi/index.php" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" id="btnBack" style="margin-top:10px">Kembali</a>
     </div>
   </div>
 

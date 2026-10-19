@@ -39,27 +39,29 @@ $jk = $siswa['jenis_kelamin'] === 'P' ? 'Perempuan' : 'Laki-laki';
 $ttl = trim(($siswa['tempat_lahir'] ?: '') . ($siswa['tanggal_lahir'] ? ($siswa['tempat_lahir'] ? ', ' : '') . format_tanggal_indonesia($siswa['tanggal_lahir']) : ''));
 ?>
 
+<div class="siap-eyebrow siap-stack-sm">Data &amp; Kelas</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-person-vcard"></i> Detail Siswa</h2>
+
 <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-3 mb-3">
-  <h4 class="mb-0"><i class="bi bi-person-vcard"></i> Detail Siswa</h4>
   <div class="d-flex flex-wrap gap-2">
-    <a href="<?= e(modul_url('siswa')) ?>" class="siap-btn siap-btn-ghost siap-mono-xs"><i class="bi bi-arrow-left"></i> Kembali</a>
+    <a href="<?= e(modul_url('siswa')) ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs"><i class="bi bi-arrow-left"></i> Kembali</a>
     <?php if (can('siswa.ubah')): ?>
     <a href="<?= e(modul_url('siswa_edit', ['nis' => $siswa['nis']])) ?>"
        data-popup="<?= e(modul_url('siswa_edit', ['nis' => $siswa['nis'], 'modal' => 1])) ?>" data-popup-title="Edit Siswa"
-       class="siap-btn siap-btn-blue siap-mono-xs"><i class="bi bi-pencil"></i> Edit</a>
+       class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs"><i class="bi bi-pencil"></i> Edit</a>
     <?php endif; ?>
     <?php if (can('qr_siswa.lihat')): ?>
-    <a href="<?= e(modul_url('qr_generate', ['nis' => $siswa['nis']])) ?>" class="siap-btn siap-btn-ghost siap-mono-xs"><i class="bi bi-qr-code"></i> QR Code</a>
+    <a href="<?= e(modul_url('qr_generate', ['nis' => $siswa['nis']])) ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs"><i class="bi bi-qr-code"></i> QR Code</a>
     <?php endif; ?>
     <?php if (can('device.lihat')): ?>
-    <a href="<?= e(modul_url('device', ['siswa_id' => $id])) ?>" class="siap-btn siap-btn-ghost siap-mono-xs"><i class="bi bi-phone"></i> Perangkat</a>
+    <a href="<?= e(modul_url('device', ['siswa_id' => $id])) ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs"><i class="bi bi-phone"></i> Perangkat</a>
     <?php endif; ?>
   </div>
 </div>
 
 <div class="row g-3">
   <div class="col-lg-4">
-    <div class="card h-100">
+    <div class="ps-card ps-card-pad h-100">
       <div class="card-body text-center">
         <?php if ($siswa['foto']): ?>
           <img src="<?= BASE_URL ?>/uploads/siswa/<?= e($siswa['foto']) ?>" alt="" class="rounded-circle mb-3" style="width:110px;height:110px;object-fit:cover">
@@ -75,7 +77,7 @@ $ttl = trim(($siswa['tempat_lahir'] ?: '') . ($siswa['tanggal_lahir'] ? ($siswa[
   </div>
 
   <div class="col-lg-8">
-    <div class="card h-100">
+    <div class="ps-card ps-card-pad h-100">
       <div class="card-body">
         <h6 class="mb-3">Data Siswa</h6>
         <dl class="row mb-0 small">
@@ -93,7 +95,7 @@ $ttl = trim(($siswa['tempat_lahir'] ?: '') . ($siswa['tanggal_lahir'] ? ($siswa[
 
   <?php if (can('device.lihat')): ?>
   <div class="col-lg-6">
-    <div class="card h-100">
+    <div class="ps-card ps-card-pad h-100">
       <div class="card-body">
         <h6 class="mb-3">Perangkat Terdaftar</h6>
         <?php if ($binding): ?>
@@ -114,7 +116,7 @@ $ttl = trim(($siswa['tempat_lahir'] ?: '') . ($siswa['tanggal_lahir'] ? ($siswa[
   <?php endif; ?>
 
   <div class="<?= can('device.lihat') ? 'col-lg-6' : 'col-12' ?>">
-    <div class="card h-100">
+    <div class="ps-card ps-card-pad h-100">
       <div class="card-body">
         <h6 class="mb-3">Kehadiran Bulan Ini <small class="text-muted fw-normal">(sejak <?= e(format_tanggal_indonesia($awalBulan)) ?>)</small></h6>
         <div class="d-flex flex-wrap gap-2">
@@ -128,7 +130,7 @@ $ttl = trim(($siswa['tempat_lahir'] ?: '') . ($siswa['tanggal_lahir'] ? ($siswa[
 
   <?php if (can('presensi.lihat')): ?>
   <div class="col-12">
-    <div class="card">
+    <div class="ps-card ps-card-pad">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h6 class="mb-0">Riwayat Absensi Terakhir</h6>
