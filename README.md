@@ -179,7 +179,11 @@ Semua dilayani `index.php` (front controller) lewat aturan di `.htaccess`.
   2. **Kode Pasangan 6 angka** — diketik siswa saat konfirmasi presensi.
 - Berlaku 10 menit (pembuatan massal bisa tanpa batas waktu), terkunci setelah 5 kali salah.
   Yang tersimpan di database hanya hash.
-- Pengaturan **"Wajib Kode Pasangan"**: bila aktif, perangkat baru tidak didaftarkan otomatis.
+- Pengaturan **"Wajib Kode Pasangan"** (default **aktif** sejak 18-10-2026, GLM #4): perangkat
+  baru tidak lagi didaftarkan otomatis — wajib QR/Kode Pasangan buatan admin. Hanya admin yang
+  menyetelnya ke nonaktif di Pengaturan yang mematikannya. Notifikasi in-app: antrean
+  "anomali perangkat" dan percobaan kode gagal (>= 5x/24 jam) muncul di Dashboard agar
+  dapat segera ditinjau lewat Log Keamanan.
 - Admin dapat **memblokir**, **mengaktifkan kembali**, atau **mereset** perangkat
   (satu per satu atau massal per kelas/jenjang/pilihan). Reset individual dibatasi per bulan;
   reset massal tidak menghabiskan jatah tersebut.
@@ -198,12 +202,17 @@ lebih kuat, gabungkan dengan QR dinamis gerbang, GPS/geofencing, dan validasi IP
 
 ---
 
-## 9. LIBRARY QR CODE — DI-BUNDLE LOKAL
+## 9. LIBRARY — DI-BUNDLE LOKAL (TANPA CDN)
 
 `qrcode.js` (generate) dan `html5-qrcode.min.js` (scan kamera) sudah ada di
-`assets/js/vendor/`, begitu juga Bootstrap, Bootstrap Icons, dan font. Tidak ada
-ketergantungan CDN, sehingga tetap berfungsi bila jaringan sekolah membatasi CDN atau
-server tanpa internet. Untuk memperbarui, cukup ganti file di folder `vendor/`.
+`assets/js/vendor/`, begitu juga Bootstrap CSS + JS (`bootstrap.min.css`,
+`bootstrap.bundle.min.js`), Bootstrap Icons (`bootstrap-icons.min.css` + font),
+Chart.js (`chart.umd.min.js`), dan font Montserrat (subset latin, di
+`assets/css/vendor/montserrat.css` + `fonts/montserrat-latin.woff2`). **Tidak ada
+ketergantungan CDN sama sekali**, sehingga tetap berfungsi bila jaringan sekolah
+membatasi CDN atau server tanpa internet — sekaligus menyederhanakan CSP ketat
+(`default-src 'self'`) di masa depan. Untuk memperbarui, cukup ganti file di
+folder `vendor/`.
 
 ---
 
@@ -220,6 +229,14 @@ server tanpa internet. Untuk memperbarui, cukup ganti file di folder `vendor/`.
   (router maupun akses langsung ke `/panel/xxx.php`).
 - **Pembatas login:** 5 gagal per username atau 20 gagal per IP dalam 15 menit
   mengunci login sementara (tabel `login_attempts`, dibuat otomatis).
+- **Rate limit API dua lapis:** perangkat (ketat) + IP (longgar) — presensi & presensi kilat
+  6/menit/perangkat + 300/menit/IP; scan 20/menit/perangkat + 600/menit/IP. Memakai APCu bila
+  tersedia, atau fallback penghitung berkas di `var/cache/ratelimit` (otomatis, tanpa konfigurasi).
+  **Di belakang reverse proxy (Cloudflare, aaPanel/Nginx proxy) WAJIB mengisi `TRUSTED_PROXIES`
+  di `config/database.php`** (contoh Nginx satu mesin: `define('TRUSTED_PROXIES', '127.0.0.1, ::1');`).
+  Isi dengan **IP persis** (dipisah koma), bukan rentang CIDR — pencocokan memakai `in_array`.
+  Bila lupa, `get_client_ip()` melihat IP proxy yang sama untuk seluruh sekolah: lapis per-IP
+  menjadi satu ember global dan kolom `ip_address` di log tidak lagi bermakna.
 - **Header keamanan & cookie sesi** (`HttpOnly`, `SameSite=Lax`, `Secure` di HTTPS, strict mode,
   regenerasi ID sesi berkala) diatur di `includes/keamanan.php`. CSP belum dipasang karena
   aplikasi memakai script/style inline.

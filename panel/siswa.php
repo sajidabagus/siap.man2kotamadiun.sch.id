@@ -32,16 +32,18 @@ $jurusanList = $db->query('SELECT DISTINCT jurusan FROM siswa WHERE jurusan IS N
 $extraParams = ['q' => $q, 'kelas' => $kelas, 'jurusan' => $jurusan, 'limit' => $perPage];
 ?>
 
+<div class="siap-eyebrow siap-stack-sm">Data &amp; Kelas</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-people"></i> Data Siswa</h2>
+
 <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-3 mb-3">
-  <h4 class="mb-0"><i class="bi bi-people"></i> Data Siswa</h4>
   <div class="d-flex gap-2">
     <?php if (can('siswa.impor')): ?>
-    <a href="<?= modul_url('siswa_import') ?>" class="btn btn-outline-primary flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2">
+    <a href="<?= modul_url('siswa_import') ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2" style="padding:0.375rem 0.875rem">
       <i class="bi bi-upload"></i><span>Import<span class="d-none d-sm-inline"> Excel/CSV</span></span>
     </a>
     <?php endif; ?>
     <?php if (can('siswa.tambah')): ?>
-    <a href="<?= modul_url('siswa_tambah') ?>" data-popup="<?= e(modul_url('siswa_tambah', ['modal' => 1])) ?>" data-popup-title="Tambah Siswa" class="btn btn-primary flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2">
+    <a href="<?= modul_url('siswa_tambah') ?>" data-popup="<?= e(modul_url('siswa_tambah', ['modal' => 1])) ?>" data-popup-title="Tambah Siswa" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2" style="padding:0.375rem 0.875rem">
       <i class="bi bi-plus-circle"></i><span>Tambah Siswa</span>
     </a>
     <?php endif; ?>
@@ -67,21 +69,21 @@ $sampai = $offset + count($daftarSiswa);
       <?= render_per_page_field($perPage, false) ?>
       <div class="tbl-search">
         <i class="bi bi-search"></i>
-        <input type="text" name="q" class="form-control" placeholder="Cari nama/NISN..." value="<?= e($q) ?>">
+        <input type="text" name="q" class="siap-input siap-input-ios17" placeholder="Cari nama/NISN..." value="<?= e($q) ?>">
       </div>
-      <select name="kelas" class="form-select">
+      <select name="kelas" class="siap-input siap-input-ios17">
         <option value="">Semua Kelas</option>
         <?php foreach ($kelasList as $k): ?>
           <option value="<?= e($k) ?>" <?= $kelas === $k ? 'selected' : '' ?>><?= e($k) ?></option>
         <?php endforeach; ?>
       </select>
-      <select name="jurusan" class="form-select">
+      <select name="jurusan" class="siap-input siap-input-ios17">
         <option value="">Semua Jurusan</option>
         <?php foreach ($jurusanList as $j): ?>
           <option value="<?= e($j) ?>" <?= $jurusan === $j ? 'selected' : '' ?>><?= e($j) ?></option>
         <?php endforeach; ?>
       </select>
-      <a href="<?= modul_url('siswa') ?>" class="btn btn-light border" title="Hapus semua filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
+      <a href="<?= modul_url('siswa') ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" title="Hapus semua filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
     </form>
   </div>
 
@@ -110,7 +112,7 @@ $sampai = $offset + count($daftarSiswa);
             </div>
           </td>
           <td><?= e($s['nisn'] ?: '-') ?></td>
-          <td><span class="pill"><?= e($s['kelas']) ?></span></td>
+          <td><span class="siap-badge siap-badge-info siap-mono-xs"><?= e($s['kelas']) ?></span></td>
           <td><?= e($s['jurusan'] ?: '-') ?></td>
           <td><span class="st <?= $aktif ? 'st-aktif' : 'st-lain' ?>"><?= $aktif ? 'Aktif' : e(ucfirst((string) $s['status'])) ?></span></td>
           <td class="text-end">

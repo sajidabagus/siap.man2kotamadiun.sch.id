@@ -8,8 +8,19 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d6efd'/%3E%3Cpath d='M18 33l10 10 19-22' fill='none' stroke='%23fff' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
   :root {
-    --bg1: #eef4ff; --bg2: #f8fbff; --card: #ffffffcc; --text: #1b2437; --muted: #64708a;
-    --primary: #0d6efd; --primary-d: #0a58ca; --ring: #0d6efd33; --line: #dbe5f6;
+    --siap-bg: #F3F5F8;
+    --siap-ink: #020617;
+    --siap-body: #475569;
+    --siap-muted: #64748B;
+    --siap-line: #E2E8F0;
+    --siap-blue: #3B82F6;
+    --siap-blue-start: #4A8BF7;
+    --siap-blue-end: #2260E3;
+    --siap-success-bg: #ECFDF5;
+    --siap-success-text: #065F46;
+
+    --bg1: var(--siap-success-bg); --bg2: #f8fbff; --card: #ffffffcc; --text: var(--siap-ink); --muted: var(--siap-muted);
+    --primary: var(--siap-blue); --primary-d: var(--siap-ink2); --ring: rgba(59,130,246,0.2); --line: var(--siap-line);
   }
   @media (prefers-color-scheme: dark) {
     :root { --bg1: #0b1220; --bg2: #111b30; --card: #172138cc; --text: #e8eefc; --muted: #93a1c0; --ring: #5b9bff33; --line: #26324f; --primary: #4d8dff; --primary-d: #3a78e8; }

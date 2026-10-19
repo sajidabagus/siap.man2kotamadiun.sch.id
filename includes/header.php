@@ -11,7 +11,7 @@ $current = defined('MODUL_FILE') ? MODUL_FILE : basename($_SERVER['PHP_SELF']);
 jalankan_pembersihan_log_otomatis();
 
 /**
- * Kelompok halaman per menu sidebar, supaya menu tetap ter-highlight aktif
+ * Kelompok halaman per menu, supaya menu tetap ter-highlight aktif
  * walau sedang berada di halaman turunannya (tambah/edit/hapus/dsb),
  * bukan hanya saat persis di halaman utamanya.
  */
@@ -39,82 +39,7 @@ function is_menu_active(string $menuKey, array $groups, string $current): bool
 {
     return in_array($current, $groups[$menuKey] ?? [$menuKey], true);
 }
-?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><?= e($settings['nama_sekolah'] ?? 'Presensi Siswa') ?> — Admin</title>
-<?= favicon_tag() ?>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-<link href="<?= BASE_URL ?>/assets/css/style.css?v=<?= @filemtime(__DIR__ . '/../assets/css/style.css') ?: time() ?>" rel="stylesheet">
-<style>:root{--tema:<?= e($settings['warna_tema'] ?? '#0d6efd') ?>;}</style>
-<script>try{if(localStorage.getItem('sidebar_collapsed')==='1')document.documentElement.classList.add('sidebar-collapsed');}catch(e){}</script>
-</head>
-<body>
-<div class="d-flex app-shell">
-  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
-  <nav class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-      <i class="bi bi-qr-code-scan"></i>
-      <span><?= e($settings['nama_sekolah'] ?? 'Presensi Siswa') ?></span>
-    </div>
-    <div class="sidebar-nav-scroll">
-    <ul class="nav flex-column">
-      <?php if (can_modul('dashboard')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('dashboard.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('dashboard') ?>"><i><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.15em" height="1.15em" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1.8"/><rect width="7" height="5" x="14" y="3" rx="1.8"/><rect width="7" height="9" x="14" y="12" rx="1.8"/><rect width="7" height="5" x="3" y="16" rx="1.8"/></svg></i> Dashboard</a></li><?php endif; ?>
-    </ul>
 
-<?php if (can_any_modul(['siswa', 'master_kelas', 'kenaikan_kelas'])): ?>
-    <div class="sidebar-section-title">Data &amp; Kelas</div>
-    <ul class="nav flex-column">
-      <?php if (can_modul('siswa')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('siswa.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('siswa') ?>"><i class="bi bi-people"></i> Data Siswa</a></li><?php endif; ?>
-      <?php if (can_modul('master_kelas')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('master_kelas.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('master_kelas') ?>"><i class="bi bi-tags"></i> Master Kelas</a></li><?php endif; ?>
-      <?php if (can_modul('kenaikan_kelas')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('kenaikan_kelas.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('kenaikan_kelas') ?>"><i class="bi bi-arrow-up-square"></i> Kenaikan Kelas</a></li><?php endif; ?>
-    </ul>
-    <?php endif; ?>
-
-<?php if (can_any_modul(['qr_siswa', 'qr_gerbang', 'qr_kelas'])): ?>
-    <div class="sidebar-section-title">QR Code</div>
-    <ul class="nav flex-column">
-      <?php if (can_modul('qr_siswa')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('qr_siswa.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('qr_siswa') ?>"><i class="bi bi-qr-code"></i> QR Code Siswa</a></li><?php endif; ?>
-      <?php if (can_modul('qr_gerbang')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('qr_gerbang.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('qr_gerbang') ?>"><i class="bi bi-signpost-2"></i> QR Gerbang</a></li><?php endif; ?>
-      <?php if (can_modul('qr_kelas')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('qr_kelas.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('qr_kelas') ?>"><i class="bi bi-easel2"></i> QR Kelas</a></li><?php endif; ?>
-    </ul>
-    <?php endif; ?>
-
-<?php if (can_any_modul(['presensi', 'papan', 'rekap'])): ?>
-    <div class="sidebar-section-title">Presensi</div>
-    <ul class="nav flex-column">
-      <?php if (can_modul('presensi')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('presensi.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('presensi') ?>"><i class="bi bi-calendar-check"></i> Data Presensi</a></li><?php endif; ?>
-      <?php if (can_modul('papan')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('papan.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('papan') ?>"><i class="bi bi-broadcast"></i> Papan Langsung</a></li><?php endif; ?>
-      <?php if (can_modul('rekap')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('rekap.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('rekap') ?>"><i class="bi bi-bar-chart"></i> Rekap Kehadiran</a></li><?php endif; ?>
-    </ul>
-    <?php endif; ?>
-
-<?php if (can_any_modul(['device', 'kode_massal', 'security_log', 'log_aktivitas', 'pengguna', 'hak_akses', 'pengaturan'])): ?>
-    <div class="sidebar-section-title">Sistem &amp; Keamanan</div>
-    <ul class="nav flex-column">
-      <?php if (can_modul('device')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('device.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('device') ?>"><i class="bi bi-phone"></i> Manajemen Perangkat</a></li><?php endif; ?>
-      <?php if (can_modul('kode_massal')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('kode_massal.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('kode_massal') ?>"><i class="bi bi-key"></i> Kode Pasangan</a></li><?php endif; ?>
-      <?php if (can_modul('security_log')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('security_log.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('security_log') ?>"><i class="bi bi-shield-exclamation"></i> Log Keamanan</a></li><?php endif; ?>
-      <?php if (can_modul('log_aktivitas')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('log_aktivitas.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('log_aktivitas') ?>"><i class="bi bi-clock-history"></i> Log Aktivitas</a></li><?php endif; ?>
-      <?php if (can_modul('pengguna')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('pengguna.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('pengguna') ?>"><i class="bi bi-person-badge"></i> Pengguna</a></li><?php endif; ?>
-      <?php if (can_modul('hak_akses')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('hak_akses.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('hak_akses') ?>"><i class="bi bi-shield-lock"></i> Hak Akses</a></li><?php endif; ?>
-      <?php if (can_modul('pengaturan')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('pengaturan.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('pengaturan') ?>"><i class="bi bi-gear"></i> Pengaturan</a></li><?php endif; ?>
-    </ul>
-    <?php endif; ?>
-    </div>
-
-    <div class="sidebar-footer">
-      <ul class="nav flex-column">
-        <li class="nav-item"><a class="nav-link text-danger" href="<?= BASE_URL ?>/logout.php"><i class="bi bi-box-arrow-right"></i> Keluar</a></li>
-      </ul>
-    </div>
-  </nav>
-
-<?php
 // Label halaman & grup (eyebrow) untuk breadcrumb di topbar dan teks kecil di atas judul
 $labelCrumb = [
   'dashboard' => 'Dashboard', 'siswa' => 'Data Siswa', 'siswa_tambah' => 'Tambah Siswa', 'siswa_edit' => 'Edit Siswa',
@@ -139,52 +64,115 @@ $grupHalaman = [
 $modulAktif = defined('MODUL_FILE') ? basename(MODUL_FILE, '.php') : '';
 $namaAdminHdr = trim((string) ($admin['nama'] ?? ''));
 $inisialAdmin = mb_strtoupper(mb_substr($namaAdminHdr !== '' ? $namaAdminHdr : (string) ($admin['username'] ?? 'A'), 0, 1));
+
+// Siapkan item menu navigasi topbar (key => label, ikon, modul)
+// Hanya ditampilkan jika user punya akses ke minimal satu modul dalam grup.
+$navItems = [];
+$canSee = function(string $modul): bool { return can_modul($modul); };
+
+if ($canSee('dashboard')) $navItems[] = ['key' => 'dashboard.php', 'label' => 'Beranda', 'icon' => 'bi-house-door', 'groups' => ['dashboard.php']];
+if (can_any_modul(['siswa', 'master_kelas', 'kenaikan_kelas'])) $navItems[] = ['key' => 'siswa.php', 'label' => 'Siswa', 'icon' => 'bi-people', 'groups' => ['siswa.php', 'siswa_detail.php', 'siswa_tambah.php', 'siswa_edit.php', 'siswa_hapus.php', 'siswa_import.php', 'master_kelas.php', 'kenaikan_kelas.php']];
+if (can_any_modul(['qr_siswa', 'qr_gerbang', 'qr_kelas'])) $navItems[] = ['key' => 'qr_siswa.php', 'label' => 'QR Code', 'icon' => 'bi-qr-code', 'groups' => ['qr_siswa.php', 'qr_print.php', 'qr_generate.php', 'qr_gerbang.php', 'qr_kelas.php', 'qr_kelas_print.php']];
+if (can_any_modul(['presensi', 'papan', 'rekap'])) $navItems[] = ['key' => 'presensi.php', 'label' => 'Presensi', 'icon' => 'bi-calendar-check', 'groups' => ['presensi.php', 'presensi_export.php', 'papan.php', 'rekap.php', 'rekap_print.php']];
+if (can_any_modul(['device', 'kode_massal', 'security_log', 'log_aktivitas', 'pengguna', 'hak_akses', 'pengaturan'])) $navItems[] = ['key' => 'pengaturan.php', 'label' => 'Sistem', 'icon' => 'bi-gear', 'groups' => ['device.php', 'kode_massal.php', 'security_log.php', 'log_aktivitas.php', 'pengguna.php', 'hak_akses.php', 'pengaturan.php', 'kode_pasangan.php']];
 ?>
-  <main class="content flex-grow-1">
-    <nav class="navbar navbar-light bg-white border-bottom topbar">
-      <div class="container-fluid">
-        <button class="btn btn-sm btn-outline-secondary" id="toggleSidebar" type="button" title="Menu" aria-label="Buka/tutup menu"><i class="bi bi-list"></i></button>
-        <?php if ($modulAktif !== '' && isset($labelCrumb[$modulAktif])): ?>
-          <nav class="topbar-crumb" aria-label="breadcrumb">
-            <a href="<?= modul_url('dashboard') ?>" class="d-none d-sm-inline">Beranda</a>
-            <?php if ($modulAktif !== 'dashboard'): ?>
-              <i class="bi bi-chevron-right sep d-none d-sm-inline"></i>
-            <?php endif; ?>
-            <span class="now"><?= e($labelCrumb[$modulAktif]) ?></span>
-          </nav>
-        <?php endif; ?>
-        <div class="dropdown ms-auto">
-          <button type="button" class="topbar-user" data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false" aria-label="Menu akun">
-            <span class="topbar-user-info d-none d-md-block text-end">
-              <span class="nama"><?= e($admin['nama'] ?? '') ?></span>
-              <span class="peran"><?= e($admin['role'] ?? '') ?></span>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><?= e($settings['nama_sekolah'] ?? 'Presensi Siswa') ?> — Admin</title>
+<?= favicon_tag() ?>
+<link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap.min.css?v=<?= @filemtime(__DIR__ . '/../assets/css/vendor/bootstrap.min.css') ?: time() ?>" rel="stylesheet">
+<link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap-icons.min.css?v=<?= @filemtime(__DIR__ . '/../assets/css/vendor/bootstrap-icons.min.css') ?: time() ?>" rel="stylesheet">
+<link href="<?= BASE_URL ?>/assets/css/style.css?v=<?= @filemtime(__DIR__ . '/../assets/css/style.css') ?: time() ?>" rel="stylesheet">
+<style>:root{--tema:<?= e($settings['warna_tema'] ?? '#0d6efd') ?>;}</style>
+</head>
+<body class="siap-page">
+  <!-- Glow biru puncak halaman -->
+  <div class="siap-glow-top"></div>
+
+  <!-- Topbar / Nav sticky (gaya iOS 17: radius besar, shadow halus, border lembut) -->
+  <nav class="siap-nav siap-card-ios17">
+    <div class="siap-shell d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <!-- Brand -->
+      <a href="<?= modul_url('dashboard') ?>" class="siap-brand d-flex align-items-center gap-2 text-decoration-none">
+        <i class="bi bi-qr-code-scan siap-tile"></i>
+        <div>
+          <div class="siap-brand-title"><?= e($settings['nama_sekolah'] ?? 'Presensi Siswa') ?></div>
+          <div class="siap-brand-sub">Sistem Presensi Siswa</div>
+        </div>
+      </a>
+
+      <!-- Menu desktop (tampilkan hanya pada layar besar) -->
+      <div class="d-none d-lg-flex align-items-center gap-1">
+        <?php foreach ($navItems as $item): $active = is_menu_active($item['key'], $item['groups'], $current); ?>
+          <a href="<?= modul_url(basename($item['key'], '.php')) ?>" class="siap-nav-link <?= $active ? 'active' : '' ?> d-flex align-items-center gap-2 text-decoration-none">
+            <i class="bi <?= e($item['icon']) ?>"></i>
+            <?= e($item['label']) ?>
+          </a>
+        <?php endforeach; ?>
+      </div>
+
+      <!-- Kanan: hamburger (mobile) + dropdown profil -->
+      <div class="d-flex align-items-center gap-2">
+        <!-- Hamburger menu (mobile only) -->
+        <button class="siap-menu-btn" id="btnHamburger" aria-label="Buka menu" aria-expanded="false" aria-controls="drawerMobile">
+          <i class="bi bi-list"></i>
+        </button>
+
+        <!-- Dropdown profil -->
+        <div class="dropdown">
+          <button type="button" class="siap-user-btn" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menu akun">
+            <span class="siap-avatar"><?= e($inisialAdmin) ?></span>
+            <span class="d-none d-sm-block">
+              <span class="d-block siap-mono-xs siap-label"><?= e($admin['nama'] ?? '') ?></span>
+              <span class="siap-copy-sm"><?= e($admin['role'] ?? '') ?></span>
             </span>
-            <span class="avatar"><?= e($inisialAdmin) ?></span>
           </button>
-          <ul class="dropdown-menu dropdown-menu-end menu-user">
-            <li class="menu-user-head">
-              <span class="avatar"><?= e($inisialAdmin) ?></span>
-              <span class="info">
-                <span class="nama"><?= e($admin['nama'] ?? '') ?></span>
-                <span class="peran"><?= e($admin['role'] ?? '') ?></span>
-              </span>
-            </li>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li class="dropdown-header siap-eyebrow text-dark">Akun</li>
+            <li><a class="dropdown-item siap-copy-sm d-flex align-items-center gap-2" href="<?= modul_url('profil') ?>"><i class="bi bi-person"></i> Profil Akun</a></li>
+            <?php if (can('pengaturan.kelola')): ?><li><a class="dropdown-item siap-copy-sm d-flex align-items-center gap-2" href="<?= modul_url('pengaturan') ?>"><i class="bi bi-gear"></i> Pengaturan</a></li><?php endif; ?>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="<?= modul_url('profil') ?>"><i class="bi bi-person"></i> Profil Akun</a></li>
-            <?php if (can('pengaturan.kelola')): ?><li><a class="dropdown-item" href="<?= modul_url('pengaturan') ?>"><i class="bi bi-gear"></i> Pengaturan</a></li><?php endif; ?>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item item-keluar" href="<?= BASE_URL ?>/logout.php"><i class="bi bi-box-arrow-right"></i> Keluar</a></li>
+            <li><a class="dropdown-item siap-copy-sm d-flex align-items-center gap-2 text-danger" href="<?= BASE_URL ?>/logout.php"><i class="bi bi-box-arrow-right"></i> Keluar</a></li>
           </ul>
         </div>
       </div>
-    </nav>
-    <div class="container-fluid py-4 content-scroll">
-      <?php if ($flash): ?>
-        <div class="alert alert-<?= e($flash['type']) ?> alert-dismissible fade show" role="alert">
-          <?= e($flash['message']) ?>
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-      <?php endif; ?>
-      <?php if ($modulAktif !== '' && isset($grupHalaman[$modulAktif])): ?>
-        <div class="page-eyebrow"><?= e($grupHalaman[$modulAktif]) ?></div>
-      <?php endif; ?>
+    </div>
+  </nav>
+
+  <!-- Drawer mobile (overlay) -->
+  <div class="offcanvas offcanvas-start siap-drawer" id="drawerMobile" tabindex="-1">
+    <div class="offcanvas-header siap-panel-blue siap-panel-pad">
+      <h5 class="offcanvas-title siap-h3">Menu</h5>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Tutup"></button>
+    </div>
+    <div class="offcanvas-body py-3">
+      <ul class="nav flex-column siap-stack">
+        <?php foreach ($navItems as $item): $active = is_menu_active($item['key'], $item['groups'], $current); ?>
+          <li class="nav-item mb-2">
+            <a href="<?= modul_url(basename($item['key'], '.php')) ?>" class="siap-nav-link d-flex align-items-center gap-2 text-decoration-none <?= $active ? 'active' : '' ?> w-100">
+              <i class="bi <?= e($item['icon']) ?>"></i>
+              <?= e($item['label']) ?>
+            </a>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+      <div class="siap-stack mt-4 pt-3 border-top">
+        <a href="<?= BASE_URL ?>/logout.php" class="siap-btn siap-btn-danger w-100 siap-mono-xs">Keluar</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Konten utama -->
+  <main class="siap-shell siap-main content-scroll">
+    <?php if ($flash): ?>
+      <div class="alert alert-<?= e($flash['type']) ?> alert-dismissible fade show siap-card siap-card-pad" role="alert">
+        <?= e($flash['message']) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <?php endif; ?>
+    <?php if ($modulAktif !== '' && isset($grupHalaman[$modulAktif])): ?>
+      <div class="siap-eyebrow siap-stack-sm"><?= e($grupHalaman[$modulAktif]) ?></div>
+    <?php endif; ?>

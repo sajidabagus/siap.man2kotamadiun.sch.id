@@ -44,7 +44,8 @@ $labelModul = [
 ];
 $extra = ['aksi' => $aksi, 'modul_log' => $modul, 'q' => $q, 'tanggal' => $tanggal, 'limit' => $perPage];
 ?>
-<h4 class="mb-3"><i class="bi bi-clock-history"></i> Log Aktivitas</h4>
+<div class="siap-eyebrow siap-stack-sm">Sistem &amp; Keamanan</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-clock-history"></i> Log Aktivitas</h2>
 
 <div class="tbl-card">
   <div class="tbl-head">
@@ -54,7 +55,7 @@ $extra = ['aksi' => $aksi, 'modul_log' => $modul, 'q' => $q, 'tanggal' => $tangg
   <div class="tbl-tools">
     <form method="get" data-live data-live-target="#hasil-live"><?= hidden_modul() ?>
       <?= render_per_page_field($perPage, false) ?>
-              <div class="tbl-search"><i class="bi bi-search"></i><input type="text" name="q" class="form-control" placeholder="Cari keterangan / nama admin" value="<?= e($q) ?>"></div>
+              <div class="tbl-search"><i class="bi bi-search"></i><input type="text" name="q" class="siap-input siap-input-ios17" placeholder="Cari keterangan / nama admin" value="<?= e($q) ?>"></div>
               <select name="aksi" class="form-select">
           <option value="">Semua Aksi</option>
           <?php foreach (AKSI_AKTIVITAS as $a): ?><option value="<?= $a ?>" <?= $aksi === $a ? 'selected' : '' ?>><?= $a ?></option><?php endforeach; ?>
@@ -63,8 +64,8 @@ $extra = ['aksi' => $aksi, 'modul_log' => $modul, 'q' => $q, 'tanggal' => $tangg
           <option value="">Semua Modul</option>
           <?php foreach ($daftarModul as $m): ?><option value="<?= e($m) ?>" <?= $modul === $m ? 'selected' : '' ?>><?= e($labelModul[$m] ?? $m) ?></option><?php endforeach; ?>
         </select>
-              <input type="date" name="tanggal" class="form-control" value="<?= e($tanggal) ?>">
-          <a href="<?= modul_url('log_aktivitas') ?>" class="btn btn-light border" title="Hapus semua filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
+              <input type="date" name="tanggal" class="siap-input siap-input-ios17" value="<?= e($tanggal) ?>">
+          <a href="<?= modul_url('log_aktivitas') ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" title="Hapus semua filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
     </form>
   </div>
   <div id="hasil-live">
@@ -76,7 +77,7 @@ $extra = ['aksi' => $aksi, 'modul_log' => $modul, 'q' => $q, 'tanggal' => $tangg
           <tr>
             <td class="text-nowrap"><?= e($l['created_at']) ?></td>
             <td><?= e($l['admin_nama'] ?? '-') ?></td>
-            <td><span class="badge bg-<?= $badge[$l['aksi']] ?? 'secondary' ?>"><?= e($l['aksi']) ?></span></td>
+            <td><span class="siap-badge siap-badge-<?= $badge[$l['aksi']] ?? 'info' ?> siap-mono-xs"><?= e($l['aksi']) ?></span></td>
             <td class="small"><?= e($labelModul[$l['modul']] ?? $l['modul']) ?></td>
             <td class="small"><?= e($l['keterangan']) ?></td>
             <td class="small text-muted"><?= e($l['ip_address']) ?></td>

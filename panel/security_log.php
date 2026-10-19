@@ -31,13 +31,14 @@ $stmt->execute($params);
 $logs = $stmt->fetchAll();
 $extraParams1 = ['siswa' => $siswaQ, 'event' => $event, 'tanggal' => $tanggal, 'limit' => $perPage];
 
-$eventList = ['DEVICE_REGISTERED','DEVICE_MATCH','DEVICE_MISMATCH','DEVICE_BLOCKED','PRESENCE_SUCCESS','PRESENCE_REJECTED','ADMIN_LOGIN_FAILED','DEVICE_PAIRING_FAILED'];
+$eventList = ['DEVICE_REGISTERED','DEVICE_MATCH','DEVICE_MISMATCH','DEVICE_BLOCKED','DEVICE_ANOMALY_REVIEW','DEVICE_SECRET_MISMATCH','DEVICE_SECRET_MISSING','DEVICE_UPGRADED_V3','DEVICE_RESET','PRESENCE_SUCCESS','PRESENCE_REJECTED','ADMIN_LOGIN_FAILED','DEVICE_PAIRING_FAILED'];
 
 $badgeMap = [
     'DEVICE_REGISTERED' => 'info', 'DEVICE_MATCH' => 'success', 'DEVICE_MISMATCH' => 'danger',
-    'DEVICE_BLOCKED' => 'dark', 'ADMIN_LOGIN_FAILED' => 'danger', 'DEVICE_PAIRING_FAILED' => 'warning', 'DEVICE_RESET' => 'warning', 'PRESENCE_SUCCESS' => 'success', 'PRESENCE_REJECTED' => 'danger',
-    'ADMIN_ACCOUNT_UPDATED' => 'primary', 'QR_KELAS_REGENERATED' => 'warning',
-    'SISWA_PINDAH_KELAS' => 'info', 'KENAIKAN_KELAS' => 'primary', 'KELAS_DIGANTI_NAMA' => 'info',
+    'DEVICE_BLOCKED' => 'info', 'ADMIN_LOGIN_FAILED' => 'danger', 'DEVICE_PAIRING_FAILED' => 'warning', 'DEVICE_RESET' => 'warning', 'PRESENCE_SUCCESS' => 'success', 'PRESENCE_REJECTED' => 'danger',
+    'DEVICE_ANOMALY_REVIEW' => 'danger', 'DEVICE_SECRET_MISMATCH' => 'danger', 'DEVICE_SECRET_MISSING' => 'warning', 'DEVICE_UPGRADED_V3' => 'info',
+    'ADMIN_ACCOUNT_UPDATED' => 'info', 'QR_KELAS_REGENERATED' => 'warning',
+    'SISWA_PINDAH_KELAS' => 'info', 'KENAIKAN_KELAS' => 'info', 'KELAS_DIGANTI_NAMA' => 'info',
 ];
 
 // Log reset perangkat (riwayat administratif terpisah)
@@ -54,7 +55,8 @@ $resetLogs = $db->query(
      ORDER BY rl.created_at DESC LIMIT " . $perPage . " OFFSET $offset2"
 )->fetchAll();
 ?>
-<h4 class="mb-3"><i class="bi bi-shield-exclamation"></i> Log Keamanan</h4>
+<div class="siap-eyebrow siap-stack-sm">Sistem &amp; Keamanan</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-shield-exclamation"></i> Log Keamanan</h2>
 
 <ul class="nav nav-pills mb-3 flex-nowrap overflow-auto pb-1" role="tablist" style="white-space:nowrap">
   <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tabSecurity" type="button" role="tab"><i class="bi bi-shield-exclamation"></i> Aktivitas Keamanan</button></li>
@@ -72,13 +74,13 @@ $resetLogs = $db->query(
   <div class="tbl-tools">
     <form method="get" data-live data-live-target="#hasil-live"><?= hidden_modul() ?>
       <?= render_per_page_field($perPage, false) ?>
-              <div class="tbl-search"><i class="bi bi-search"></i><input type="text" name="siswa" class="form-control" placeholder="Cari NISN siswa..." value="<?= e($siswaQ) ?>"></div>
-              <select name="event" class="form-select">
+              <div class="tbl-search"><i class="bi bi-search"></i><input type="text" name="siswa" class="siap-input siap-input-ios17" placeholder="Cari NISN siswa..." value="<?= e($siswaQ) ?>"></div>
+              <select name="event" class="siap-input siap-input-ios17">
           <option value="">Semua Event</option>
           <?php foreach ($eventList as $ev): ?><option value="<?= $ev ?>" <?= $event===$ev?'selected':'' ?>><?= $ev ?></option><?php endforeach; ?>
         </select>
-        <input type="date" name="tanggal" class="form-control" value="<?= e($tanggal) ?>">
-          <a href="<?= modul_url('security_log') ?>" class="btn btn-light border" title="Hapus semua filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
+        <input type="date" name="tanggal" class="siap-input siap-input-ios17" value="<?= e($tanggal) ?>">
+          <a href="<?= modul_url('security_log') ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" title="Hapus semua filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
     </form>
   </div>
   <div id="hasil-live">
@@ -90,7 +92,7 @@ $resetLogs = $db->query(
           <tr>
             <td class="text-nowrap" data-label="Waktu"><?= e(date('d/m/Y', strtotime($l['created_at']))) ?><br><small class="text-muted"><?= e(date('H:i:s', strtotime($l['created_at']))) ?></small></td>
             <td data-label="NISN"><?= !empty($l['nisn']) ? e($l['nisn']) : '-' ?></td>
-            <td data-label="Event"><span class="badge bg-<?= $badgeMap[$l['event']] ?? 'secondary' ?>" style="white-space:normal; word-break:break-word"><?= e($l['event']) ?></span></td>
+            <td data-label="Event"><span class="siap-badge siap-badge-<?= $badgeMap[$l['event']] ?? 'info' ?> siap-mono-xs" style="white-space:normal; word-break:break-word"><?= e($l['event']) ?></span></td>
             <td class="small" data-label="IP" style="word-break:break-all"><?= e($l['ip_address']) ?></td>
             <td class="small text-muted d-none d-xl-table-cell" style="word-break:break-word; max-width:260px;" title="<?= e($l['user_agent']) ?>"><?= e($l['user_agent']) ?></td>
             <td class="small" data-label="Keterangan"><?= e($l['keterangan']) ?></td>

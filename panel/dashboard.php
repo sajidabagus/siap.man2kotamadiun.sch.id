@@ -65,6 +65,17 @@ $persenHadir = $totalSiswa ? (int) round($hadirTotal / $totalSiswa * 100) : 0;
 $efektifHariIni = is_hari_efektif();
 $warnaPersen = $persenHadir >= 90 ? '#2fb344' : ($persenHadir >= 70 ? '#d9631e' : ($persenHadir >= 50 ? '#e8a200' : '#e03e4a'));
 
+// GLM #4 — notifikasi in-app antrean keamanan perangkat (lihat Log Keamanan):
+// anomali perangkat 30 hari terakhir + percobaan kode pasangan gagal (indikasi
+// brute-force; >= 5x/24 jam baru diberitahukan supaya tidak bising).
+$reviewAnomali = (int) $db->query(
+  "SELECT COUNT(*) FROM security_logs WHERE event = 'DEVICE_ANOMALY_REVIEW' AND created_at > (NOW() - INTERVAL 30 DAY)"
+)->fetchColumn();
+$reviewPairing = (int) $db->query(
+  "SELECT COUNT(*) FROM security_logs WHERE event = 'DEVICE_PAIRING_FAILED' AND created_at > (NOW() - INTERVAL 24 HOUR)"
+)->fetchColumn();
+if ($reviewPairing < 5) $reviewPairing = 0;
+
 // Total siswa aktif per jenjang
 $jenjangTotal = [];
 foreach ($db->query("SELECT kelas, COUNT(*) c FROM siswa WHERE status='aktif' GROUP BY kelas")->fetchAll() as $r) {
@@ -85,17 +96,17 @@ $namaAdmin = (current_admin()['nama'] ?? '') ?: 'Admin';
 ?>
 
 <style>
-  .dash-hero { border: 0; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 10px rgba(20,33,61,.06); }
-  .dash-hero-top { background: linear-gradient(135deg, #2bb673, #46d08c); color: #fff; padding: 26px 26px 96px; position: relative; }
+  .dash-hero { border: 0; border-radius: var(--siap-radius-window); overflow: hidden; box-shadow: 0 2px 10px rgba(20,33,61,.06); }
+  .dash-hero-top { background: linear-gradient(135deg, var(--siap-blue-start), var(--siap-blue-end)); color: #fff; padding: 26px 26px 96px; position: relative; }
   .dash-hero-top h3 { font-weight: 700; margin: 0 0 4px; }
   .dash-hero-top p { margin: 0; opacity: .95; }
   .dash-hero-top p b { border-bottom: 2px solid rgba(255,255,255,.7); }
   .dash-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 0 26px 26px; margin-top: -68px; position: relative; }
-  .dash-tile { background: #fafbfc; border: 1px solid #eef1f6; border-radius: 12px; padding: 16px 18px; }
+  .dash-tile { background: rgba(255,255,255,0.9); border: 1px solid var(--siap-line); border-radius: var(--siap-radius-window); padding: 1rem 1.125rem; box-shadow: 0 1px 3px rgba(15,23,42,0.08); }
   .dash-tile i { font-size: 22px; }
   .dash-tile .angka { font-size: 2rem; font-weight: 700; color: #3b4560; line-height: 1.1; margin-top: 10px; }
   .dash-tile .ket { color: #9aa3b5; font-size: .92rem; }
-  .dash-card { border: 1px solid #eef1f6; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 10px rgba(20,33,61,.04); }
+  .dash-card { border: 1px solid var(--siap-line); border-radius: var(--siap-radius-window); overflow: hidden; box-shadow: 0 1px 3px rgba(15,23,42,0.08); }
   .dash-card h6 { font-weight: 700; color: #1b2437; margin: 0; }
   .dash-card .sub { color: #9aa3b5; font-size: .85rem; font-weight: 600; }
   /* Seragamkan elemen di dalam kartu dashboard dengan gaya baru */
@@ -113,7 +124,7 @@ $namaAdmin = (current_admin()['nama'] ?? '') ?: 'Admin';
   .dash-card .list-group-item { border-color: #eef1f6; }
   .dash-card .table > :not(caption) > * > * { border-color: #eef1f6; }
   .dash-card thead th { color: #9aa3b5; font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
-  .ring { --p: 0; --c: #0d6efd; width: 96px; height: 96px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  .ring { --p: 0; --c: var(--siap-blue); width: 96px; height: 96px; border-radius: 50%; flex: none; display: grid; place-items: center;
           background: conic-gradient(var(--c) calc(var(--p) * 1%), #e9edf5 0); }
   .ring::before { content: ""; grid-area: 1/1; width: 74px; height: 74px; border-radius: 50%; background: #fff; }
   .ring span { grid-area: 1/1; z-index: 1; font-weight: 700; font-size: 1.25rem; color: #1b2437; }
@@ -121,20 +132,21 @@ $namaAdmin = (current_admin()['nama'] ?? '') ?: 'Admin';
   .meta-list { list-style: none; padding: 0; margin: 0; font-size: .92rem; color: #5b6580; }
   .meta-list li { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-weight: 600; }
   .meta-list .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
-  .pesan-banner { background: #1c2f5a; color: #fff; border-radius: 16px; padding: 26px 28px; position: relative; overflow: hidden; }
+  .pesan-banner { background: linear-gradient(135deg, var(--siap-blue-start), var(--siap-blue-end)); color: #fff; border-radius: var(--siap-radius-window); padding: 1.75rem 2rem; position: relative; overflow: hidden; box-shadow: var(--siap-shadow-btn-blue); }
   .pesan-banner h5 { font-weight: 700; line-height: 1.4; margin-bottom: 8px; }
   .pesan-banner .hl { color: #ff3b6b; border-bottom: 2px solid #b0294d; padding-bottom: 1px; }
   .pesan-banner p { color: #c9d3ea; margin-bottom: 16px; }
   .pesan-banner .bg-icon { position: absolute; right: -10px; bottom: -22px; font-size: 130px; color: rgba(255,255,255,.07); }
-  .btn-pink { background: #ff2d63; color: #fff; border: 0; } .btn-pink:hover { background: #e8235a; color: #fff; }
-  .btn-slate { background: #3a4d78; color: #fff; border: 0; } .btn-slate:hover { background: #46598a; color: #fff; }
+  .btn-pink { background: var(--siap-danger-text); color: #fff; border: 0; } .btn-pink:hover { background: var(--siap-danger-border); color: #fff; }
+  .btn-slate { background: var(--siap-muted); color: #fff; border: 0; } .btn-slate:hover { background: var(--siap-faint); color: #fff; }
   .info-item { display: flex; gap: 12px; align-items: flex-start; padding: 9px 0; border-bottom: 1px dashed #e6eaf2; }
   .info-item:last-child { border-bottom: 0; }
   .info-item i { font-size: 18px; margin-top: 1px; }
   @media (max-width: 575px) { .dash-hero-top { padding: 22px 20px 90px; } .dash-tiles { padding: 0 16px 20px; gap: 10px; } .dash-tile { padding: 14px; } }
 </style>
 
-<h4 class="mb-3"><i class="bi bi-speedometer2"></i> Dashboard</h4>
+<div class="siap-eyebrow siap-stack-sm">Ringkasan</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-speedometer2"></i> Dashboard</h2>
 
 <div class="row g-3 mb-3">
   <!-- KIRI: presensi hari ini -->
@@ -146,10 +158,10 @@ $namaAdmin = (current_admin()['nama'] ?? '') ?: 'Admin';
         <p>Sudah presensi: <b><?= (int) $sudahPresensi ?></b> dari <?= (int) $totalSiswa ?> siswa</p>
       </div>
       <div class="dash-tiles">
-        <div class="dash-tile"><i class="bi bi-check-circle-fill" style="color:#2fb344"></i><div class="angka"><?= (int) $hadirTotal ?></div><div class="ket">Hadir</div></div>
-        <div class="dash-tile"><i class="bi bi-clock-fill" style="color:#f08c1a"></i><div class="angka"><?= (int) $rekapHariIni['TERLAMBAT'] ?></div><div class="ket">Terlambat</div></div>
-        <div class="dash-tile"><i class="bi bi-hourglass-split" style="color:#6c7a96"></i><div class="angka"><?= (int) $belumPresensi ?></div><div class="ket">Belum Presensi</div></div>
-        <div class="dash-tile"><i class="bi bi-x-circle-fill" style="color:#e03e4a"></i><div class="angka"><?= (int) $tidakHadir ?></div><div class="ket">Tidak Hadir <span style="font-size:.75rem">(izin, sakit, alpa)</span></div></div>
+        <div class="dash-tile"><i class="bi bi-check-circle-fill" style="color:var(--siap-success-text)"></i><div class="angka"><?= (int) $hadirTotal ?></div><div class="ket">Hadir</div></div>
+        <div class="dash-tile"><i class="bi bi-clock-fill" style="color:var(--siap-warning-text)"></i><div class="angka"><?= (int) $rekapHariIni['TERLAMBAT'] ?></div><div class="ket">Terlambat</div></div>
+        <div class="dash-tile"><i class="bi bi-hourglass-split" style="color:var(--siap-muted)"></i><div class="angka"><?= (int) $belumPresensi ?></div><div class="ket">Belum Presensi</div></div>
+        <div class="dash-tile"><i class="bi bi-x-circle-fill" style="color:var(--siap-danger-text)"></i><div class="angka"><?= (int) $tidakHadir ?></div><div class="ket">Tidak Hadir <span style="font-size:.75rem">(izin, sakit, alpa)</span></div></div>
       </div>
     </div>
   </div>
@@ -170,7 +182,7 @@ $namaAdmin = (current_admin()['nama'] ?? '') ?: 'Admin';
               <?php if (!$jenjangTotal): ?><li>Belum ada siswa aktif</li><?php endif; ?>
             </ul>
           </div>
-          <a href="<?= modul_url('siswa') ?>" class="btn btn-sm btn-light mt-3">Data Siswa</a>
+          <a href="<?= modul_url('siswa') ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs mt-3" style="width:100%">Data Siswa</a>
         </div></div>
       </div>
       <div class="col-md-6">
@@ -185,7 +197,7 @@ $namaAdmin = (current_admin()['nama'] ?? '') ?: 'Admin';
               <li><span class="dot" style="background:#9aa3b5"></span> Belum: <?= (int) $belumPresensi ?></li>
             </ul>
           </div>
-          <a href="<?= modul_url('presensi') ?>" class="btn btn-sm btn-light mt-3">Lihat Presensi</a>
+          <a href="<?= modul_url('presensi') ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs mt-3" style="width:100%">Lihat Presensi</a>
         </div></div>
       </div>
     </div>
@@ -203,14 +215,20 @@ $namaAdmin = (current_admin()['nama'] ?? '') ?: 'Admin';
             <?php endif; ?>
           </h5>
           <p><?= $efektifHariIni ? 'Pantau kehadiran secara langsung dan tindak lanjuti siswa yang belum presensi.' : 'Presensi siswa ditutup. Hari efektif: ' . e(label_hari_efektif()) . '.' ?></p>
-          <a href="<?= modul_url('presensi') ?>" class="btn btn-pink btn-sm px-3">Lihat Presensi</a>
-          <a href="<?= modul_url('rekap') ?>" class="btn btn-slate btn-sm px-3">Rekap Bulanan</a>
+          <a href="<?= modul_url('presensi') ?>" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs px-3">Lihat Presensi</a>
+          <a href="<?= modul_url('rekap') ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs px-3">Rekap Bulanan</a>
         </div>
       </div>
       <!-- Pesan 2: info & pengingat -->
       <div class="col-md-5">
         <div class="card dash-card h-100"><div class="card-body">
           <h6 class="mb-2">Info &amp; Pengingat</h6>
+          <?php if ($reviewAnomali > 0): ?>
+          <div class="info-item"><i class="bi bi-shield-exclamation text-danger"></i><div class="small"><b><?= (int) $reviewAnomali ?> anomali perangkat</b> perlu review (30 hari terakhir). <a href="<?= e(modul_url('security_log', ['event' => 'DEVICE_ANOMALY_REVIEW'])) ?>">Lihat</a></div></div>
+          <?php endif; ?>
+          <?php if ($reviewPairing > 0): ?>
+          <div class="info-item"><i class="bi bi-key text-danger"></i><div class="small"><b><?= (int) $reviewPairing ?> percobaan kode pasangan gagal</b> (24 jam terakhir). <a href="<?= e(modul_url('security_log', ['event' => 'DEVICE_PAIRING_FAILED'])) ?>">Lihat</a></div></div>
+          <?php endif; ?>
           <div class="info-item"><i class="bi bi-alarm text-primary"></i><div class="small">Presensi mulai <b><?= e(substr((string) ($cfg['jam_masuk'] ?? '07:00'), 0, 5)) ?></b>, terlambat setelah <b><?= e(substr((string) ($cfg['batas_terlambat'] ?? '07:15'), 0, 5)) ?></b>.</div></div>
           <div class="info-item"><i class="bi bi-geo-alt <?= !empty($cfg['gps_aktif']) ? 'text-success' : 'text-secondary' ?>"></i><div class="small">Validasi lokasi GPS <?= !empty($cfg['gps_aktif']) ? '<b>aktif</b>' : '<b>nonaktif</b>' ?>.</div></div>
           <div class="info-item"><i class="bi bi-phone <?= !empty($cfg['device_binding_aktif']) ? 'text-success' : 'text-secondary' ?>"></i><div class="small">Device binding <?= !empty($cfg['device_binding_aktif']) ? '<b>aktif</b>' : '<b>nonaktif</b>' ?>.</div></div>
@@ -266,8 +284,8 @@ $namaAdmin = (current_admin()['nama'] ?? '') ?: 'Admin';
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2" id="pagerRekapKelas">
           <span class="text-muted small" id="infoRekapKelas"></span>
           <div class="btn-group btn-group-sm">
-            <button type="button" class="btn btn-outline-secondary" id="prevRekapKelas" aria-label="Sebelumnya"><i class="bi bi-chevron-left"></i></button>
-            <button type="button" class="btn btn-outline-secondary" id="nextRekapKelas" aria-label="Berikutnya"><i class="bi bi-chevron-right"></i></button>
+            <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost" id="prevRekapKelas" aria-label="Sebelumnya"><i class="bi bi-chevron-left"></i></button>
+            <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost" id="nextRekapKelas" aria-label="Berikutnya"><i class="bi bi-chevron-right"></i></button>
           </div>
         </div>
       </div>
@@ -345,7 +363,7 @@ $warnaStatus = ['HADIR' => 'success', 'TERLAMBAT' => 'warning', 'IZIN' => 'info'
                   <td class="text-nowrap small"><?= e(date('d/m', strtotime($h['tanggal']))) ?> <span class="text-muted"><?= e(substr((string) $h['jam_masuk'], 0, 5)) ?></span></td>
                   <td class="small"><?= e($h['nama']) ?></td>
                   <td class="small text-nowrap"><?= e($h['kelas']) ?></td>
-                  <td><span class="badge bg-<?= $warnaStatus[$h['status']] ?? 'secondary' ?>"><?= e($h['status']) ?></span></td>
+                  <td><span class="siap-badge siap-badge-<?= $warnaStatus[$h['status']] ?? 'info' ?>"><?= e($h['status']) ?></span></td>
                 </tr>
               <?php endforeach; ?>
               <?php if (!$histori): ?><tr><td colspan="4" class="text-center text-muted py-3">Belum ada data absensi.</td></tr><?php endif; ?>
@@ -388,7 +406,7 @@ $warnaStatus = ['HADIR' => 'success', 'TERLAMBAT' => 'warning', 'IZIN' => 'info'
           <?php foreach ($siswaRajin as $r): ?>
             <li class="list-group-item d-flex justify-content-between align-items-start py-1">
               <div class="ms-2 me-auto small"><?= e($r['nama']) ?> <span class="text-muted">(<?= e($r['kelas']) ?>)</span></div>
-              <span class="badge bg-success rounded-pill"><?= (int) $r['hadir'] ?>x hadir</span>
+              <span class="siap-badge siap-badge-success"><?= (int) $r['hadir'] ?>x hadir</span>
             </li>
           <?php endforeach; ?>
           <?php if (!$siswaRajin): ?><li class="list-group-item small text-muted">Belum ada data bulan ini.</li><?php endif; ?>
@@ -399,7 +417,7 @@ $warnaStatus = ['HADIR' => 'success', 'TERLAMBAT' => 'warning', 'IZIN' => 'info'
           <?php foreach ($kelasTerbaik as $k): ?>
             <li class="list-group-item d-flex justify-content-between align-items-start py-1">
               <div class="ms-2 me-auto small"><?= e($k['kelas']) ?></div>
-              <span class="badge bg-primary rounded-pill"><?= e($k['persen']) ?>%</span>
+              <span class="siap-badge siap-badge-info"><?= e($k['persen']) ?>%</span>
             </li>
           <?php endforeach; ?>
           <?php if (!$kelasTerbaik): ?><li class="list-group-item small text-muted">Belum ada data bulan ini.</li><?php endif; ?>
@@ -413,10 +431,10 @@ $warnaStatus = ['HADIR' => 'success', 'TERLAMBAT' => 'warning', 'IZIN' => 'info'
   /* Persentase rekap per kelas: titik berwarna + angka tebal (hijau / oranye / kuning / merah) */
   .pct-badge { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.05rem; white-space: nowrap; }
   .pct-badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
-  .pct-hijau  { color: #2fb344; }
-  .pct-oranye { color: #d9631e; }
-  .pct-kuning { color: #e8a200; }
-  .pct-merah  { color: #e03e4a; }
+  .pct-hijau  { color: var(--siap-success-text); }
+  .pct-oranye { color: var(--siap-warning-text); }
+  .pct-kuning { color: var(--siap-warning-text); }
+  .pct-merah  { color: var(--siap-danger-text); }
 </style>
 <script>
 // Paginasi rekap per kelas (di sisi browser, tanpa reload). Jumlah baris per
@@ -454,7 +472,7 @@ $warnaStatus = ['HADIR' => 'success', 'TERLAMBAT' => 'warning', 'IZIN' => 'info'
 })();
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/vendor/chart.umd.min.js?v=<?= @filemtime(__DIR__ . '/../assets/js/vendor/chart.umd.min.js') ?: time() ?>"></script>
 <script>
   (function () {
     var labels = <?= json_encode($labels7) ?>;

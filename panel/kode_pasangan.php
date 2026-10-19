@@ -10,7 +10,7 @@ $st = $db->prepare('SELECT id, nama, nis, kelas FROM siswa WHERE id = :id');
 $st->execute([':id' => $siswaId]);
 $siswa = $st->fetch();
 if (!$siswa) {
-  echo '<div class="alert alert-danger mb-0">Siswa tidak ditemukan.</div>';
+  echo '<div class="siap-note siap-note-danger mb-0">Siswa tidak ditemukan.</div>';
   exit;
 }
 
@@ -35,47 +35,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$binding) {
 </div>
 
 <?php if ($binding): ?>
-  <div class="alert alert-warning mb-3">
+  <div class="siap-note siap-note-warning mb-3">
     Siswa ini <strong>sudah memiliki perangkat terdaftar</strong>. Untuk mendaftarkan perangkat baru, reset perangkatnya dulu di
     <a href="<?= e(modul_url('device', ['siswa_id' => (int) $siswaId])) ?>">Manajemen Perangkat</a>, lalu buat kode di sini.
   </div>
-  <div class="d-flex justify-content-end"><button type="button" class="btn btn-light border" data-bs-dismiss="modal">Tutup</button></div>
+  <div class="d-flex justify-content-end"><button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" data-bs-dismiss="modal">Tutup</button></div>
 
 <?php elseif ($hasil): ?>
   <?php $tampil = substr($hasil['kode'], 0, 3) . ' ' . substr($hasil['kode'], 3); ?>
   <div class="text-center mb-2">
-    <span class="badge bg-light text-dark border" style="font-size:.85rem">
+    <span class="siap-badge siap-badge-info siap-mono-xs" style="font-size:.85rem">
       <i class="bi bi-hourglass-split"></i> Berlaku <span data-countdown="<?= (int) strtotime($hasil['berlaku_sampai']) ?>">--:--</span>
       &middot; sekali pakai
     </span>
   </div>
   <div class="row g-3 align-items-stretch">
     <div class="col-md-6">
-      <div class="border rounded-3 p-3 h-100 text-center">
+      <div class="ps-card ps-card-pad h-100 text-center">
         <div class="text-muted small fw-bold mb-2">CARA 1 &mdash; SCAN QR</div>
         <div data-qr="<?= e($hasil['url']) ?>" data-qr-lib="<?= e(BASE_URL) ?>/assets/js/vendor/qrcode.js" style="min-height:190px" class="d-flex align-items-center justify-content-center"></div>
         <div class="small text-muted mt-2">Siswa scan dengan kamera perangkatnya, lalu ketuk <em>Daftarkan Perangkat Ini</em>.</div>
       </div>
     </div>
     <div class="col-md-6">
-      <div class="border rounded-3 p-3 h-100 text-center d-flex flex-column justify-content-center">
+      <div class="ps-card ps-card-pad h-100 text-center d-flex flex-column justify-content-center">
         <div class="text-muted small fw-bold mb-2">CARA 2 &mdash; KODE 6 ANGKA</div>
         <div class="fw-bold" style="font-size:2.3rem; letter-spacing:.16em; font-family:ui-monospace,Consolas,monospace; color:#14213d"><?= e($tampil) ?></div>
         <div class="small text-muted mt-2">Di halaman presensi siswa, ketuk <em>Daftarkan Perangkat</em>, lalu isi <strong>NIS</strong> dan kode ini.</div>
       </div>
     </div>
   </div>
-  <div class="alert alert-info small mt-3 mb-3">
+  <div class="siap-note siap-note-info mt-3 mb-3">
     Pilih <strong>salah satu</strong> cara. Begitu salah satunya dipakai, cara lainnya langsung hangus. Kode dan QR ini hanya tampil sekali di layar ini.
   </div>
   <div class="d-flex justify-content-end gap-2">
-    <button type="button" class="btn btn-light border" onclick="navigator.clipboard && navigator.clipboard.writeText('<?= e($hasil['kode']) ?>'); this.textContent='Kode tersalin ✓'"><i class="bi bi-clipboard"></i> Salin kode</button>
-    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Selesai</button>
+    <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" onclick="navigator.clipboard && navigator.clipboard.writeText('<?= e($hasil['kode']) ?>'); this.textContent='Kode tersalin ✓'"><i class="bi bi-clipboard"></i> Salin kode</button>
+    <button type="button" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs" data-bs-dismiss="modal">Selesai</button>
   </div>
 
 <?php else: ?>
-  <?php if (empty($settings['device_wajib_kode'])): ?>
-    <div class="alert alert-warning small">
+  <?php if (!device_wajib_kode_aktif($settings)): ?>
+    <div class="siap-note siap-note-warning small">
       Mode <strong>Wajib Kode Pasangan</strong> belum aktif, sehingga perangkat siswa masih terdaftar otomatis saat scan pertama.
       Aktifkan di <a href="<?= modul_url('pengaturan') ?>">Pengaturan → Pengaturan Absensi → Device Binding</a> agar QR/kode ini dipakai.
     </div>
@@ -85,8 +85,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$binding) {
     <?= csrf_field() ?>
     <input type="hidden" name="siswa_id" value="<?= (int) $siswaId ?>">
     <div class="d-flex justify-content-end gap-2">
-      <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Batal</button>
-      <button type="submit" class="btn btn-primary"><i class="bi bi-key"></i> Buat QR &amp; Kode</button>
+      <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" data-bs-dismiss="modal">Batal</button>
+      <button type="submit" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs"><i class="bi bi-key"></i> Buat QR &amp; Kode</button>
     </div>
   </form>
 <?php endif; ?>

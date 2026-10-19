@@ -52,10 +52,10 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/../uploads/siswa/' . $logo)) ? B
 <?= favicon_tag() ?>
 <style>
   * { box-sizing: border-box; }
-  body { font-family: "Segoe UI", Arial, sans-serif; font-size: 12px; color: #000; margin: 0; background: #f1f3f5; }
-  .toolbar { position: sticky; top: 0; background: #fff; border-bottom: 1px solid #ddd; padding: 8px 16px; display: flex; gap: 8px; align-items: center; }
-  .toolbar button, .toolbar a { font: inherit; padding: 6px 14px; border: 1px solid #0d6efd; background: #0d6efd; color: #fff; border-radius: 6px; cursor: pointer; text-decoration: none; }
-  .toolbar a { background: #fff; color: #0d6efd; }
+  body { font-family: "Segoe UI", Arial, sans-serif; font-size: 12px; color: var(--siap-ink); margin: 0; background: var(--siap-bg); }
+  .toolbar { position: sticky; top: 0; background: #fff; border-bottom: 1px solid var(--siap-line); padding: 8px 16px; display: flex; gap: 8px; align-items: center; }
+  .toolbar button, .toolbar a { font: inherit; padding: 6px 14px; border: 1px solid var(--siap-blue); background: var(--siap-blue); color: #fff; border-radius: 6px; cursor: pointer; text-decoration: none; }
+  .toolbar a { background: #fff; color: var(--siap-blue); }
   .halaman { width: 210mm; max-width: 100%; margin: 12px auto; background: #fff; padding: 15mm; }
   .kop { display: flex; align-items: center; gap: 14px; border-bottom: 3px double #000; padding-bottom: 8px; margin-bottom: 12px; }
   .kop img { width: 64px; height: 64px; object-fit: contain; }
@@ -68,7 +68,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/../uploads/siswa/' . $logo)) ? B
   .ringkas b { display: block; font-size: 15px; }
   table.data { width: 100%; border-collapse: collapse; }
   .data th, .data td { border: 1px solid #000; padding: 3px 5px; }
-  .data th { background: #e9ecef; text-align: center; }
+  .data th { background: var(--siap-line); text-align: center; }
   .data td.c { text-align: center; }
   thead { display: table-header-group; }
   tr { page-break-inside: avoid; }
@@ -87,9 +87,9 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/../uploads/siswa/' . $logo)) ? B
 </head>
 <body>
 <div class="toolbar">
-  <button type="button" onclick="window.print()">Cetak</button>
-  <a href="javascript:window.close()">Tutup</a>
-  <span style="color:#6c757d"><?= e($tglIndo) ?> — <?= e($filterTxt) ?></span>
+  <button type="button" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs" onclick="window.print()">Cetak</button>
+  <a href="javascript:window.close()" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs">Tutup</a>
+  <span style="color:var(--siap-muted)"><?= e($tglIndo) ?> — <?= e($filterTxt) ?></span>
 </div>
 
 <div class="halaman">

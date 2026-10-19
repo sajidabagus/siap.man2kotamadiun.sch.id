@@ -19,6 +19,16 @@ define('BASE_URL', 'http://localhost/siap.man2kotamadiun.sch.id');
 // Zona waktu server — WAJIB konsisten agar validasi jam presensi akurat.
 date_default_timezone_set('Asia/Jakarta');
 
+/**
+ * SECURITY: daftar IP proxy tepercaya yang boleh menyisipkan header
+ * X-Forwarded-For / CF-Connecting-IP. String kosong berarti tidak ada proxy
+ * (aman utk XAMPP/localhost): get_client_ip() hanya memakai REMOTE_ADDR,
+ * sehingga header XFF yang dipalsukan klien TIDAK dipercaya — ini menutup
+ * celah rotasi-IP palsu pada rate-limit login & pencemaran security_logs.
+ * Contoh production (Nginx di mesin sama):  '127.0.0.1, ::1'
+ */
+define('TRUSTED_PROXIES', '');
+
 function getDB(): PDO
 {
     static $pdo = null;

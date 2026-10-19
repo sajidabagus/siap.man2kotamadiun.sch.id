@@ -35,7 +35,7 @@ if ($kelas !== '') {
     <meta charset="UTF-8">
     <title>QR Kelas <?= e($kelas) ?></title>
 <?= favicon_tag() ?>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap.min.css?v=<?= @filemtime(__DIR__ . '/../assets/css/vendor/bootstrap.min.css') ?: time() ?>" rel="stylesheet">
     <style>
       @font-face {
         font-family: 'Baloo2Poster';
@@ -45,9 +45,9 @@ if ($kelas !== '') {
         font-display: swap;
       }
 
-      body { background:#0d1b2a; color:#fff; min-height:100vh; display:flex; align-items:center; justify-content:center; padding: 24px; }
+      body { background:var(--siap-bg); color:var(--siap-ink); min-height:100vh; display:flex; align-items:center; justify-content:center; padding: 24px; }
       .box { text-align:center; max-width: 420px; }
-      #qrHolder { background:#fff; padding:16px; border-radius:12px; display:inline-flex; }
+      #qrHolder { background:rgba(255,255,255,0.9); padding:24px; border-radius:var(--siap-radius-window); box-shadow:var(--siap-shadow-card); display:inline-flex; border:1px solid var(--siap-line); }
       .badge-kelas { font-size: 1.1rem; padding: 8px 18px; }
 
       /* ===== Area cetak (poster, format sama dgn versi cetak lama) =====
@@ -95,15 +95,15 @@ if ($kelas !== '') {
     <body>
       <div class="box">
         <h2><?= e($settings['nama_sekolah'] ?? '') ?></h2>
-        <p class="mb-2"><span class="badge bg-primary badge-kelas">Kelas <?= e($kelas) ?></span></p>
+        <p class="mb-2"><span class="siap-badge siap-badge-info badge-kelas">Kelas <?= e($kelas) ?></span></p>
         <p class="mb-1 fs-5">Scan QR ini dengan perangkat Anda untuk presensi di kelas <?= e($kelas) ?></p>
         <div id="qrHolder" class="my-3 d-flex justify-content-center"></div>
         <p class="text-muted small mb-3">QR permanen untuk kelas ini — hanya berlaku bagi siswa kelas <?= e($kelas) ?>, aman dicetak dan ditempel.</p>
 
         <div class="d-flex gap-2 justify-content-center mt-3 flex-wrap">
-          <a href="<?= modul_url('qr_kelas') ?>" class="btn btn-outline-secondary btn-sm">Ganti Kelas</a>
-          <?php if (can('qr_kelas.cetak')): ?><button type="button" class="btn btn-outline-light btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Cetak Kartu Ini</button><?php endif; ?>
-          <?php if (can('qr_kelas.generate')): ?><button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalRegen">
+          <a href="<?= modul_url('qr_kelas') ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs btn-sm">Ganti Kelas</a>
+          <?php if (can('qr_kelas.cetak')): ?><button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Cetak Kartu Ini</button><?php endif; ?>
+          <?php if (can('qr_kelas.generate')): ?><button type="button" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs btn-sm" data-bs-toggle="modal" data-bs-target="#modalRegen" style="background:var(--siap-danger-text);border:none">
             <i class="bi bi-arrow-repeat"></i> Regenerate QR Ini
           </button><?php endif; ?>
         </div>
@@ -125,8 +125,8 @@ if ($kelas !== '') {
                 <strong>langsung tidak berlaku</strong> setelah ini. Pastikan Anda akan mengganti QR fisiknya juga.</p>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="submit" name="regenerate" value="1" class="btn btn-danger">Ya, Regenerate</button>
+                <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" name="regenerate" value="1" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs" style="background:var(--siap-danger-text);border:none">Ya, Regenerate</button>
               </div>
             </form>
           </div>
@@ -165,7 +165,7 @@ if ($kelas !== '') {
         </div>
       </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="<?= BASE_URL ?>/assets/js/vendor/bootstrap.bundle.min.js?v=<?= @filemtime(__DIR__ . '/../assets/js/vendor/bootstrap.bundle.min.js') ?: time() ?>"></script>
     <script src="<?= BASE_URL ?>/assets/js/vendor/qrcode.js"></script>
     <script>
     const content = <?= json_encode(BASE_URL . '/presensi/?gate=' . $qr['token']) ?>;
@@ -188,23 +188,34 @@ $logoFile = !empty($settings['logo']) ? $settings['logo'] : null;
 $kelasList = $db->query('SELECT DISTINCT kelas FROM siswa ORDER BY kelas')->fetchAll(PDO::FETCH_COLUMN);
 $perJenjang = kelompokkan_per_jenjang($kelasList);
 
-// Siapkan QR permanen (atau buat kalau belum ada) utk SETIAP kelas, supaya
-// thumbnail QR-nya bisa langsung ditampilkan di kartu. Tidak pernah generate
-// ULANG kalau sudah ada -> tidak mengubah QR yang mungkin sudah dicetak.
+// D8: satu kueri untuk SELURUH kelas (dulu get_or_create_qr_kelas() per kelas
+// = N+1; 30 kelas berarti 30+ kueri tiap halaman dibuka). Ambil token AKTIF
+// terbaru per kelas sekaligus (ORDER BY id DESC + ambil pertama = identik
+// dengan ORDER BY id DESC LIMIT 1 milik get_or_create). Kelas yang benar-benar
+// belum punya QR tetap dibuatkan lewat fallback per kelas (hanya bila kosong).
 $tokenPerKelas = [];
+$stKelas = $db->query('SELECT kelas_target, token FROM qr_dinamis
+                       WHERE kelas_target IS NOT NULL AND status = "AKTIF" AND kadaluarsa_at >= NOW()
+                       ORDER BY id DESC');
+foreach ($stKelas->fetchAll() as $row) {
+    if (!isset($tokenPerKelas[$row['kelas_target']])) $tokenPerKelas[$row['kelas_target']] = $row['token'];
+}
 foreach ($kelasList as $k) {
-    $tokenPerKelas[$k] = get_or_create_qr_kelas($k)['token'];
+    if (!isset($tokenPerKelas[$k])) $tokenPerKelas[$k] = get_or_create_qr_kelas($k)['token'];
 }
 ?>
+<div class="siap-eyebrow siap-stack-sm">QR Code</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-easel2"></i> QR Kelas</h2>
+
 <div class="konten-biasa">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-0"><i class="bi bi-easel2"></i> QR Kelas</h4>
-    <?php if (can('qr_kelas.cetak')): ?><button type="button" class="btn btn-outline-secondary" onclick="cetakKelasGrid(null)"><i class="bi bi-printer"></i> Cetak Semua QR Kelas</button><?php endif; ?>
+    <div></div>
+    <?php if (can('qr_kelas.cetak')): ?><button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" onclick="cetakKelasGrid(null)"><i class="bi bi-printer"></i> Cetak Semua QR Kelas</button><?php endif; ?>
   </div>
 
   <?php if (empty($kelasList)): ?>
-    <div class="card"><div class="card-body">
-      <p class="text-muted mb-0">Belum ada data kelas. Tambahkan siswa terlebih dahulu di menu Data Siswa.</p>
+    <div class="ps-card"><div class="ps-body text-center">
+      <p class="siap-copy-sm mb-0">Belum ada data kelas. Tambahkan siswa terlebih dahulu di menu Data Siswa.</p>
     </div></div>
   <?php else: ?>
     <?php foreach ($perJenjang as $jenjang => $daftarKelasJenjang): ?>
@@ -214,7 +225,7 @@ foreach ($kelasList as $k) {
             <h6>Jenjang <?= e($jenjang) ?></h6>
             <div class="sub"><?= count($daftarKelasJenjang) ?> kelas</div>
           </div>
-          <?php if (can('qr_kelas.cetak')): ?><button type="button" class="btn btn-light border btn-sm" onclick="cetakKelasGrid('<?= e($jenjang) ?>')">
+          <?php if (can('qr_kelas.cetak')): ?><button type="button" class="siap-btn siap-btn-ghost siap-mono-xs btn-sm" onclick="cetakKelasGrid('<?= e($jenjang) ?>')">
             <i class="bi bi-printer"></i> Cetak Semua Jenjang <?= e($jenjang) ?>
           </button><?php endif; ?>
         </div>
@@ -287,8 +298,8 @@ foreach ($kelasList as $k) {
 @media (max-width: 992px) { .col-kelas { width: calc(100% / 3); } }
 @media (max-width: 768px) { .col-kelas { width: calc(100% / 2); } }
 .kelas-card {
-  border-radius: 14px;
-  border: 1px solid #e3e6ea;
+  border-radius: var(--siap-radius-window);
+  border: 1px solid var(--siap-line);
   transition: box-shadow .15s ease, transform .15s ease;
 }
 .kelas-card:hover {
@@ -297,7 +308,7 @@ foreach ($kelasList as $k) {
   border-color: #1f8f94;
 }
 .qr-thumb {
-  width: 74px; height: 74px; border-radius: 10px;
+  width: 74px; height: 74px; border-radius: var(--siap-radius-mini);
   background: #fff; border: 1px solid #eef0f2;
   display: flex; align-items: center; justify-content: center; overflow: hidden;
 }

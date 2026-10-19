@@ -79,7 +79,8 @@ $rekapKelas = $stmtK->fetchAll();
 $namaBulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 $extraParams = ['bulan' => $bulan, 'tahun' => $tahun, 'kelas' => $kelas, 'limit' => $perPage];
 ?>
-<h4 class="mb-3"><i class="bi bi-bar-chart"></i> Rekap Kehadiran Bulanan</h4>
+<div class="siap-eyebrow siap-stack-sm">Presensi</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-bar-chart"></i> Rekap Kehadiran Bulanan</h2>
 
 <div class="tbl-card">
   <div class="tbl-head">
@@ -89,16 +90,16 @@ $extraParams = ['bulan' => $bulan, 'tahun' => $tahun, 'kelas' => $kelas, 'limit'
   <div class="tbl-tools">
     <form method="get" id="formRekap" data-live data-live-target="#hasil-live"><?= hidden_modul() ?>
       <?= render_per_page_field($perPage, false) ?>
-      <select name="bulan" class="form-select">
+      <select name="bulan" class="siap-input siap-input-ios17">
         <?php for ($m = 1; $m <= 12; $m++): ?><option value="<?= $m ?>" <?= $m === $bulan ? 'selected' : '' ?>><?= $namaBulan[$m] ?></option><?php endfor; ?>
       </select>
-      <input type="number" name="tahun" class="form-control" value="<?= $tahun ?>" aria-label="Tahun">
-      <select name="kelas" class="form-select">
+      <input type="number" name="tahun" class="siap-input siap-input-ios17" value="<?= $tahun ?>" aria-label="Tahun">
+      <select name="kelas" class="siap-input siap-input-ios17">
         <option value="">Semua Kelas</option>
         <?php foreach ($kelasList as $k): ?><option value="<?= e($k) ?>" <?= $kelas === $k ? 'selected' : '' ?>><?= e($k) ?></option><?php endforeach; ?>
       </select>
       <?php if (can('rekap.cetak')): ?>
-      <button type="button" class="btn btn-light border" data-open-form="<?= modul_url('rekap_print') ?>" title="Cetak rekap bulan ini (semua siswa)"><i class="bi bi-printer"></i> Cetak</button>
+      <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" data-open-form="<?= modul_url('rekap_print') ?>" title="Cetak rekap bulan ini (semua siswa)"><i class="bi bi-printer"></i> Cetak</button>
       <?php endif; ?>
     </form>
   </div>

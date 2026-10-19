@@ -146,7 +146,7 @@ $berhasilTampil = ($status === 'ok' || $status === 'already') && $result;
   </div>
 
   <?php if (!empty($result['device_new'])): ?>
-    <div class="ps-note info" style="margin:0 0 14px"><i class="bi bi-phone"></i><div>Perangkat ini kini terdaftar sebagai perangkat presensi utama Anda.</div></div>
+    <div class="siap-note siap-note-info" style="margin:0 0 14px"><i class="bi bi-phone"></i><div>Perangkat ini kini terdaftar sebagai perangkat presensi utama Anda.</div></div>
   <?php endif; ?>
 
   <?php if ($ringkasan): ?>
@@ -173,7 +173,7 @@ $berhasilTampil = ($status === 'ok' || $status === 'already') && $result;
   </div>
   <?php endif; ?>
 
-  <a href="<?= BASE_URL ?>/" class="ps-btn hijau"><i class="bi bi-house-door-fill"></i> Selesai</a>
+  <a href="<?= BASE_URL ?>/" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs"><i class="bi bi-house-door-fill"></i> Selesai</a>
 
 <?php else: ?>
 
@@ -189,8 +189,8 @@ $berhasilTampil = ($status === 'ok' || $status === 'already') && $result;
   </div>
   <div class="hs-gagal">
     <div class="pesan"><?= e($pesan) ?></div>
-    <a href="<?= BASE_URL ?>/presensi/index.php" class="ps-btn utama"><i class="bi bi-arrow-repeat"></i> Coba Lagi</a>
-    <a href="<?= BASE_URL ?>/" class="ps-btn polos" style="margin-top:10px">Kembali ke Beranda</a>
+    <a href="<?= BASE_URL ?>/presensi/index.php" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs"><i class="bi bi-arrow-repeat"></i> Coba Lagi</a>
+    <a href="<?= BASE_URL ?>/" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" style="margin-top:10px">Kembali ke Beranda</a>
   </div>
 
 <?php endif; ?>

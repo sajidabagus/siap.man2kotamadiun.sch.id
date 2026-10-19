@@ -10,7 +10,7 @@ $admin = current_admin();
 
 $opsiMasa = [
   '10' => '10 menit', '30' => '30 menit', '60' => '1 jam', '360' => '6 jam',
-  '1440' => '1 hari', '10080' => '7 hari', '0' => 'Tanpa batas waktu',
+  '1440' => '1 hari', '10080' => '7 hari (maksimum)',
 ];
 $masaPilih = '1440';
 $sasaran = ['jenjang' => '', 'kelas' => '', 'daftar' => ''];
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'batalka
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['aksi'] ?? '') === 'buat') {
   csrf_require();
   $masaPilih = isset($opsiMasa[$_POST['masa'] ?? '']) ? (string) $_POST['masa'] : '1440';
-  $menit = $masaPilih === '0' ? null : (int) $masaPilih;
+  $menit = (int) $masaPilih;
   $sasaranPilih = (string) ($_POST['sasaran'] ?? 'semua');
   if ($sasaranPilih === 'daftar') {
     $sasaran['daftar'] = trim((string) ($_POST['daftar'] ?? ''));
@@ -109,13 +109,14 @@ $jenjangList = array_values(array_unique(array_map('ambil_jenjang', $kelasList))
 $aktifCount = (int) $db->query("SELECT COUNT(DISTINCT siswa_id) FROM device_pairing_codes WHERE used_at IS NULL AND expires_at > NOW()")->fetchColumn();
 $settingsKode = get_settings();
 ?>
-<h4 class="mb-3"><i class="bi bi-key"></i> Kode Pasangan</h4>
+<div class="siap-eyebrow siap-stack-sm">Sistem &amp; Keamanan</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-key"></i> Kode Pasangan</h2>
 
 <?php if ($errors): ?>
-  <div class="alert alert-danger"><ul class="mb-0"><?php foreach ($errors as $err) echo '<li>' . e($err) . '</li>'; ?></ul></div>
+  <div class="siap-note siap-note-danger"><ul class="mb-0"><?php foreach ($errors as $err) echo '<li>' . e($err) . '</li>'; ?></ul></div>
 <?php endif; ?>
 
-<?php if (empty($settingsKode['device_wajib_kode'])): ?>
+<?php if (!device_wajib_kode_aktif($settingsKode)): ?>
   <div class="text-muted small mb-3"><i class="bi bi-info-circle"></i> Mode <strong>Wajib Kode Pasangan</strong> belum aktif. <a href="<?= modul_url('pengaturan') ?>">Aktifkan di Pengaturan</a> agar kode ini diperlukan.</div>
 <?php endif; ?>
 
@@ -129,7 +130,7 @@ $settingsKode = get_settings();
       <?= csrf_field() ?>
       <input type="hidden" name="aksi" value="buat">
       <div class="col-md-6">
-        <label class="form-label fw-semibold">Untuk</label>
+        <label class="siap-label siap-label-ios17">Untuk</label>
         <select name="sasaran" id="selSasaran" class="form-select">
           <option value="semua">Semua siswa</option>
           <optgroup label="Jenjang">
@@ -142,16 +143,16 @@ $settingsKode = get_settings();
         </select>
       </div>
       <div class="col-md-4">
-        <label class="form-label fw-semibold">Berlaku</label>
+        <label class="siap-label siap-label-ios17">Berlaku</label>
         <select name="masa" class="form-select">
           <?php foreach ($opsiMasa as $v => $t): ?><option value="<?= e((string) $v) ?>" <?= (string) $masaPilih === (string) $v ? 'selected' : '' ?>><?= e($t) ?></option><?php endforeach; ?>
         </select>
       </div>
       <div class="col-md-2">
-        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-key"></i> Buat</button>
+        <button type="submit" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs w-100"><i class="bi bi-key"></i> Buat</button>
       </div>
       <div class="col-12 d-none" id="boxDaftar">
-        <textarea name="daftar" class="form-control" rows="3" placeholder="Tempel NIS/NISN, satu per baris"><?= e($sasaran['daftar']) ?></textarea>
+        <textarea name="daftar" class="siap-input siap-input-ios17" rows="3" placeholder="Tempel NIS/NISN, satu per baris"><?= e($sasaran['daftar']) ?></textarea>
       </div>
     </form>
   </div>
@@ -169,9 +170,9 @@ $settingsKode = get_settings();
       </div>
       <?php if ($hasil['baris']): ?>
       <div class="d-flex flex-wrap gap-2">
-        <button type="button" class="btn btn-light border btn-sm" onclick="salinSemua(this)"><i class="bi bi-clipboard"></i> Salin</button>
-        <button type="button" class="btn btn-light border btn-sm" onclick="unduhExcel()"><i class="bi bi-file-earmark-excel"></i> Excel</button>
-        <button type="button" class="btn btn-primary btn-sm" onclick="cetakKode()"><i class="bi bi-printer"></i> Cetak</button>
+        <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs btn-sm" onclick="salinSemua(this)"><i class="bi bi-clipboard"></i> Salin</button>
+        <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs btn-sm" onclick="unduhExcel()"><i class="bi bi-file-earmark-excel"></i> Excel</button>
+        <button type="button" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs btn-sm" onclick="cetakKode()"><i class="bi bi-printer"></i> Cetak</button>
       </div>
       <?php endif; ?>
     </div>
@@ -179,7 +180,7 @@ $settingsKode = get_settings();
     <div class="px-3 pt-3 small text-muted">
       <i class="bi bi-exclamation-circle"></i> Kode hanya tampil di halaman ini. Cetak atau simpan sekarang.
       <?php if ($hasil['tidak_ditemukan']): ?>
-        <div class="text-danger mt-1">Tidak ditemukan (<?= count($hasil['tidak_ditemukan']) ?>): <?= e(implode(', ', array_slice($hasil['tidak_ditemukan'], 0, 30))) ?><?= count($hasil['tidak_ditemukan']) > 30 ? ', …' : '' ?></div>
+        <div class="siap-copy-sm mt-1" style="color:var(--siap-danger-text)">Tidak ditemukan (<?= count($hasil['tidak_ditemukan']) ?>): <?= e(implode(', ', array_slice($hasil['tidak_ditemukan'], 0, 30))) ?><?= count($hasil['tidak_ditemukan']) > 30 ? ', …' : '' ?></div>
       <?php endif; ?>
     </div>
 
@@ -219,7 +220,7 @@ $settingsKode = get_settings();
     <?= csrf_field() ?>
     <input type="hidden" name="aksi" value="batalkan">
     <span><strong><?= $aktifCount ?></strong> siswa masih punya kode aktif.</span>
-    <button type="submit" class="btn btn-link btn-sm text-danger p-0">Batalkan semua kode</button>
+    <button type="submit" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs btn-sm">Batalkan semua kode</button>
   </form>
 <?php endif; ?>
 

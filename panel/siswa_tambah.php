@@ -91,70 +91,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 <?php if (!$modal): ?>
+<div class="siap-eyebrow siap-stack-sm">Data &amp; Kelas</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-person-plus"></i> Tambah Siswa</h2>
+
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h4 class="mb-0"><i class="bi bi-person-plus"></i> Tambah Siswa</h4>
-  <a href="<?= modul_url('siswa') ?>" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Kembali ke Data Siswa</a>
+  <a href="<?= modul_url('siswa') ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs"><i class="bi bi-arrow-left"></i> Kembali ke Data Siswa</a>
 </div>
 <?php endif; ?>
 
 <?php if ($errors): ?>
-  <div class="alert alert-danger">
+  <div class="siap-note siap-note-danger">
     <ul class="mb-0"><?php foreach ($errors as $err) echo '<li>' . e($err) . '</li>'; ?></ul>
   </div>
 <?php endif; ?>
 
-<?php if (!$modal): ?><div class="card">
+<?php if (!$modal): ?><div class="ps-card ps-card-pad">
   <div class="card-body"><?php endif; ?>
     <form method="post" enctype="multipart/form-data"<?= $modal ? ' action="' . e(modul_url('siswa_tambah', ['modal' => 1])) . '" data-popup-form' : '' ?>>
       <?= csrf_field() ?>
       <div class="row g-3">
         <div class="col-md-4">
-          <label class="form-label">NIS *</label>
-          <input type="text" name="nis" class="form-control" value="<?= e($old['nis'] ?? '') ?>" required>
+          <label class="siap-label siap-label-ios17">NIS *</label>
+          <input type="text" name="nis" class="siap-input siap-input-ios17" value="<?= e($old['nis'] ?? '') ?>" required>
         </div>
         <div class="col-md-4">
-          <label class="form-label">NISN *</label>
-          <input type="text" name="nisn" class="form-control" value="<?= e($old['nisn'] ?? '') ?>" required>
+          <label class="siap-label siap-label-ios17">NISN *</label>
+          <input type="text" name="nisn" class="siap-input siap-input-ios17" value="<?= e($old['nisn'] ?? '') ?>" required>
         </div>
         <div class="col-md-4">
-          <label class="form-label">Nama Lengkap *</label>
-          <input type="text" name="nama" class="form-control" value="<?= e($old['nama'] ?? '') ?>" required>
+          <label class="siap-label siap-label-ios17">Nama Lengkap *</label>
+          <input type="text" name="nama" class="siap-input siap-input-ios17" value="<?= e($old['nama'] ?? '') ?>" required>
         </div>
         <div class="col-md-4">
-          <label class="form-label">Jenis Kelamin</label>
-          <select name="jenis_kelamin" class="form-select">
+          <label class="siap-label siap-label-ios17">Jenis Kelamin</label>
+          <select name="jenis_kelamin" class="siap-input siap-input-ios17">
             <option value="L" <?= ($old['jenis_kelamin'] ?? '') === 'L' ? 'selected' : '' ?>>Laki-laki</option>
             <option value="P" <?= ($old['jenis_kelamin'] ?? '') === 'P' ? 'selected' : '' ?>>Perempuan</option>
           </select>
         </div>
         <div class="col-md-4">
-          <label class="form-label">Tempat Lahir</label>
-          <input type="text" name="tempat_lahir" class="form-control" value="<?= e($old['tempat_lahir'] ?? '') ?>">
+          <label class="siap-label siap-label-ios17">Tempat Lahir</label>
+          <input type="text" name="tempat_lahir" class="siap-input siap-input-ios17" value="<?= e($old['tempat_lahir'] ?? '') ?>">
         </div>
         <div class="col-md-4">
-          <label class="form-label">Tanggal Lahir</label>
-          <input type="date" name="tanggal_lahir" class="form-control" value="<?= e($old['tanggal_lahir'] ?? '') ?>">
+          <label class="siap-label siap-label-ios17">Tanggal Lahir</label>
+          <input type="date" name="tanggal_lahir" class="siap-input siap-input-ios17" value="<?= e($old['tanggal_lahir'] ?? '') ?>">
         </div>
         <div class="col-md-4">
-          <label class="form-label">Kelas *</label>
-          <input type="text" name="kelas" class="form-control" placeholder="XI A" value="<?= e($old['kelas'] ?? '') ?>" required>
+          <label class="siap-label siap-label-ios17">Kelas *</label>
+          <input type="text" name="kelas" class="siap-input siap-input-ios17" placeholder="XI A" value="<?= e($old['kelas'] ?? '') ?>" required>
         </div>
         <div class="col-md-4">
-          <label class="form-label">Jurusan</label>
-          <input type="text" name="jurusan" class="form-control" placeholder="IPA" value="<?= e($old['jurusan'] ?? '') ?>">
+          <label class="siap-label siap-label-ios17">Jurusan</label>
+          <input type="text" name="jurusan" class="siap-input siap-input-ios17" placeholder="IPA" value="<?= e($old['jurusan'] ?? '') ?>">
         </div>
         <div class="col-md-4">
-          <label class="form-label">Tahun Pelajaran *</label>
-          <input type="text" name="tahun_pelajaran" class="form-control" placeholder="2026/2027" value="<?= e($old['tahun_pelajaran'] ?? '2026/2027') ?>" required>
+          <label class="siap-label siap-label-ios17">Tahun Pelajaran *</label>
+          <input type="text" name="tahun_pelajaran" class="siap-input siap-input-ios17" placeholder="2026/2027" value="<?= e($old['tahun_pelajaran'] ?? '2026/2027') ?>" required>
         </div>
         <div class="col-md-6">
-          <label class="form-label">Foto Siswa</label>
-          <input type="file" name="foto" class="form-control" accept=".jpg,.jpeg,.png,.webp">
+          <label class="siap-label siap-label-ios17">Foto Siswa</label>
+          <input type="file" name="foto" class="siap-input siap-input-ios17" accept=".jpg,.jpeg,.png,.webp">
           <small class="text-muted">Maks 2MB, format JPG/PNG/WEBP.</small>
         </div>
         <div class="col-md-6">
-          <label class="form-label">Status</label>
-          <select name="status" class="form-select">
+          <label class="siap-label siap-label-ios17">Status</label>
+          <select name="status" class="siap-input siap-input-ios17">
             <option value="aktif" <?= ($old['status'] ?? '') === 'aktif' ? 'selected' : '' ?>>Aktif</option>
             <option value="nonaktif" <?= ($old['status'] ?? '') === 'nonaktif' ? 'selected' : '' ?>>Nonaktif</option>
           </select>
@@ -162,11 +164,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
       <div class="mt-4<?= $modal ? ' d-flex justify-content-end gap-2' : '' ?>">
         <?php if ($modal): ?>
-          <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Simpan</button>
+          <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs"><i class="bi bi-save"></i> Simpan</button>
         <?php else: ?>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Simpan</button>
-          <a href="<?= modul_url('siswa') ?>" class="btn btn-outline-secondary">Batal</a>
+          <button type="submit" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs"><i class="bi bi-save"></i> Simpan</button>
+          <a href="<?= modul_url('siswa') ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs">Batal</a>
         <?php endif; ?>
       </div>
     </form>

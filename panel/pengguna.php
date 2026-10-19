@@ -95,31 +95,31 @@ if ($modal) {
   }
   ?>
   <?php if ($errors): ?>
-    <div class="alert alert-danger"><ul class="mb-0"><?php foreach ($errors as $err) echo '<li>' . e($err) . '</li>'; ?></ul></div>
+    <div class="siap-note siap-note-danger"><ul class="mb-0"><?php foreach ($errors as $err) echo '<li>' . e($err) . '</li>'; ?></ul></div>
   <?php endif; ?>
   <form method="post" autocomplete="off" action="<?= e(modul_url('pengguna', ['modal' => 1, 'id' => (int) $id])) ?>" data-popup-form<?= $user ? ' data-dirty-guard' : '' ?>>
     <?= csrf_field() ?>
     <input type="hidden" name="aksi" value="simpan">
     <div class="row g-3">
       <div class="col-md-6">
-        <label class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
-        <input type="text" name="nama" class="form-control" value="<?= e($data['nama']) ?>" required>
+        <label class="siap-label siap-label-ios17">Nama Lengkap <span class="text-danger">*</span></label>
+        <input type="text" name="nama" class="siap-input siap-input-ios17" value="<?= e($data['nama']) ?>" required>
       </div>
       <div class="col-md-6">
-        <label class="form-label">Username <span class="text-danger">*</span></label>
-        <input type="text" name="username" class="form-control" value="<?= e($data['username']) ?>" required autocapitalize="none" spellcheck="false">
+        <label class="siap-label siap-label-ios17">Username <span class="text-danger">*</span></label>
+        <input type="text" name="username" class="siap-input siap-input-ios17" value="<?= e($data['username']) ?>" required autocapitalize="none" spellcheck="false">
       </div>
       <div class="col-md-6">
-        <label class="form-label">Role</label>
-        <select name="role" class="form-select" <?= $dirSendiri ? 'disabled' : '' ?>>
+        <label class="siap-label siap-label-ios17">Role</label>
+        <select name="role" class="siap-input siap-input-ios17" <?= $dirSendiri ? 'disabled' : '' ?>>
           <?php foreach (DAFTAR_ROLE as $kode => $nama): ?>
             <option value="<?= e($kode) ?>" <?= $data['role'] === $kode ? 'selected' : '' ?>><?= e($nama) ?></option>
           <?php endforeach; ?>
         </select>
       </div>
       <div class="col-md-6">
-        <label class="form-label">Status</label>
-        <select name="status" class="form-select" <?= $dirSendiri ? 'disabled' : '' ?>>
+        <label class="siap-label siap-label-ios17">Status</label>
+        <select name="status" class="siap-input siap-input-ios17" <?= $dirSendiri ? 'disabled' : '' ?>>
           <option value="aktif" <?= $data['status'] === 'aktif' ? 'selected' : '' ?>>Aktif</option>
           <option value="nonaktif" <?= $data['status'] === 'nonaktif' ? 'selected' : '' ?>>Nonaktif</option>
         </select>
@@ -128,13 +128,13 @@ if ($modal) {
         <div class="col-12"><div class="form-text mt-0">Role dan status akun Anda sendiri tidak dapat diubah dari sini.</div></div>
       <?php endif; ?>
       <div class="col-12">
-        <label class="form-label">Password <?= $user ? '' : '<span class="text-danger">*</span>' ?></label>
-        <input type="password" name="password" class="form-control" placeholder="<?= $user ? 'Kosongkan jika tidak diganti' : 'Minimal 6 karakter' ?>" <?= $user ? '' : 'required' ?>>
+        <label class="siap-label siap-label-ios17">Password <?= $user ? '' : '<span class="text-danger">*</span>' ?></label>
+        <input type="password" name="password" class="siap-input siap-input-ios17" placeholder="<?= $user ? 'Kosongkan jika tidak diganti' : 'Minimal 6 karakter' ?>" <?= $user ? '' : 'required' ?>>
       </div>
     </div>
     <div class="mt-4 d-flex justify-content-end gap-2">
-      <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Batal</button>
-      <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> <?= $user ? 'Simpan Perubahan' : 'Simpan' ?></button>
+      <button type="button" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs" data-bs-dismiss="modal">Batal</button>
+      <button type="submit" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs"><i class="bi bi-save"></i> <?= $user ? 'Simpan Perubahan' : 'Simpan' ?></button>
     </div>
   </form>
   <?php
@@ -145,11 +145,13 @@ if ($modal) {
 $users = $db->query('SELECT id, nama, username, role, status, created_at FROM users ORDER BY role, nama')->fetchAll();
 $warnaAvatar = ['#20b2a0', '#4a9be8', '#a855c8', '#f59f0b', '#e5484d', '#2fb344', '#1d6fd8', '#8b5cf6'];
 ?>
+<div class="siap-eyebrow siap-stack-sm">Sistem &amp; Keamanan</div>
+<h2 class="siap-h2 mb-3"><i class="bi bi-person-badge"></i> Pengguna</h2>
+
 <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-3 mb-3">
-  <h4 class="mb-0"><i class="bi bi-person-badge"></i> Pengguna</h4>
   <div class="d-flex gap-2">
-    <a href="<?= modul_url('hak_akses') ?>" class="btn btn-outline-secondary flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2"><i class="bi bi-shield-lock"></i><span>Hak Akses</span></a>
-    <a href="<?= e(modul_url('pengguna', ['modal' => 1])) ?>" data-popup="<?= e(modul_url('pengguna', ['modal' => 1])) ?>" data-popup-title="Tambah Pengguna" class="btn btn-primary flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2"><i class="bi bi-plus-circle"></i><span>Tambah Pengguna</span></a>
+    <a href="<?= modul_url('hak_akses') ?>" class="siap-btn-ios17 siap-btn-ios17-ghost siap-mono-xs flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2" style="padding:0.375rem 0.875rem"><i class="bi bi-shield-lock"></i><span>Hak Akses</span></a>
+    <a href="<?= e(modul_url('pengguna', ['modal' => 1])) ?>" data-popup="<?= e(modul_url('pengguna', ['modal' => 1])) ?>" data-popup-title="Tambah Pengguna" class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs flex-fill flex-md-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2" style="padding:0.375rem 0.875rem"><i class="bi bi-plus-circle"></i><span>Tambah Pengguna</span></a>
   </div>
 </div>
 

@@ -34,8 +34,8 @@ $logoFile = !empty($settings['logo']) ? $settings['logo'] : null;
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cetak Kartu QR Siswa</title>
 <?= favicon_tag() ?>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap.min.css?v=<?= @filemtime(__DIR__ . '/../assets/css/vendor/bootstrap.min.css') ?: time() ?>" rel="stylesheet">
+  <link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap-icons.min.css?v=<?= @filemtime(__DIR__ . '/../assets/css/vendor/bootstrap-icons.min.css') ?: time() ?>" rel="stylesheet">
   <style>
     @font-face {
       font-family: 'Baloo2Poster';
@@ -46,8 +46,9 @@ $logoFile = !empty($settings['logo']) ? $settings['logo'] : null;
     }
 
     body {
-      background: #e9edf1;
+      background: var(--siap-bg);
       font-family: Arial, Helvetica, sans-serif;
+      color: var(--siap-ink);
     }
 
     /* Format kartu & halaman DISAMAKAN dgn menu QR Kelas: kertas A4, kartu
@@ -72,7 +73,7 @@ $logoFile = !empty($settings['logo']) ? $settings['logo'] : null;
     .kartu {
       width: 6cm;
       height: 9cm;
-      border: 1px solid #dfe3e7;
+      border: 1px solid var(--siap-line);
       border-radius: 0.25cm;
       background: #fff;
       box-sizing: border-box;
@@ -86,7 +87,7 @@ $logoFile = !empty($settings['logo']) ? $settings['logo'] : null;
     }
 
     .kartu-pill {
-      background: #1f8f94;
+      background: var(--siap-blue);
       color: #fff;
       font-weight: 700;
       font-size: 9px;
@@ -109,7 +110,7 @@ $logoFile = !empty($settings['logo']) ? $settings['logo'] : null;
       font-family: 'Baloo2Poster', Arial, sans-serif;
       font-weight: 800;
       font-size: 18px;
-      color: #2a9297;
+      color: var(--siap-blue);
       letter-spacing: .5px;
       margin-top: 0.15cm;
       line-height: 1;
@@ -119,7 +120,7 @@ $logoFile = !empty($settings['logo']) ? $settings['logo'] : null;
       position: relative;
       width: 3.9cm;
       height: 3.9cm;
-      background: #fbdb57;
+      background: var(--siap-warning-bg);
       border-radius: 0.45cm;
       margin-top: 0.15cm;
       display: flex;
@@ -133,6 +134,7 @@ $logoFile = !empty($settings['logo']) ? $settings['logo'] : null;
       left: 0;
       width: 100%;
       height: 100%;
+      stroke: var(--siap-blue);
     }
 
     .qr-item {
@@ -153,7 +155,7 @@ $logoFile = !empty($settings['logo']) ? $settings['logo'] : null;
     }
 
     .kartu-nama {
-      color: #2a9297;
+      color: var(--siap-blue);
       font-weight: 800;
       font-size: 12px;
       letter-spacing: .3px;
@@ -169,7 +171,7 @@ $logoFile = !empty($settings['logo']) ? $settings['logo'] : null;
     }
 
     .kartu-detail {
-      color: #888;
+      color: var(--siap-muted);
       font-size: 9px;
       margin-top: 0.08cm;
       text-align: center;
@@ -208,14 +210,14 @@ $logoFile = !empty($settings['logo']) ? $settings['logo'] : null;
   <div class="container py-4 no-print">
     <div class="d-flex justify-content-between mb-3">
       <form method="get" class="d-flex gap-2"><?= hidden_modul() ?>
-        <select name="kelas" class="form-select form-select-sm" onchange="this.form.submit()">
+        <select name="kelas" class="siap-input siap-input-ios17 form-select-sm" onchange="this.form.submit()">
           <option value="">-- Cetak Massal per Kelas --</option>
           <?php foreach ($kelasList as $k): ?>
             <option value="<?= e($k) ?>" <?= $kelas === $k ? 'selected' : '' ?>><?= e($k) ?></option>
           <?php endforeach; ?>
         </select>
       </form>
-      <button class="btn btn-primary btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Cetak</button>
+      <button class="siap-btn-ios17 siap-btn-ios17-blue siap-mono-xs btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Cetak</button>
     </div>
     <p class="text-muted small mb-0">
       <?= count($daftar) ?> kartu QR siswa &middot; ukuran kartu 6 &times; 9 cm &middot; 9 kartu/halaman A4 Potrait (susunan 3&times;3) &middot; otomatis lanjut ke halaman berikutnya jika tidak muat
