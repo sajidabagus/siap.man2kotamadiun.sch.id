@@ -20,6 +20,15 @@ function portal_head(string $judul): void
 <?php
 }
 
+/**
+ * Alamat "Home" untuk menu bawah & panah kembali. Sesi hasil masuk otomatis (perangkat terdaftar) kembali ke beranda
+ * utama "/" (tampilan siswa tanpa login), bukan ke /portal, supaya siswa tidak berpindah ke beranda lain.
+ */
+function portal_url_home(): string
+{
+    return (function_exists('portal_sesi_via_perangkat') && portal_sesi_via_perangkat()) ? BASE_URL . '/' : portal_url();
+}
+
 /** Halaman masuk/aktivasi: panel merek + panel formulir. */
 function portal_auth_awal(string $judul, string $heading, string $sub = '', bool $tombolKembali = true): void
 {
@@ -92,7 +101,7 @@ function portal_app_awal(string $judul, array $akun, string $aktif = 'beranda', 
 <?php if (empty($opsi['tanpa_header'])): ?>
 <header class="pt-bar">
   <?php if (isset($opsi['kembali'])): ?>
-    <a class="pt-bar-btn" href="<?= e(portal_url((string) $opsi['kembali'])) ?>" aria-label="Kembali"><i class="bi bi-arrow-left"></i></a>
+    <a class="pt-bar-btn" href="<?= e((string) $opsi['kembali'] === '' ? portal_url_home() : portal_url((string) $opsi['kembali'])) ?>" aria-label="Kembali"><i class="bi bi-arrow-left"></i></a>
   <?php else: ?><span class="pt-bar-btn kosong" aria-hidden="true"></span><?php endif; ?>
   <h1><?= e((string) ($opsi['judul'] ?? $judul)) ?></h1>
   <div class="pt-bar-aksi"><?= $opsi['aksi'] ?? '' ?></div>
@@ -110,7 +119,7 @@ function portal_app_akhir(): void
     ?>
 </main>
 <nav class="pt-tab" aria-label="Menu utama">
-  <a href="<?= e(portal_url()) ?>"<?= $on('beranda') ?>><i class="bi bi-house-door-fill"></i><span>Home</span></a>
+  <a href="<?= e(portal_url_home()) ?>"<?= $on('beranda') ?>><i class="bi bi-house-door-fill"></i><span>Home</span></a>
   <a href="<?= e(portal_url('riwayat')) ?>"<?= $on('riwayat') ?>><i class="bi bi-journal-text"></i><span>Riwayat</span></a>
   <a class="pt-scan" href="<?= e(BASE_URL) ?>/presensi/" aria-label="Scan QR untuk absen"><i class="bi bi-qr-code-scan"></i></a>
   <a href="<?= e(portal_url('izin')) ?>"<?= $on('izin') ?>><i class="bi bi-file-earmark-text-fill"></i><span>Izin</span><?php if ($baru > 0): ?><b class="pt-dot-tab" aria-label="<?= $baru ?> notifikasi baru"><?= $baru > 9 ? '9+' : $baru ?></b><?php endif; ?></a>

@@ -112,7 +112,7 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
     $db = getDB();
 
     // 1. Validasi token gerbang/kelas (dinamis)
-    $qrRow = get_active_qr_dinamis($gateToken);
+    $qrRow = get_qr_dinamis_sesi($gateToken);
     if (!$qrRow) {
         security_log($siswaId, 'PRESENCE_REJECTED', null, 'Token QR gerbang/kelas tidak valid/kedaluwarsa.');
         return ['success' => false, 'code' => 'GATE_INVALID', 'message' => 'Sesi QR sudah kedaluwarsa. Silakan scan ulang QR di sekolah.'];
@@ -235,7 +235,18 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
             'INSERT INTO presensi (siswa_id, kelas_saat_presensi, tanggal, jam_masuk, status, metode, device_info, ip_address, latitude, longitude, created_at)
              VALUES (:sid, :kelas, :tgl, :jam, :status, "QR", :device_info, :ip, :lat, :lng, NOW())'
         );
-        $stmt->execute($nilai);
+        try {
+            $stmt->execute($nilai);
+        } catch (PDOException $e) {
+            // Dua permintaan bersamaan (dobel-tap / jaringan lambat): UNIQUE(siswa_id, tanggal) menolak yang kedua.
+            if ($e->getCode() !== '23000') throw $e;
+            $existing = sudah_presensi_hari_ini($siswaId);
+            return [
+                'success' => false, 'code' => 'ALREADY_PRESENT',
+                'message' => 'Anda sudah melakukan presensi hari ini.',
+                'data' => $existing ? ['jam' => $existing['jam_masuk'], 'status' => $existing['status']] : null,
+            ];
+        }
     }
 
     // 11. Security log

@@ -46,6 +46,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
 portal_auth_awal('Aktivasi Akun', 'Aktivasi Akun', 'Masukkan kode dari petugas, lalu buat password Anda sendiri');
 if ($galat !== '') portal_alert('err', $galat);
+elseif (($_GET['dari'] ?? '') === 'perangkat') portal_alert('info', 'HP ini sudah terdaftar untuk presensi, tetapi akun portal Anda belum diaktifkan. Minta kode aktivasi ke petugas sekolah, lalu isi formulir ini sekali saja. Setelah itu Riwayat, Izin, dan Profil terbuka otomatis dari HP ini.');
 ?>
       <form method="post" action="<?= e(portal_url('aktivasi')) ?>" data-sekali autocomplete="off">
         <?= csrf_field() ?>

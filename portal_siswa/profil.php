@@ -22,11 +22,11 @@ $viaPerangkat = portal_sesi_via_perangkat();
 $kata = preg_split('/\s+/', trim((string) $akun['nama']));
 $inisial = mb_strtoupper(mb_substr($kata[0] ?? '', 0, 1) . (isset($kata[1]) ? mb_substr($kata[1], 0, 1) : ''));
 
-portal_app_awal('Profil', $akun, 'profil');
+portal_app_awal('Profil', $akun, 'profil', ['kembali' => '']);
 if ($info !== '') portal_alert('ok', $info);
 if ($galatFlash !== '') portal_alert('err', $galatFlash);
 ?>
-<section class="pt-card">
+<section class="pt-card pt-profil-kartu">
   <div class="pt-profil">
     <?php if ($akun['foto'] && is_file(__DIR__ . '/../uploads/siswa/' . $akun['foto'])): ?>
       <img class="pt-avatar" src="<?= e(BASE_URL . '/uploads/siswa/' . rawurlencode($akun['foto'])) ?>" alt="">
@@ -37,6 +37,7 @@ if ($galatFlash !== '') portal_alert('err', $galatFlash);
       <h2><?= e($akun['nama']) ?></h2>
       <div>
         <span class="pt-chip">Kelas <?= e($akun['kelas']) ?></span>
+        <?php if (($akun['nis'] ?? '') !== ''): ?><span class="pt-chip">NIS <?= e($akun['nis']) ?></span><?php endif; ?>
         <span class="pt-chip">NISN <?= e($akun['nisn']) ?></span>
         <?php if ($akun['jurusan']): ?><span class="pt-chip"><?= e($akun['jurusan']) ?></span><?php endif; ?>
       </div>

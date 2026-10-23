@@ -90,6 +90,19 @@ try {
             'izin' => ($p && $p['metode'] === 'PENGAJUAN') ? $p['status'] : null,
             'jam' => ($p && $p['metode'] !== 'PENGAJUAN') ? substr((string) $p['jam_masuk'], 0, 5) : null,
         ];
+
+        // Ringkasan bulan ini untuk tampilan siswa (perangkat terdaftar): Hadir (termasuk terlambat), Izin (izin+sakit), Alfa.
+        $awalBulan = date('Y-m-01');
+        $st = $db->prepare('SELECT status, COUNT(*) n FROM presensi WHERE siswa_id = :s AND tanggal >= :a AND tanggal < :b GROUP BY status');
+        $st->execute([':s' => $saya['id'], ':a' => $awalBulan, ':b' => date('Y-m-d', strtotime($awalBulan . ' +1 month'))]);
+        $rek = ['HADIR' => 0, 'TERLAMBAT' => 0, 'IZIN' => 0, 'SAKIT' => 0, 'ALPA' => 0];
+        foreach ($st->fetchAll() as $x) { if (isset($rek[$x['status']])) $rek[$x['status']] = (int) $x['n']; }
+        $out['saya']['bulan'] = [
+            'hadir' => $rek['HADIR'] + $rek['TERLAMBAT'], 'terlambat' => $rek['TERLAMBAT'],
+            'izin' => $rek['IZIN'] + $rek['SAKIT'], 'alfa' => $rek['ALPA'],
+        ];
+        $out['saya']['alpa_hari_ini'] = ($p && $p['status'] === 'ALPA');
+        $out['gps_aktif'] = !empty($settings['gps_aktif']);
     }
 
     echo json_encode($out);

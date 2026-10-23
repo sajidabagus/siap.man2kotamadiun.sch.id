@@ -19,8 +19,7 @@ if ($gate !== '') {
 }
 
 // Anggap gate token kedaluwarsa jika lebih dari 5 menit sejak diverifikasi di sesi ini
-$gateValidInSession = !empty($_SESSION['gate_token']) && (time() - ($_SESSION['gate_verified_at'] ?? 0) < 300)
-    && validate_qr_dinamis($_SESSION['gate_token']);
+$gateValidInSession = !empty($_SESSION['gate_token']) && validate_qr_dinamis_sesi((string) $_SESSION['gate_token']);
 ?>
 <!DOCTYPE html>
 <html lang="id">

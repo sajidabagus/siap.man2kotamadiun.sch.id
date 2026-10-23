@@ -12,7 +12,7 @@ $rekap = portal_rekap_bulan($sid, $bulan);
 $bulanList = portal_bulan_tersedia($sid);
 if (!in_array($bulan, $bulanList, true)) { $bulanList[] = $bulan; rsort($bulanList); }
 $zona = portal_zona_label();
-$ikon = ['HADIR' => 'check-lg', 'TERLAMBAT' => 'clock-history', 'IZIN' => 'file-earmark-text-fill', 'SAKIT' => 'heart-pulse-fill', 'ALPA' => 'x-lg'];
+$ikon = ['HADIR' => 'check-lg', 'TERLAMBAT' => 'clock-history', 'IZIN' => 'file-earmark-text-fill', 'SAKIT' => 'file-earmark-medical-fill', 'ALPA' => 'x-lg'];
 $q = fn(array $x): string => portal_url('riwayat', array_filter($x, fn($v) => $v !== ''));
 
 $aksi = '<button type="button" class="pt-bar-btn" id="btnFilter" aria-label="Filter status" aria-expanded="' . ($status !== '' ? 'true' : 'false') . '" aria-controls="panelFilter"><i class="bi bi-funnel' . ($status !== '' ? '-fill' : '') . '"></i></button>';
@@ -45,15 +45,25 @@ portal_app_awal('Riwayat Absensi', $akun, 'riwayat', ['kembali' => '', 'aksi' =>
   <?php foreach ($daftar as $r):
     $t = strtotime($r['tanggal']);
     $jam = substr((string) $r['jam_masuk'], 0, 5);
-    if ($r['metode'] === 'PENGAJUAN') $rinci = ['Keterangan', 'Pengajuan disetujui'];
-    elseif (in_array($r['status'], ['HADIR', 'TERLAMBAT'], true)) $rinci = ($jam !== '' && $jam !== '00:00') ? ['Masuk', $jam . ' ' . $zona] : ['Keterangan', 'Dicatat petugas'];
-    elseif ($r['status'] === 'ALPA') $rinci = null;
-    else $rinci = ['Keterangan', 'Dicatat petugas'];
+    // Tampilan seperti desain: Hadir -> kolom Masuk & Pulang (Pulang "-" karena saat ini hanya absen masuk);
+    // Izin/Sakit -> judul "Izin" + Keterangan (Izin/Sakit); Alfa -> tanpa rincian.
+    $judul = PORTAL_LABEL_STATUS[$r['status']] ?? $r['status'];
+    $kolom = null; $rinci = null;
+    if (in_array($r['status'], ['HADIR', 'TERLAMBAT'], true)) {
+        if ($r['metode'] !== 'PENGAJUAN' && $jam !== '' && $jam !== '00:00') $kolom = [['Masuk', $jam . ' ' . $zona], ['Pulang', '-']];
+        else $rinci = ['Keterangan', $r['metode'] === 'PENGAJUAN' ? 'Pengajuan disetujui' : 'Dicatat petugas'];
+    } elseif (in_array($r['status'], ['IZIN', 'SAKIT'], true)) {
+        $judul = 'Izin';
+        $rinci = ['Keterangan', PORTAL_LABEL_STATUS[$r['status']] . ($r['metode'] === 'PENGAJUAN' ? '' : ' (dicatat petugas)')];
+    } elseif ($r['status'] === 'ALPA') {
+        $judul = 'Alfa';
+    }
   ?>
   <article class="pt-hari pt-c-<?= e($r['status']) ?>">
     <div class="tgl"><b><?= (int) date('j', $t) ?></b><span><?= e(PORTAL_BULAN_PENDEK[(int) date('n', $t)]) ?></span><small><?= e(PORTAL_HARI_PENDEK[(int) date('N', $t)]) ?></small></div>
     <div class="isi">
-      <strong><?= e(PORTAL_LABEL_STATUS[$r['status']] ?? $r['status']) ?></strong>
+      <strong><?= e($judul) ?></strong>
+      <?php if ($kolom): ?><div class="r2"><?php foreach ($kolom as $k): ?><div class="r"><?= e($k[0]) ?><b><?= e($k[1]) ?></b></div><?php endforeach; ?></div><?php endif; ?>
       <?php if ($rinci): ?><div class="r"><?= e($rinci[0]) ?><b><?= e($rinci[1]) ?></b></div><?php endif; ?>
     </div>
     <div class="ikon" aria-hidden="true"><i class="bi bi-<?= e($ikon[$r['status']] ?? 'check-lg') ?>"></i></div>
