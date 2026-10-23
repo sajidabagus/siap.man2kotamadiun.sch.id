@@ -27,11 +27,11 @@ $kunciStatus = $p['status'] ?? 'BELUM';
 $ikonStatus = ['HADIR' => 'check-lg', 'TERLAMBAT' => 'clock-history', 'IZIN' => 'file-earmark-text-fill', 'SAKIT' => 'heart-pulse-fill', 'ALPA' => 'x-lg', 'BELUM' => 'hourglass-split'][$kunciStatus];
 $judulStatus = $p ? (PORTAL_LABEL_STATUS[$p['status']] ?? $p['status']) : 'Belum absen';
 if (!$p) {
-    $subStatus = 'Scan QR absen saat tiba di sekolah.';
+    $subStatus = absen_sudah_ditutup() && is_hari_efektif() ? 'Absen masuk sudah ditutup pukul ' . substr(batas_absen(), 0, 5) . '.' : 'Scan QR absen saat tiba di sekolah.';
 } elseif (in_array($p['status'], ['HADIR', 'TERLAMBAT'], true) && $p['metode'] !== 'PENGAJUAN' && substr((string) $p['jam_masuk'], 0, 5) !== '00:00') {
     $subStatus = 'Masuk: ' . substr((string) $p['jam_masuk'], 0, 5) . ' ' . $zona;
 } else {
-    $subStatus = $p['metode'] === 'PENGAJUAN' ? 'Pengajuan disetujui' : 'Dicatat petugas';
+    $subStatus = $p['metode'] === 'PENGAJUAN' ? 'Pengajuan disetujui' : ($p['metode'] === 'OTOMATIS' ? 'Tidak absen sampai batas ' . substr(batas_absen(), 0, 5) : 'Dicatat petugas');
 }
 $hadir = $rekap['HADIR'] + $rekap['TERLAMBAT'];
 $izin = $rekap['IZIN'] + $rekap['SAKIT'];
@@ -53,18 +53,16 @@ if ($galatFlash !== '') portal_alert('err', $galatFlash);
 <section class="pt-jam" aria-label="Jam sekarang">
   <div>
     <div class="lbl">Jam Sekarang</div>
-    <div class="waktu"><span id="jamTeks">--:--</span><small><?= e($zona) ?></small></div>
+    <div class="waktu"><span id="jamTeks">--:--</span><span class="dt" id="jamDetik">:--</span><small><?= e($zona) ?></small></div>
     <div class="ket"><i class="bi bi-calendar-check"></i> <?= e(portal_tanggal_panjang($hariIni)) ?></div>
   </div>
   <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">
-    <circle cx="60" cy="60" r="58" fill="rgba(255,255,255,.28)"/>
-    <circle cx="60" cy="60" r="52" fill="#fff"/>
-    <?php for ($i = 0; $i < 12; $i++): $sudut = $i * 30; ?>
-      <line x1="60" y1="12" x2="60" y2="<?= $i % 3 === 0 ? 20 : 17 ?>" stroke="#9db3a6" stroke-width="<?= $i % 3 === 0 ? 2.6 : 1.6 ?>" stroke-linecap="round" transform="rotate(<?= $sudut ?> 60 60)"/>
-    <?php endfor; ?>
-    <line id="jmJam" x1="60" y1="60" x2="60" y2="38" stroke="#0b3a27" stroke-width="5" stroke-linecap="round"/>
-    <line id="jmMenit" x1="60" y1="60" x2="60" y2="23" stroke="#167a4a" stroke-width="3.4" stroke-linecap="round"/>
-    <circle cx="60" cy="60" r="4.2" fill="#0b3a27"/>
+    <circle cx="60" cy="60" r="58" fill="rgba(255,255,255,.25)"/><circle cx="60" cy="60" r="51" fill="#fff"/>
+    <?php for ($i = 0; $i < 60; $i++): $b = $i % 5 === 0; ?><line x1="60" y1="<?= $b ? 13 : 13.5 ?>" x2="60" y2="<?= $b ? 21 : 16.5 ?>" stroke="<?= $b ? '#14213d' : '#c3cad6' ?>" stroke-width="<?= $b ? 2.8 : 1 ?>" stroke-linecap="round" transform="rotate(<?= $i * 6 ?> 60 60)"/><?php endfor; ?>
+    <line id="jmJam" x1="60" y1="60" x2="60" y2="35" stroke="#14213d" stroke-width="5" stroke-linecap="round"/>
+    <line id="jmMenit" x1="60" y1="60" x2="60" y2="20" stroke="#14213d" stroke-width="3.6" stroke-linecap="round"/>
+    <line id="jmDetik" x1="60" y1="68" x2="60" y2="18" stroke="#2f80ff" stroke-width="1.6" stroke-linecap="round"/>
+    <circle cx="60" cy="60" r="4.5" fill="#14213d"/><circle cx="60" cy="60" r="1.6" fill="#2f80ff"/>
   </svg>
 </section>
 
@@ -92,20 +90,22 @@ if ($galatFlash !== '') portal_alert('err', $galatFlash);
 
 <script>
 (function () {
-  var teks = document.getElementById('jamTeks'), jam = document.getElementById('jmJam'), menit = document.getElementById('jmMenit');
+  var teks = document.getElementById('jamTeks'), jam = document.getElementById('jmJam'), menit = document.getElementById('jmMenit'), detikT = document.getElementById('jamDetik'), detikJ = document.getElementById('jmDetik');
   if (!teks || !jam || !menit) return;
   var tz = <?= json_encode(date_default_timezone_get()) ?>, selisih = <?= (int) time() * 1000 ?> - Date.now(), fmt = null;
-  try { fmt = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false }); } catch (e) {}
+  try { fmt = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }); } catch (e) {}
   function waktu() {
-    var d = new Date(Date.now() + selisih), h = d.getHours(), m = d.getMinutes();
-    if (fmt) { fmt.formatToParts(d).forEach(function (x) { if (x.type === 'hour') h = parseInt(x.value, 10) % 24; if (x.type === 'minute') m = parseInt(x.value, 10); }); }
-    return [h, m];
+    var d = new Date(Date.now() + selisih), h = d.getHours(), m = d.getMinutes(), s = d.getSeconds();
+    if (fmt) { fmt.formatToParts(d).forEach(function (x) { if (x.type === 'hour') h = parseInt(x.value, 10) % 24; if (x.type === 'minute') m = parseInt(x.value, 10); if (x.type === 'second') s = parseInt(x.value, 10); }); }
+    return [h, m, s];
   }
   function gambar() {
-    var t = waktu(), h = t[0], m = t[1];
+    var t = waktu(), h = t[0], m = t[1], s = t[2];
     teks.textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
     jam.setAttribute('transform', 'rotate(' + ((h % 12) * 30 + m * 0.5) + ' 60 60)');
-    menit.setAttribute('transform', 'rotate(' + (m * 6) + ' 60 60)');
+    menit.setAttribute('transform', 'rotate(' + (m * 6 + s * 0.1) + ' 60 60)');
+    if (detikT) detikT.textContent = ':' + (s < 10 ? '0' : '') + s;
+    if (detikJ) detikJ.setAttribute('transform', 'rotate(' + (s * 6) + ' 60 60)');
   }
   gambar(); setInterval(gambar, 1000);
 })();

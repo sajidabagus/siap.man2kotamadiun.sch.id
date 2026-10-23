@@ -125,7 +125,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/../uploads/siswa/' . $logo)) ? B
           <td><?= e($r['nisn'] ?: '-') ?></td>
           <td><?= e($r['nama']) ?></td>
           <td class="c"><?= e($r['kelas']) ?></td>
-          <td class="c"><?= $r['metode'] === 'PENGAJUAN' ? '—' : e(substr((string) $r['jam_masuk'], 0, 5)) ?></td>
+          <td class="c"><?= in_array($r['metode'], ['PENGAJUAN', 'OTOMATIS'], true) ? '—' : e(substr((string) $r['jam_masuk'], 0, 5)) ?></td>
           <td class="c"><?= e($r['status']) ?></td>
           <td class="c"><?= e($r['metode']) ?></td>
         </tr>

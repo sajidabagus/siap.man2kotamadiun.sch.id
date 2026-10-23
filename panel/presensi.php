@@ -127,7 +127,7 @@ $extraParams = compact('tanggal', 'kelas', 'jurusan', 'status') + ['limit' => $p
             <td><?= e($r['nama']) ?></td>
             <td><?= e($r['kelas']) ?></td>
             <td><?= e($r['tanggal']) ?></td>
-            <td><?= $r['metode'] === 'PENGAJUAN' ? '—' : e($r['jam_masuk']) ?></td>
+            <td><?= in_array($r['metode'], ['PENGAJUAN', 'OTOMATIS'], true) ? '—' : e($r['jam_masuk']) ?></td>
             <td><span class="badge bg-<?= $r['status'] === 'HADIR' ? 'success' : ($r['status'] === 'TERLAMBAT' ? 'warning' : 'secondary') ?>"><?= e($r['status']) ?></span></td>
             <td><?= e($r['metode']) ?></td>
           </tr>

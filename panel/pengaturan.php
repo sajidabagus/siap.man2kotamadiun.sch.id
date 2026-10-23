@@ -31,6 +31,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Pilih minimal satu hari efektif presensi.';
     }
 
+    // Batas absen masuk (HH:MM). Harus setelah Batas Terlambat, kalau tidak siswa terlambat tidak bisa absen sama sekali.
+    $batasAbsenVal = trim((string) ($_POST['batas_absen'] ?? '10:00'));
+    if (!preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $batasAbsenVal)) {
+        $errors[] = 'Format Batas Absen Masuk tidak valid (JJ:MM).';
+    } elseif ($batasAbsenVal <= substr(clean($_POST['batas_terlambat'] ?? '07:15'), 0, 5)) {
+        $errors[] = 'Batas Absen Masuk harus lebih lambat dari Batas Terlambat.';
+    }
+    $batasAbsenVal .= ':00';
+
     if (!$errors) {
     $logo = $settings['logo'] ?? null;
     if (!empty($_FILES['logo']['name'])) {
@@ -60,6 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $setIdentitas = '';
     foreach ($identitas as $kol => $_) $setIdentitas .= "$kol=:$kol, ";
     $punyaKode = array_key_exists('device_wajib_kode', $settings);
+    $punyaBatasAbsen = array_key_exists('batas_absen', $settings);
+    if ($punyaBatasAbsen) $setIdentitas .= 'batas_absen=:batasabsen, ';
     if ($punyaKode) $setIdentitas .= 'device_wajib_kode=:wajibkode, ';
     $stmt = $db->prepare(
         'UPDATE settings SET ' . ($punyaHari ? 'hari_efektif=:hari, ' : '') . $setIdentitas . 'nama_sekolah=:nama, logo=:logo, tahun_pelajaran=:tahun, jam_masuk=:jam, batas_terlambat=:batas,
@@ -88,6 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ':id' => $settings['id'],
     ] + ($punyaHari ? [':hari' => implode(',', $hariPilih)] : [])
       + array_combine(array_map(fn($k) => ":$k", array_keys($identitas)), array_values($identitas))
+      + ($punyaBatasAbsen ? [':batasabsen' => $batasAbsenVal] : [])
       + ($punyaKode ? [':wajibkode' => isset($_POST['device_wajib_kode']) ? 1 : 0] : []));
 
     catat_aktivitas('UBAH', 'pengaturan', 'Menyimpan pengaturan sistem');
@@ -106,6 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'warna_tema' => clean($_POST['warna_tema'] ?? '#0d6efd'),
         'jam_masuk' => clean($_POST['jam_masuk'] ?? '07:00'),
         'batas_terlambat' => clean($_POST['batas_terlambat'] ?? '07:15'),
+        'batas_absen' => clean($_POST['batas_absen'] ?? '10:00'),
         'pesan_sukses' => clean($_POST['pesan_sukses'] ?? ''),
         'gps_aktif' => $gpsAktif,
         'latitude_sekolah' => $latInput,
@@ -207,6 +220,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <input type="time" name="batas_terlambat" class="form-control" value="<?= e(substr($settings['batas_terlambat'],0,5)) ?>">
         <small class="text-muted">Presensi setelah jam ini otomatis berstatus TERLAMBAT.</small>
       </div>
+      <?php if (array_key_exists('batas_absen', $settings)): ?>
+      <div class="col-md-4">
+        <label class="form-label">Batas Absen Masuk</label>
+        <input type="time" name="batas_absen" class="form-control" value="<?= e(substr((string) ($settings['batas_absen'] ?? '10:00'), 0, 5)) ?>">
+        <small class="text-muted">Setelah jam ini scan masuk ditutup, dan siswa aktif yang belum absen (tanpa izin/sakit disetujui) otomatis dicatat ALPA pada hari efektif.</small>
+      </div>
+      <?php endif; ?>
       <div class="col-md-4">
         <label class="form-label">Pesan Presensi Berhasil</label>
         <input type="text" name="pesan_sukses" class="form-control" value="<?= e($settings['pesan_sukses']) ?>">

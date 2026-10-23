@@ -48,6 +48,7 @@ $pesanKhusus = [
     'GPS_REQUIRED'    => 'Lokasi perangkat tidak terdeteksi. Aktifkan GPS dan izinkan akses lokasi.',
     'INACTIVE'        => 'Status siswa tidak aktif. Hubungi admin sekolah.',
     'BELUM_WAKTUNYA'  => $msgFromQuery ?: 'Presensi belum dibuka.',
+    'CLOSED'          => $msgFromQuery ?: 'Absen masuk hari ini sudah ditutup.',
 ];
 $pesan = $pesanKhusus[$code] ?? ($msgFromQuery ?: 'Terjadi kesalahan. Silakan coba lagi.');
 

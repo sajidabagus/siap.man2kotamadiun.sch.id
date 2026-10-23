@@ -138,6 +138,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   body.mode-siswa .top, body.mode-siswa .hero, body.mode-siswa #panelDonut { display: none; }
   body.mode-siswa .app { display: block; }
   body.mode-siswa .wrap { max-width: 520px; padding-bottom: 110px; }
+  @media (min-width: 1024px) { body.mode-siswa .wrap { max-width: 760px; padding: 28px 32px 40px; } }
   body.mode-siswa .grid { display: block; }
   .ap-hello { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin: 4px 0 18px; }
   .ap-hello h1 { font-size: 1.6rem; font-weight: 800; line-height: 1.2; }
@@ -414,8 +415,9 @@ try { var _s = JSON.parse(localStorage.getItem('siapBerandaV1') || 'null');
     });
     gambarDonut(d); gambarFeed(d); renderSiswa(d);
     var cb = $('chipBuka');
-    cb.className = 'chip ' + (d.efektif ? 'ok' : 'tutup');
-    cb.textContent = d.efektif ? 'Presensi dibuka hari ini' : 'Hari ini libur — presensi ditutup';
+    var tutupJam = d.efektif && d.ditutup;
+    cb.className = 'chip ' + (d.efektif && !tutupJam ? 'ok' : 'tutup');
+    cb.textContent = !d.efektif ? 'Hari ini libur — presensi ditutup' : (tutupJam ? 'Absen masuk ditutup pukul ' + d.batas_absen : 'Presensi dibuka hari ini' + (d.batas_absen ? ' s.d. ' + d.batas_absen : ''));
     if (d.jam_masuk) { var cj = $('chipJam'); cj.style.display = ''; cj.textContent = 'Masuk ' + d.jam_masuk + (d.batas_terlambat ? ' · terlambat setelah ' + d.batas_terlambat : ''); }
     $('waktuUpdate').textContent = (modeKelas ? d.terbaru.length + ' siswa sudah presensi' + (d.terbaru.length > 5 ? ' · gulir untuk melihat semua' : '') + ' · ' : '') + 'Diperbarui ' + d.waktu;
     $('liveBadge').classList.remove('putus'); $('liveBadge').textContent = 'LIVE';

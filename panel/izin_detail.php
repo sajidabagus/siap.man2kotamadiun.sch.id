@@ -142,7 +142,7 @@ $perluSurat = $row['jenis'] === 'sakit' && count($efektif) > 1;
       <?php if ($riwayat): ?>
       <ul class="list-unstyled mb-0 small">
         <?php foreach ($riwayat as $r): ?>
-        <li class="d-flex justify-content-between py-1 border-bottom"><span><?= e(date('d/m/Y', strtotime($r['tanggal']))) ?></span><span class="badge bg-<?= $warnaPresensi[$r['status']] ?? 'secondary' ?>"><?= e($r['status']) ?><?= $r['metode'] === 'PENGAJUAN' ? ' · pengajuan' : '' ?></span></li>
+        <li class="d-flex justify-content-between py-1 border-bottom"><span><?= e(date('d/m/Y', strtotime($r['tanggal']))) ?></span><span class="badge bg-<?= $warnaPresensi[$r['status']] ?? 'secondary' ?>"><?= e($r['status']) ?><?= $r['metode'] === 'PENGAJUAN' ? ' · pengajuan' : ($r['metode'] === 'OTOMATIS' ? ' · otomatis' : '') ?></span></li>
         <?php endforeach; ?>
       </ul>
       <?php else: ?><div class="small text-muted">Belum ada presensi.</div><?php endif; ?>

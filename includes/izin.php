@@ -266,7 +266,7 @@ function izin_validasi(int $siswaId, array $in): array
                 if (!$efektif) {
                     $g['mulai'] = 'Rentang tanggal itu tidak mencakup hari efektif sekolah (' . label_hari_efektif() . ').';
                 } else {
-                    $st = $db->prepare("SELECT tanggal FROM presensi WHERE siswa_id = :s AND tanggal BETWEEN :a AND :b AND metode <> 'PENGAJUAN' ORDER BY tanggal");
+                    $st = $db->prepare("SELECT tanggal FROM presensi WHERE siswa_id = :s AND tanggal BETWEEN :a AND :b AND metode NOT IN ('PENGAJUAN','OTOMATIS') ORDER BY tanggal");
                     $st->execute([':s' => $siswaId, ':a' => $mulai, ':b' => $selesai]);
                     $sudah = $st->fetchAll(PDO::FETCH_COLUMN);
                     if ($sudah) $g['mulai'] = 'Anda sudah absen pada ' . tgl_indo_pendek($sudah[0]) . ', jadi tidak bisa mengajukan izin/sakit untuk tanggal itu. Pilih tanggal lain.';
@@ -368,12 +368,16 @@ function izin_setujui(int $id, array $admin, string $catatan = ''): array
 
         $status = $r['jenis'] === 'sakit' ? 'SAKIT' : 'IZIN';
         $ins = $db->prepare("INSERT INTO presensi (siswa_id, kelas_saat_presensi, tanggal, jam_masuk, status, metode, created_at)
-                             VALUES (:s, :k, :t, '00:00:00', :st, 'PENGAJUAN', NOW()) ON DUPLICATE KEY UPDATE id = id");
+                             VALUES (:s, :k, :t, '00:00:00', :st, 'PENGAJUAN', NOW())
+                             ON DUPLICATE KEY UPDATE status = IF(metode = 'OTOMATIS', VALUES(status), status),
+                                                     created_at = IF(metode = 'OTOMATIS', NOW(), created_at),
+                                                     metode = IF(metode = 'OTOMATIS', 'PENGAJUAN', metode)");
+        // Alpa otomatis (metode OTOMATIS) DITIMPA oleh izin/sakit yang disetujui belakangan; presensi asli tidak disentuh.
         $hari = $db->prepare('INSERT INTO izin_hari (pengajuan_id, tanggal, hasil) VALUES (:p, :t, :h) ON DUPLICATE KEY UPDATE hasil = VALUES(hasil)');
         $terapkan = 0; $lewati = 0;
         foreach (izin_efektif_dalam(izin_rentang($r['tanggal_mulai'], $r['tanggal_selesai'])) as $t) {
             $ins->execute([':s' => $r['siswa_id'], ':k' => $r['kelas'], ':t' => $t, ':st' => $status]);
-            $baru = $ins->rowCount() === 1;
+            $baru = $ins->rowCount() > 0;   // 1 = baris baru, 2 = menimpa Alpa otomatis, 0 = presensi asli sudah ada
             $baru ? $terapkan++ : $lewati++;
             $hari->execute([':p' => $id, ':t' => $t, ':h' => $baru ? 'diterapkan' : 'sudah_ada']);
         }
@@ -425,8 +429,16 @@ function izin_cabut(int $id, array $admin, string $catatan): array
         $hari = $db->prepare("SELECT tanggal FROM izin_hari WHERE pengajuan_id = :p AND hasil = 'diterapkan'");
         $hari->execute([':p' => $id]);
         $hapus = $db->prepare("DELETE FROM presensi WHERE siswa_id = :s AND tanggal = :t AND metode = 'PENGAJUAN' AND status IN ('IZIN','SAKIT')");
+        // Hari yang batas absennya sudah lewat kembali menjadi Alpa otomatis (konsisten dengan siswa lain yang tidak absen);
+        // hari yang belum lewat dihapus sehingga siswa masih bisa scan.
+        $keAlpa = $db->prepare("UPDATE presensi SET status = 'ALPA', metode = 'OTOMATIS', created_at = NOW()
+                                WHERE siswa_id = :s AND tanggal = :t AND metode = 'PENGAJUAN' AND status IN ('IZIN','SAKIT')");
         $dicabut = 0;
-        foreach ($hari->fetchAll(PDO::FETCH_COLUMN) as $t) { $hapus->execute([':s' => $r['siswa_id'], ':t' => $t]); $dicabut += $hapus->rowCount(); }
+        foreach ($hari->fetchAll(PDO::FETCH_COLUMN) as $t) {
+            $lewat = $t < date('Y-m-d') || ($t === date('Y-m-d') && absen_sudah_ditutup());
+            $q = $lewat ? $keAlpa : $hapus;
+            $q->execute([':s' => $r['siswa_id'], ':t' => $t]); $dicabut += $q->rowCount();
+        }
         $db->prepare("UPDATE izin_hari SET hasil = 'dicabut' WHERE pengajuan_id = :p AND hasil = 'diterapkan'")->execute([':p' => $id]);
         $db->prepare("UPDATE izin_pengajuan SET status = 'dicabut', diproses_oleh = :a, diproses_nama = :n, diproses_at = NOW(), catatan_petugas = :c WHERE id = :id")
            ->execute([':a' => $admin['id'] ?? null, ':n' => izin_nama_admin($admin), ':c' => $catatan, ':id' => $id]);
