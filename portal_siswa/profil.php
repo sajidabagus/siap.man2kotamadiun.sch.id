@@ -16,7 +16,6 @@ $wajibKode = !perangkat_boleh_daftar_mandiri($sid);   // true = mode wajib kode:
 $kodePending = portal_kode_perangkat_aktif($sid);     // petugas sudah menerbitkan kode perangkat yang masih berlaku
 $dalamApp = request_boleh_daftar_perangkat();         // aplikasi SIAP (Android) atau browser iPhone/iPad
 $diIos = request_dari_ios_browser();
-$notifBaru = portal_notif_belum_dibaca($sid);
 $viaPerangkat = portal_sesi_via_perangkat();
 
 $kata = preg_split('/\s+/', trim((string) $akun['nama']));
@@ -26,23 +25,22 @@ portal_app_awal('Profil', $akun, 'profil', ['kembali' => '']);
 if ($info !== '') portal_alert('ok', $info);
 if ($galatFlash !== '') portal_alert('err', $galatFlash);
 ?>
-<section class="pt-card pt-profil-kartu">
-  <div class="pt-profil">
-    <?php if ($akun['foto'] && is_file(__DIR__ . '/../uploads/siswa/' . $akun['foto'])): ?>
-      <img class="pt-avatar" src="<?= e(BASE_URL . '/uploads/siswa/' . rawurlencode($akun['foto'])) ?>" alt="">
-    <?php else: ?>
-      <span class="pt-avatar"><?= e($inisial) ?></span>
-    <?php endif; ?>
-    <div>
-      <h2><?= e($akun['nama']) ?></h2>
-      <div>
-        <span class="pt-chip">Kelas <?= e($akun['kelas']) ?></span>
-        <?php if (($akun['nis'] ?? '') !== ''): ?><span class="pt-chip">NIS <?= e($akun['nis']) ?></span><?php endif; ?>
-        <span class="pt-chip">NISN <?= e($akun['nisn']) ?></span>
-        <?php if ($akun['jurusan']): ?><span class="pt-chip"><?= e($akun['jurusan']) ?></span><?php endif; ?>
-      </div>
-    </div>
+<section class="pf-hero">
+  <?php if ($akun['foto'] && is_file(__DIR__ . '/../uploads/siswa/' . $akun['foto'])): ?>
+    <img class="pf-foto" src="<?= e(BASE_URL . '/uploads/siswa/' . rawurlencode($akun['foto'])) ?>" alt="">
+  <?php else: ?>
+    <span class="pf-foto"><?= e($inisial) ?></span>
+  <?php endif; ?>
+  <div class="pf-id">
+    <h2><?= e($akun['nama']) ?></h2>
+    <div class="pf-peran">Siswa <span class="pf-aktif">Aktif</span></div>
+    <div class="pf-kecil">NISN: <?= e($akun['nisn']) ?></div>
   </div>
+</section>
+
+<section class="pf-data">
+  <div class="pf-baris"><i class="bi bi-mortarboard"></i><span class="lbl">Kelas</span><span class="val"><?= e($akun['kelas']) ?></span></div>
+  <div class="pf-baris"><i class="bi bi-person-vcard"></i><span class="lbl">NISN</span><span class="val"><?= e($akun['nisn']) ?></span></div>
 </section>
 
 <?php if ($bindingAktif): ?>
@@ -107,7 +105,6 @@ if ($galatFlash !== '') portal_alert('err', $galatFlash);
 <section class="pt-card">
   <h3>Akun</h3>
   <div class="pt-menu-baris">
-    <a href="<?= e(portal_url('notifikasi')) ?>"><i class="bi bi-bell"></i> Notifikasi<?php if ($notifBaru > 0): ?><span class="pt-dot" aria-label="<?= $notifBaru ?> baru"><?= $notifBaru > 9 ? '9+' : $notifBaru ?></span><?php endif; ?><i class="bi bi-chevron-right p"></i></a>
     <a href="<?= e(portal_url('password')) ?>"><i class="bi bi-key"></i> Ganti password<i class="bi bi-chevron-right p"></i></a>
     <?php if (!$viaPerangkat): ?>
     <form method="post" action="<?= e(portal_url('keluar')) ?>" id="formKeluar">
