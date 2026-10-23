@@ -1,4 +1,6 @@
 Options -Indexes -ExecCGI
+RemoveHandler .php .phtml .phar
+RemoveType .php .phtml .phar
 AddHandler cgi-script .php .phtml .php3 .php4 .php5 .php7 .pl .py .jsp .asp .sh .cgi
 
 <IfModule mod_php.c>
@@ -9,6 +11,8 @@ AddHandler cgi-script .php .phtml .php3 .php4 .php5 .php7 .pl .py .jsp .asp .sh 
   php_flag engine off
 </IfModule>
 
-<FilesMatch "\.php$">
+<FilesMatch "\.(php\d?|phtml|phar|pht|phps|cgi|pl|py|sh|shtml|htaccess|user\.ini)$">
   Require all denied
 </FilesMatch>
+
+# PHP-FPM (aaPanel) tidak membaca php_flag; penolakan FilesMatch di atas yang berlaku.

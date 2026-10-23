@@ -213,6 +213,10 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
         if ($lat === null || $lng === null) {
             return ['success' => false, 'code' => 'GPS_REQUIRED', 'message' => 'Lokasi perangkat tidak terdeteksi. Aktifkan GPS dan izinkan akses lokasi.'];
         }
+        if (!is_finite($lat) || !is_finite($lng) || abs($lat) > 90 || abs($lng) > 180) {
+            security_log($siswaId, 'PRESENCE_REJECTED', null, 'Koordinat GPS tidak valid.');
+            return ['success' => false, 'code' => 'GPS_REQUIRED', 'message' => 'Lokasi perangkat tidak valid. Aktifkan GPS lalu coba lagi.'];
+        }
         $jarak = distance_meter((float)$settings['latitude_sekolah'], (float)$settings['longitude_sekolah'], $lat, $lng);
         if ($jarak > (float)$settings['radius_meter']) {
             security_log($siswaId, 'PRESENCE_REJECTED', null, 'Di luar radius sekolah (' . round($jarak) . 'm).');

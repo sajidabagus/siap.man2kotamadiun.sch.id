@@ -64,7 +64,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $db->commit();
     } catch (Throwable $e) {
         $db->rollBack();
-        set_flash('danger', 'Gagal memproses kenaikan kelas: ' . $e->getMessage());
+        error_log('kenaikan_kelas: ' . $e->getMessage());
+        set_flash('danger', 'Gagal memproses kenaikan kelas. Tidak ada perubahan yang disimpan; silakan coba lagi.');
         header('Location: ' . modul_url('kenaikan_kelas'));
         exit;
     }

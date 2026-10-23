@@ -217,10 +217,6 @@ function izin_ambil(int $id): ?array
     return $st->fetch() ?: null;
 }
 
-/**
- * Validasi isi pengajuan. @return array{galat:array,data:array}
- * Kunci galat: jenis, mulai, selesai, alasan, lampiran, umum.
- */
 function tgl_indo_pendek(string $t): string
 {
     $b = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
@@ -228,6 +224,10 @@ function tgl_indo_pendek(string $t): string
     return $x ? date('j', $x) . ' ' . $b[(int) date('n', $x)] . ' ' . date('Y', $x) : $t;
 }
 
+/**
+ * Validasi isi pengajuan. @return array{galat:array,data:array}
+ * Kunci galat: jenis, mulai, selesai, alasan, lampiran, umum.
+ */
 function izin_validasi(int $siswaId, array $in): array
 {
     $g = [];

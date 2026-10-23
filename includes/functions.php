@@ -441,14 +441,20 @@ function generate_token(int $bytes = 32): string
 // ---------------------------------------------------------------------
 function get_client_ip(): string
 {
-    $keys = ['HTTP_X_FORWARDED_FOR', 'HTTP_CLIENT_IP', 'REMOTE_ADDR'];
-    foreach ($keys as $key) {
-        if (!empty($_SERVER[$key])) {
-            $ip = explode(',', $_SERVER[$key])[0];
-            return trim($ip);
+    // REMOTE_ADDR tidak bisa dipalsukan klien. Header X-Forwarded-For/Client-IP HANYA dipercaya bila permintaan datang
+    // dari proxy lokal/jaringan privat (mis. reverse proxy aaPanel/Cloudflare tunnel di mesin yang sama). Sebelumnya
+    // header itu selalu dipercaya, sehingga pembatas percobaan login per-IP bisa diakali dengan header palsu.
+    $remote = trim((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
+    if ($remote === '' || !filter_var($remote, FILTER_VALIDATE_IP)) return '0.0.0.0';
+    $dariProxy = !filter_var($remote, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+    if ($dariProxy) {
+        foreach (['HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_CLIENT_IP'] as $key) {
+            if (empty($_SERVER[$key])) continue;
+            $ip = trim(explode(',', (string) $_SERVER[$key])[0]);
+            if (filter_var($ip, FILTER_VALIDATE_IP)) return $ip;
         }
     }
-    return '0.0.0.0';
+    return $remote;
 }
 
 // ---------------------------------------------------------------------
