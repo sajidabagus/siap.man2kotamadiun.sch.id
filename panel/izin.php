@@ -161,13 +161,13 @@ $tunggu = function (int $jam): string {
           <?php if ($bolehProses && $statusF === 'menunggu'): ?>
           <td><?php if ($r['status'] === 'menunggu'): ?><input type="checkbox" class="form-check-input cek" name="ids[]" form="formPilih" value="<?= (int) $r['id'] ?>" aria-label="Pilih <?= e($r['nama']) ?>"><?php endif; ?></td>
           <?php endif; ?>
-          <td><div class="fw-semibold"><?= e($r['nama']) ?></div><div class="small text-muted"><?= e($r['kelas']) ?> · NIS <?= e($r['nis']) ?></div></td>
+          <td><div class="fw-semibold"><?= e($r['nama']) ?></div><div class="small text-muted"><?= e($r['kelas']) ?></div><div class="small text-muted">NIS <?= e($r['nis']) ?></div></td>
           <td><span class="badge bg-<?= $r['jenis'] === 'sakit' ? 'primary' : 'info' ?>"><?= e(izin_label_jenis($r['jenis'])) ?></span></td>
-          <td class="text-nowrap"><?= e(izin_teks_rentang($r['tanggal_mulai'], $r['tanggal_selesai'])) ?><div class="small text-muted"><?= $hariN ?> hari sekolah</div></td>
-          <td style="max-width:260px"><div class="text-truncate" title="<?= e($r['alasan']) ?>"><?= e($r['alasan']) ?></div><?php if ($r['lampiran']): ?><div class="small text-muted"><i class="bi bi-paperclip"></i> ada lampiran</div><?php endif; ?></td>
+          <td class="text-nowrap"><?php if ($r['tanggal_mulai'] === $r['tanggal_selesai']): ?><?= e(tgl_indo_pendek($r['tanggal_mulai'])) ?><?php else: ?><?= e(tgl_indo_pendek($r['tanggal_mulai'])) ?> –<br><?= e(tgl_indo_pendek($r['tanggal_selesai'])) ?><?php endif; ?><div class="small text-muted"><?= $hariN ?> hari sekolah</div></td>
+          <td style="max-width:180px"><div class="text-truncate" title="<?= e($r['alasan']) ?>"><?= e($r['alasan']) ?></div><?php if ($r['lampiran']): ?><div class="small text-muted"><i class="bi bi-paperclip"></i> ada lampiran</div><?php endif; ?></td>
           <td><span class="badge bg-<?= $warnaStatus[$r['status']] ?? 'secondary' ?>"><?= e(IZIN_STATUS_LABEL[$r['status']] ?? $r['status']) ?></span></td>
           <td class="small text-muted text-nowrap"><?= e(date('d/m H:i', strtotime($r['diajukan_at']))) ?><div><?= $r['status'] === 'menunggu' ? e($tunggu((int) $r['jam_tunggu'])) : '' ?></div></td>
-          <td><a class="btn btn-sm btn-outline-primary" href="<?= e(modul_url('izin_detail', ['id' => (int) $r['id']])) ?>">Tinjau</a></td>
+          <td class="text-end"><a class="btn btn-sm btn-outline-primary text-nowrap" href="<?= e(modul_url('izin_detail', ['id' => (int) $r['id']])) ?>">Tinjau</a></td>
         </tr>
       <?php endforeach; ?>
       <?php if (!$daftar): ?><tr><td colspan="8" class="text-center text-muted py-4"><?= $statusF === 'menunggu' ? 'Tidak ada pengajuan yang menunggu. 🎉' : 'Tidak ada data yang cocok.' ?></td></tr><?php endif; ?>
