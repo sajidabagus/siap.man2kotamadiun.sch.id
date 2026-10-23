@@ -10,12 +10,13 @@ function portal_head(string $judul): void
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#114e2e">
+<meta name="theme-color" content="#0d6efd">
 <title><?= e($judul) ?> — Portal Siswa <?= e($s['nama_sekolah'] ?? '') ?></title>
 <?= favicon_tag() ?>
 <link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap-icons.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="<?= BASE_URL ?>/assets/css/portal.css?v=<?= @filemtime(__DIR__ . '/../assets/css/portal.css') ?: time() ?>" rel="stylesheet">
+<link href="<?= BASE_URL ?>/assets/css/siswa-app.css?v=<?= @filemtime(__DIR__ . '/../assets/css/siswa-app.css') ?: time() ?>" rel="stylesheet">
 </head>
 <?php
 }
@@ -97,7 +98,7 @@ function portal_app_awal(string $judul, array $akun, string $aktif = 'beranda', 
     $GLOBALS['PORTAL_NOTIF'] = portal_notif_belum_dibaca((int) $akun['siswa_id']);
     portal_head($judul);
     ?>
-<body class="pt-body pt-app pt-v2">
+<body class="pt-body pt-app pt-v2 ap-app">
 <?php if (empty($opsi['tanpa_header'])): ?>
 <header class="pt-bar">
   <?php if (isset($opsi['kembali'])): ?>
@@ -118,12 +119,12 @@ function portal_app_akhir(): void
     $on = fn(string $k): string => $aktif === $k ? ' class="on" aria-current="page"' : '';
     ?>
 </main>
-<nav class="pt-tab" aria-label="Menu utama">
-  <a href="<?= e(portal_url_home()) ?>"<?= $on('beranda') ?>><i class="bi bi-house-door-fill"></i><span>Home</span></a>
-  <a href="<?= e(portal_url('riwayat')) ?>"<?= $on('riwayat') ?>><i class="bi bi-journal-text"></i><span>Riwayat</span></a>
-  <a class="pt-scan" href="<?= e(BASE_URL) ?>/presensi/" aria-label="Scan QR untuk absen"><i class="bi bi-qr-code-scan"></i></a>
-  <a href="<?= e(portal_url('izin')) ?>"<?= $on('izin') ?>><i class="bi bi-file-earmark-text-fill"></i><span>Izin</span><?php if ($baru > 0): ?><b class="pt-dot-tab" aria-label="<?= $baru ?> notifikasi baru"><?= $baru > 9 ? '9+' : $baru ?></b><?php endif; ?></a>
-  <a href="<?= e(portal_url('profil')) ?>"<?= $on('profil') ?>><i class="bi bi-person-circle"></i><span>Profil</span></a>
+<nav class="ap-nav" aria-label="Menu utama">
+  <a href="<?= e(portal_url_home()) ?>"<?= $on('beranda') ?>><i class="bi bi-house-door-fill"></i>Home</a>
+  <a href="<?= e(portal_url('riwayat')) ?>"<?= $on('riwayat') ?>><i class="bi bi-journal-text"></i>Riwayat</a>
+  <a class="scan" href="<?= e(BASE_URL) ?>/presensi/" aria-label="Scan QR untuk absen"><i class="bi bi-qr-code-scan"></i></a>
+  <a href="<?= e(portal_url('izin')) ?>"<?= $on('izin') ?>><i class="bi bi-file-earmark-text"></i>Izin<?php if ($baru > 0): ?><b class="pt-dot-tab" aria-label="<?= $baru ?> notifikasi baru"><?= $baru > 9 ? '9+' : $baru ?></b><?php endif; ?></a>
+  <a href="<?= e(portal_url('profil')) ?>"<?= $on('profil') ?>><i class="bi bi-person"></i>Profile</a>
 </nav>
 <script src="<?= BASE_URL ?>/assets/js/portal.js"></script>
 </body>

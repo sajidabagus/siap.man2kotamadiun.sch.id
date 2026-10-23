@@ -25,6 +25,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
 <title><?= e($namaSekolah) ?> — Absensi Siswa</title>
 <?= favicon_tag() ?>
 <link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap-icons.min.css" rel="stylesheet">
+<link href="<?= BASE_URL ?>/assets/css/siswa-app.css?v=<?= @filemtime(__DIR__ . '/assets/css/siswa-app.css') ?: time() ?>" rel="stylesheet">
 <style>
   :root { --biru: #0d6efd; --navy: #14213d; --abu: #8a94a6; --garis: #e9edf3; --hijau: #2fb344; --oranye: #f08c1a; --merah: #e03e4a; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -165,13 +166,6 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   .ap-tiles .h { background: #e9f7ee; border-color: #cdebd6; } .ap-tiles .h b, .ap-tiles .h i { color: #23913a; }
   .ap-tiles .i { background: #fff5e3; border-color: #f7e2b5; } .ap-tiles .i b, .ap-tiles .i i { color: #d98a00; }
   .ap-tiles .a { background: #fdeced; border-color: #f6cfd2; } .ap-tiles .a b, .ap-tiles .a i { color: #d63a46; }
-  .ap-nav { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid var(--garis); display: none; justify-content: space-around; align-items: flex-end; padding: 8px 6px calc(8px + env(safe-area-inset-bottom)); z-index: 50; }
-  body.mode-siswa .ap-nav { display: flex; }
-  .ap-nav a { flex: 1; max-width: 90px; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: .74rem; font-weight: 600; color: #6b7487; text-decoration: none; }
-  .ap-nav a i { font-size: 1.3rem; }
-  .ap-nav a.on { color: var(--biru); }
-  .ap-nav a.scan { flex: none; width: 62px; height: 62px; margin-top: -30px; border-radius: 50%; background: var(--biru); color: #fff; justify-content: center; box-shadow: 0 10px 20px -8px rgba(13,110,253,.9); border: 4px solid #fff; cursor: pointer; }
-  .ap-nav a.scan i { font-size: 1.6rem; }
 </style>
 </head>
 <body>

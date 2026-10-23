@@ -318,3 +318,30 @@ body.pt-gerbang { min-height: 100vh; min-height: 100svh; display: grid; place-it
 .pt-profil-kartu .pt-avatar { width: 88px; height: 88px; font-size: 30px; }
 .pt-profil-kartu .pt-chip { margin: 6px 3px 0; display: inline-block; }
 #formIzin h3 { margin-bottom: 10px; }
+
+/* =====================================================================
+   Riwayat / Izin / Profil: tema biru identik dengan beranda (lihat siswa-app.css)
+   ===================================================================== */
+body.pt-v2 { --hj: #0d6efd; --hj2: #0d6efd; --hj-muda: #e7f0ff; --teks: #14213d; --redup: #8a94a6; --garis: #e9edf3;
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; color: var(--teks);
+  background: radial-gradient(900px 420px at 10% -10%, #dbe8ff, transparent 60%), radial-gradient(800px 400px at 100% 0, #e6e0ff, transparent 55%), #f4f6fb;
+  background-attachment: fixed; padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
+body.pt-v2 input, body.pt-v2 select, body.pt-v2 textarea, body.pt-v2 button { font-family: inherit; }
+.pt-v2 .pt-wrap { max-width: 520px; }
+.pt-v2 .pt-bar { max-width: 520px; background: transparent; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.pt-v2 .pt-bar h1 { font-weight: 800; color: var(--teks); }
+.pt-v2 .pt-bar-btn { background: #fff; border: 1px solid var(--garis); font-size: 1.15rem; color: var(--teks); }
+.pt-v2 .pt-bar-btn.kosong { visibility: hidden; }
+.pt-v2 .pt-card, .pt-v2 .pt-item, .pt-v2 .pt-hari, .pt-v2 .pt-filter, .pt-v2 .pt-pilih, .pt-v2 .pt-status {
+  background: #fff; border: 1px solid var(--garis); border-radius: 18px; box-shadow: 0 1px 3px rgba(20,33,61,.05); }
+.pt-v2 .pt-item { border-left: 4px solid var(--biru, #0d6efd); }
+.pt-v2 .pt-item:has(.pt-st.ditolak) { border-left-color: #e03e4a; }
+.pt-v2 .pt-item:has(.pt-st.menunggu) { border-left-color: #f08c1a; }
+.pt-v2 .pt-card h3 { color: var(--teks); font-weight: 800; text-transform: none; letter-spacing: 0; font-size: 1rem; }
+.pt-v2 .pt-btn:not(.garis):not(.bahaya) { background: linear-gradient(135deg, #1f6feb, #2a5bd7); border-color: transparent; color: #fff; box-shadow: 0 12px 22px -14px rgba(31,111,235,.9); }
+.pt-v2 .pt-btn.garis { border-color: #dfe4ec; color: var(--teks); background: #fff; }
+.pt-v2 .pt-filter a.on { background: #0d6efd; }
+.pt-v2 input:focus, .pt-v2 select:focus, .pt-v2 textarea:focus { border-color: #0d6efd; box-shadow: 0 0 0 4px rgba(13,110,253,.12); outline: 0; }
+.pt-v2 .pt-avatar { background: linear-gradient(135deg, #1f6feb, #2a5bd7); color: #fff; }
+.pt-v2 .pt-chip { background: #e7f0ff; color: #0d6efd; }
+.pt-v2 .pt-sec a { color: #0d6efd; }
