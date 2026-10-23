@@ -381,6 +381,10 @@ body.pt-v2 { --hj: #2563eb; --hj2: #2563eb; --hj-muda: #eff4ff; --teks: #0f172a;
 .pt-v2 .pt-field input:focus, .pt-v2 .pt-field textarea:focus { background: #fff; border-color: #2563eb; }
 .pt-v2 .pt-radio label { color: #334155; border: 1.5px solid #e2e8f0; background: #fff; }
 .pt-v2 .pt-radio label:has(input:checked) { background: #eff4ff; border-color: #2563eb; color: #1d4ed8; }
+.pt-v2 .pt-radio input:checked + span { color: #1d4ed8; }
+.pt-v2 .pt-radio label:has(input:checked) { box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+.pt-v2 .pt-radio label:has(input:checked) small { color: #1e40af; opacity: 1; }
+.pt-v2 .pt-radio label:has(input:checked) i { color: #2563eb; }
 .pt-v2 .pt-aturan b { color: #0f172a; }
 .pt-v2 .pt-jenis { background: #f1f5f9; color: #334155; }
 .pt-v2 .pt-catatan { border-left-color: #cbd5e1; background: #f8fafc; }
