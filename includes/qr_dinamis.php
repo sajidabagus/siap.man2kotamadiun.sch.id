@@ -56,6 +56,40 @@ function validate_qr_dinamis(string $token): bool
     return get_active_qr_dinamis($token) !== null;
 }
 
+/**
+ * Masa tenggang token gerbang yang SUDAH diverifikasi di sesi ini (detik).
+ * Layar gerbang memutar token tiap qr_dinamis_durasi_detik dan langsung meng-EXPIRED-kan token lama, sehingga
+ * siswa yang scan di detik-detik akhir gagal (GATE_INVALID) saat menekan Konfirmasi. Token yang sudah sah
+ * saat discan tetap diterima selama masa tenggang ini, HANYA untuk sesi yang benar-benar men-scan-nya.
+ */
+const QR_TENGGANG_SESI_DETIK = 300;
+
+/**
+ * Seperti get_active_qr_dinamis(), tetapi menerima token yang sudah diganti/kedaluwarsa bila token itu
+ * sama dengan $_SESSION['gate_token'] dan diverifikasi kurang dari QR_TENGGANG_SESI_DETIK yang lalu.
+ */
+function get_qr_dinamis_sesi(string $token): ?array
+{
+    if ($token === '') return null;
+    $row = get_active_qr_dinamis($token);
+    if ($row) return $row;
+
+    if (session_status() !== PHP_SESSION_ACTIVE) return null;
+    $tokenSesi = (string) ($_SESSION['gate_token'] ?? '');
+    $waktu = (int) ($_SESSION['gate_verified_at'] ?? 0);
+    if ($tokenSesi === '' || !hash_equals($tokenSesi, $token) || $waktu <= 0 || time() - $waktu > QR_TENGGANG_SESI_DETIK) {
+        return null;
+    }
+    $stmt = getDB()->prepare('SELECT * FROM qr_dinamis WHERE token = :token LIMIT 1');
+    $stmt->execute([':token' => $token]);
+    return $stmt->fetch() ?: null;
+}
+
+function validate_qr_dinamis_sesi(string $token): bool
+{
+    return get_qr_dinamis_sesi($token) !== null;
+}
+
 // =====================================================================
 // QR KELAS PERMANEN
 // Beda dengan QR Gerbang (otomatis berganti tiap sekian detik), QR Kelas

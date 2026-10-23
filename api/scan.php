@@ -21,7 +21,7 @@ $mode = $input['mode'] ?? '';
 $deviceUuid = clean($input['device_uuid'] ?? '');
 $gateToken = clean($input['gate_token'] ?? ($_SESSION['gate_token'] ?? ''));
 
-if ($gateToken === '' || !validate_qr_dinamis($gateToken)) {
+if ($gateToken === '' || !validate_qr_dinamis_sesi($gateToken)) {
     json_response(['success' => false, 'code' => 'GATE_INVALID', 'message' => 'Sesi QR gerbang tidak valid/kedaluwarsa.']);
 }
 

@@ -1,0 +1,4 @@
+uploads/izin/*
+!uploads/izin/.htaccess
+uploads/siswa/*
+!uploads/siswa/.htaccess

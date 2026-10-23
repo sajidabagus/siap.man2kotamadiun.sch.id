@@ -24,7 +24,7 @@ $settings = get_settings();
 // QR Gerbang (kelas_target kosong) tetap memakai tombol konfirmasi.
 require_once __DIR__ . '/../includes/qr_dinamis.php';
 $gateSesi = (string) ($_SESSION['gate_token'] ?? '');
-$infoGate = $gateSesi !== '' ? get_active_qr_dinamis($gateSesi) : null;
+$infoGate = $gateSesi !== '' ? get_qr_dinamis_sesi($gateSesi) : null;
 $autoKonfirmasi = $infoGate && !empty($infoGate['kelas_target']);
 ?>
 <!DOCTYPE html>

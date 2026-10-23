@@ -6,7 +6,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 $token = clean($_GET['token'] ?? '');
 
 // Wajib sudah melalui tahap scan QR gerbang lebih dahulu (Model B).
-if (empty($_SESSION['gate_token']) || !validate_qr_dinamis($_SESSION['gate_token'])) {
+if (empty($_SESSION['gate_token']) || !validate_qr_dinamis_sesi((string) $_SESSION['gate_token'])) {
     unset($_SESSION['gate_token']);
     header('Location: ' . BASE_URL . '/presensi/index.php');
     exit;

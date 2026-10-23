@@ -56,7 +56,7 @@ if (!$siswaId) {
     json_response(['success' => false, 'code' => 'NO_SESSION', 'message' => 'Sesi identifikasi tidak ditemukan. Silakan scan ulang.']);
 }
 $gateToken = (string) ($_SESSION['gate_token'] ?? '');
-if ($gateToken === '' || !validate_qr_dinamis($gateToken)) {
+if ($gateToken === '' || !validate_qr_dinamis_sesi($gateToken)) {
     json_response(['success' => false, 'code' => 'GATE_INVALID', 'message' => 'Sesi QR sudah kedaluwarsa. Silakan scan ulang QR di sekolah.']);
 }
 $kode = preg_replace('/\D/', '', (string) ($input['kode'] ?? ''));
