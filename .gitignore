@@ -2,3 +2,5 @@ uploads/izin/*
 !uploads/izin/.htaccess
 uploads/siswa/*
 !uploads/siswa/.htaccess
+!uploads/siswa/.gitkeep
+!uploads/izin/.gitkeep

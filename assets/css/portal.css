@@ -381,6 +381,37 @@ body.pt-v2 { --hj: #2563eb; --hj2: #2563eb; --hj-muda: #eff4ff; --teks: #0f172a;
 .pt-v2 .pt-field input:focus, .pt-v2 .pt-field textarea:focus { background: #fff; border-color: #2563eb; }
 .pt-v2 .pt-radio label { color: #334155; border: 1.5px solid #e2e8f0; background: #fff; }
 .pt-v2 .pt-radio label:has(input:checked) { background: #eff4ff; border-color: #2563eb; color: #1d4ed8; }
+.pt-v2 .pt-radio input:checked + span { color: #1d4ed8; }
+.pt-v2 .pt-radio label:has(input:checked) { box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+.pt-v2 .pt-radio label:has(input:checked) small { color: #1e40af; opacity: 1; }
+.pt-v2 .pt-radio label:has(input:checked) i { color: #2563eb; }
 .pt-v2 .pt-aturan b { color: #0f172a; }
 .pt-v2 .pt-jenis { background: #f1f5f9; color: #334155; }
 .pt-v2 .pt-catatan { border-left-color: #cbd5e1; background: #f8fafc; }
+
+/* Unggah lampiran surat (form izin) — input file disembunyikan tapi tetap dapat diakses */
+.pt-unggah { position: relative; }
+.pt-field .pt-unggah-input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); border: 0; white-space: nowrap; opacity: 0; }
+.pt-field label.pt-unggah-zona { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin: 0; padding: 22px 16px; min-height: 120px; text-align: center; cursor: pointer;
+  border: 1.5px dashed #cbd5e1; border-radius: 16px; background: #f8fafc; color: #0f172a; transition: border-color .15s, background .15s; -webkit-tap-highlight-color: transparent; }
+.pt-unggah-zona[hidden], .pt-unggah-pilih[hidden], .pt-unggah .pt-err-f[hidden] { display: none !important; }
+.pt-unggah-zona .bi { font-size: 28px; color: #2563eb; line-height: 1; }
+.pt-unggah-zona .j { font-size: 14.5px; font-weight: 600; }
+.pt-unggah-zona .k { font-size: 12px; font-weight: 500; color: #64748b; }
+.pt-unggah-zona:hover, .pt-unggah-zona:active { border-color: #2563eb; background: #eff6ff; }
+.pt-unggah-input:focus-visible + .pt-unggah-zona { border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37,99,235,.12); }
+.pt-unggah-pilih { display: flex; align-items: center; gap: 12px; padding: 10px; border: 1.5px solid #e2e8f0; border-radius: 16px; background: #fff; }
+.pt-unggah-pilih .pv { flex: 0 0 56px; height: 56px; border-radius: 12px; overflow: hidden; background: #f1f5f9; display: grid; place-items: center; color: #dc2626; font-size: 26px; }
+.pt-unggah-pilih .pv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pt-unggah-pilih .nm { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.pt-unggah-pilih .nm b { font-size: 13.5px; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pt-unggah-pilih .nm small { font-size: 12px; color: #64748b; }
+.pt-field label.pt-unggah-btn, .pt-unggah-btn { margin: 0; flex: none; display: inline-flex; align-items: center; justify-content: center; height: 36px; min-width: 36px; padding: 0 12px; border-radius: 10px;
+  border: 1.5px solid #e2e8f0; background: #fff; color: #2563eb; font-size: 13px; font-weight: 600; cursor: pointer; }
+.pt-unggah-btn.hapus { padding: 0; color: #b42318; }
+.pt-unggah .pt-err-f { margin-top: 6px; }
+
+/* Nama file panjang tidak boleh melebarkan form */
+.pt-field, .pt-unggah, .pt-unggah-pilih, .pt-unggah-zona { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.pt-unggah { width: 100%; overflow: hidden; }
+.pt-unggah-pilih .nm b, .pt-unggah-pilih .nm small { display: block; max-width: 100%; }
