@@ -15,6 +15,7 @@ if (!defined('APP_ROUTER')) {
 $settings = get_settings();
 $namaSekolah = $settings['nama_sekolah'] ?? 'Sekolah';
 $logo = $settings['logo'] ?? '';
+require_once __DIR__ . '/includes/siswa_desktop.php';
 $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE_URL . '/uploads/siswa/' . rawurlencode($logo) : null;
 ?>
 <!DOCTYPE html>
@@ -28,6 +29,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
 <style>html{background:#f7f8fa}</style>
 <link rel="preload" href="<?= BASE_URL ?>/assets/css/siswa-app.css?v=<?= @filemtime(__DIR__ . '/assets/css/siswa-app.css') ?: time() ?>" as="style">
 <link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap-icons.min.css" rel="stylesheet">
+<link href="<?= BASE_URL ?>/assets/css/siswa-desktop.css?v=<?= @filemtime(__DIR__ . '/assets/css/siswa-desktop.css') ?: time() ?>" rel="stylesheet">
 <link href="<?= BASE_URL ?>/assets/css/siswa-app.css?v=<?= @filemtime(__DIR__ . '/assets/css/siswa-app.css') ?: time() ?>" rel="stylesheet">
 <style>
   :root { --biru: #0d6efd; --navy: #14213d; --abu: #8a94a6; --garis: #e9edf3; --hijau: #2fb344; --oranye: #f08c1a; --merah: #e03e4a; }
@@ -182,6 +184,7 @@ try { var _s = JSON.parse(localStorage.getItem('siapBerandaV1') || 'null');
   if (_s && _s.hari === new Date().toDateString() && _s.d) { window.SIAP_SNAP = _s.d; if (_s.d.mode === 'kelas' && _s.d.saya) document.body.classList.add('mode-siswa'); }
 } catch (e) {}
 </script>
+<?php siswa_desktop_sidebar('beranda', BASE_URL . '/'); siswa_desktop_topbar('', null, 0, 'apTopNama'); ?>
 <div class="wrap">
 
   <div class="top">
@@ -213,13 +216,14 @@ try { var _s = JSON.parse(localStorage.getItem('siapBerandaV1') || 'null');
   <!-- Tampilan siswa: hanya diisi bila perangkat ini terdaftar & aktif (lihat render()). Semua teks diisi via textContent. -->
   <section class="app" id="appSiswa" aria-label="Absensi saya">
     <header class="ap-hello">
-      <div><h1>Halo, <span id="apNama"></span> 👋</h1><p id="apTgl">&nbsp;</p></div>
+      <div><h1><span class="sd-wave" aria-hidden="true">👋</span>Halo, <span id="apNama"></span> <span class="m-wave">👋</span></h1><p class="sd-sub">Selamat datang kembali di sistem informasi siswa</p><p class="tgl"><i class="bi bi-calendar-check sd-ik"></i><span id="apTgl">&nbsp;</span></p></div>
       <a class="ap-masuk" href="<?= BASE_URL ?>/portal/notifikasi" aria-label="Notifikasi" title="Notifikasi"><i class="bi bi-bell"></i></a>
     </header>
     <div class="ap-jam">
       <div>
-        <div class="lbl">Jam Sekarang</div>
+        <div class="lbl"><i class="bi bi-clock sd-ik"></i>Jam Sekarang</div>
         <div class="w"><span id="apJam">--:--</span><span class="dt" id="apDetik">:--</span><small>WIB</small></div>
+        <div class="sd-tgl"><i class="bi bi-calendar-check"></i> <span id="apTgl2"></span></div>
         <div class="lok" id="apLok"><i class="bi bi-geo-alt-fill"></i> <span>Memeriksa lokasi…</span></div>
       </div>
       <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">
@@ -236,15 +240,16 @@ try { var _s = JSON.parse(localStorage.getItem('siapBerandaV1') || 'null');
       <h2>Status Hari Ini</h2>
       <a class="ap-status" id="apStatus" href="<?= BASE_URL ?>/portal/riwayat">
         <span class="lg"><i class="bi bi-hourglass-split" id="apStIkon"></i></span>
-        <span><b id="apStJudul">Belum absen</b><span id="apStMasuk">Masuk: -</span><span>Pulang: -</span></span>
+        <span><em class="sd-lbl">Status Hari Ini</em><b id="apStJudul">Belum absen</b><span id="apStMasuk">Masuk: -</span><span class="sd-hide">Pulang: -</span></span>
+        <span class="sd-detail"><i class="bi bi-clock"></i> Lihat Detail <i class="bi bi-chevron-right"></i></span>
         <i class="bi bi-chevron-right ch"></i>
       </a>
     </div>
-    <div class="ap-sec"><h2>Ringkasan Bulan Ini</h2><a href="<?= BASE_URL ?>/portal/riwayat">Lihat Semua</a></div>
+    <div class="ap-sec"><h2>Ringkasan Bulan Ini</h2><a href="<?= BASE_URL ?>/portal/riwayat">Lihat Semua <i class="bi bi-chevron-right sd-ik"></i></a></div>
     <div class="ap-tiles">
-      <a class="h" href="<?= BASE_URL ?>/portal/riwayat"><b id="apHadir">0</b><span>Hadir</span><i class="bi bi-calendar-check"></i></a>
-      <a class="i" href="<?= BASE_URL ?>/portal/riwayat"><b id="apIzin">0</b><span>Izin</span><i class="bi bi-file-earmark-text-fill"></i></a>
-      <a class="a" href="<?= BASE_URL ?>/portal/riwayat"><b id="apAlfa">0</b><span>Alfa</span><i class="bi bi-calendar-x-fill"></i></a>
+      <a class="h" href="<?= BASE_URL ?>/portal/riwayat"><em class="sd-bul"><i class="bi bi-check-lg"></i></em><b id="apHadir">0</b><span>Hadir</span><i class="bi bi-calendar-check"></i><s class="sd-ch bi bi-chevron-right"></s></a>
+      <a class="i" href="<?= BASE_URL ?>/portal/riwayat"><em class="sd-bul"><i class="bi bi-clock"></i></em><b id="apIzin">0</b><span>Izin / Sakit</span><i class="bi bi-file-earmark-text-fill"></i><s class="sd-ch bi bi-chevron-right"></s></a>
+      <a class="a" href="<?= BASE_URL ?>/portal/riwayat"><em class="sd-bul"><i class="bi bi-x-lg"></i></em><b id="apAlfa">0</b><span>Alfa</span><small class="sd-only" id="apAlfaSub">Tidak ada</small><i class="bi bi-calendar-x-fill"></i><s class="sd-ch bi bi-chevron-right"></s></a>
     </div>
   </section>
 
@@ -431,6 +436,7 @@ try { var _s = JSON.parse(localStorage.getItem('siapBerandaV1') || 'null');
     if (!aktif) return;
     var s = d.saya, kata = String(s.nama || '').trim().split(/\s+/)[0] || '';
     $('apNama').textContent = kata.charAt(0).toUpperCase() + kata.slice(1).toLowerCase();
+    if ($('apTopNama')) $('apTopNama').textContent = $('apNama').textContent || 'Siswa';
     var STATUS = {
       HADIR: ['Hadir', '#2fb344', 'check-lg'], TERLAMBAT: ['Hadir (Terlambat)', '#f08c1a', 'clock-history'],
       IZIN: ['Izin', '#e0a100', 'file-earmark-text-fill'], SAKIT: ['Izin (Sakit)', '#e0a100', 'file-earmark-medical-fill'],
@@ -445,7 +451,7 @@ try { var _s = JSON.parse(localStorage.getItem('siapBerandaV1') || 'null');
     var b = $('apAbsen');
     b.disabled = sudah || !d.efektif;
     b.querySelector('span').textContent = sudah ? 'Sudah Absen Masuk' : (d.efektif ? 'Absen Masuk' : 'Presensi ditutup hari ini');
-    if (s.bulan) { $('apHadir').textContent = s.bulan.hadir; $('apIzin').textContent = s.bulan.izin; $('apAlfa').textContent = s.bulan.alfa; }
+    if (s.bulan) { $('apHadir').textContent = s.bulan.hadir; $('apIzin').textContent = s.bulan.izin; $('apAlfa').textContent = s.bulan.alfa; if ($('apAlfaSub')) $('apAlfaSub').textContent = +s.bulan.alfa > 0 ? s.bulan.alfa + ' hari' : 'Tidak ada'; }
     if (!lokasiDicek) { lokasiDicek = true; cekLokasi(!!d.gps_aktif); }
   }
   function cekLokasi(wajib) {
@@ -463,6 +469,7 @@ try { var _s = JSON.parse(localStorage.getItem('siapBerandaV1') || 'null');
     var h = d.getHours(), m = d.getMinutes(), sd = d.getSeconds(), p = function (n) { return String(n).padStart(2, '0'); };
     $('apJam').textContent = p(h) + ':' + p(m);
     $('apTgl').textContent = HARI[d.getDay()] + ', ' + d.getDate() + ' ' + BULAN[d.getMonth()] + ' ' + d.getFullYear();
+    if ($('apTgl2')) $('apTgl2').textContent = $('apTgl').textContent;
     $('apJarumJam').setAttribute('transform', 'rotate(' + ((h % 12) * 30 + m * 0.5) + ' 60 60)');
     $('apJarumMenit').setAttribute('transform', 'rotate(' + (m * 6 + sd * 0.1) + ' 60 60)');
     $('apDetik').textContent = ':' + p(sd);

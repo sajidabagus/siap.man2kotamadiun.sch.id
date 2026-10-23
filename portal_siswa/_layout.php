@@ -1,5 +1,6 @@
 <?php
 /** Kerangka HTML portal siswa (dipakai semua halaman portal). */
+require_once __DIR__ . '/../includes/siswa_desktop.php';
 
 function portal_head(string $judul): void
 {
@@ -20,6 +21,7 @@ function portal_head(string $judul): void
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="<?= BASE_URL ?>/assets/css/portal.css?v=<?= @filemtime(__DIR__ . '/../assets/css/portal.css') ?: time() ?>" rel="stylesheet">
 <link href="<?= BASE_URL ?>/assets/css/siswa-app.css?v=<?= @filemtime(__DIR__ . '/../assets/css/siswa-app.css') ?: time() ?>" rel="stylesheet">
+<link href="<?= BASE_URL ?>/assets/css/siswa-desktop.css?v=<?= @filemtime(__DIR__ . '/../assets/css/siswa-desktop.css') ?: time() ?>" rel="stylesheet">
 </head>
 <?php
 }
@@ -123,7 +125,12 @@ function portal_app_awal(string $judul, array $akun, string $aktif = 'beranda', 
     $GLOBALS['PORTAL_NOTIF'] = portal_notif_belum_dibaca((int) $akun['siswa_id']);
     portal_head($judul);
     ?>
-<body class="pt-body pt-app pt-v2 ap-app">
+<body class="pt-body pt-app pt-v2 ap-app pg-<?= e($aktif) ?>">
+<?php
+    siswa_desktop_sidebar($aktif, portal_url_home(), (int) $GLOBALS['PORTAL_NOTIF']);
+    $fotoAkun = (!empty($akun['foto']) && is_file(__DIR__ . '/../uploads/siswa/' . $akun['foto'])) ? BASE_URL . '/uploads/siswa/' . rawurlencode((string) $akun['foto']) : null;
+    siswa_desktop_topbar((string) ($akun['nama'] ?? ''), $fotoAkun, (int) $GLOBALS['PORTAL_NOTIF']);
+?>
 <?php if (empty($opsi['tanpa_header'])): ?>
 <header class="pt-bar">
   <?php if (isset($opsi['kembali'])): ?>

@@ -32,8 +32,10 @@ $gateValidInSession = !empty($_SESSION['gate_token']) && validate_qr_dinamis_ses
 <link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap-icons.min.css" rel="stylesheet">
 <link href="<?= BASE_URL ?>/assets/css/style.css" rel="stylesheet">
 <link href="<?= BASE_URL ?>/assets/css/presensi.css?v=<?= @filemtime(__DIR__ . '/../assets/css/presensi.css') ?: time() ?>" rel="stylesheet">
+<link href="<?= BASE_URL ?>/assets/css/siswa-desktop.css?v=<?= @filemtime(__DIR__ . '/../assets/css/siswa-desktop.css') ?: time() ?>" rel="stylesheet">
 </head>
 <body class="presensi-page">
+<?php require_once __DIR__ . '/../includes/siswa_desktop.php'; siswa_desktop_sidebar('scan', BASE_URL . '/portal'); ?>
 <div class="presensi-wrap ps">
   <?php
     $logoFile = $settings['logo'] ?? '';

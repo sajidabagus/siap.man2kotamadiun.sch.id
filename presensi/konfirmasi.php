@@ -38,8 +38,10 @@ $autoKonfirmasi = $infoGate && !empty($infoGate['kelas_target']);
 <link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap-icons.min.css" rel="stylesheet">
 <link href="<?= BASE_URL ?>/assets/css/style.css" rel="stylesheet">
 <link href="<?= BASE_URL ?>/assets/css/presensi.css?v=<?= @filemtime(__DIR__ . '/../assets/css/presensi.css') ?: time() ?>" rel="stylesheet">
+<link href="<?= BASE_URL ?>/assets/css/siswa-desktop.css?v=<?= @filemtime(__DIR__ . '/../assets/css/siswa-desktop.css') ?: time() ?>" rel="stylesheet">
 </head>
 <body class="presensi-page">
+<?php require_once __DIR__ . '/../includes/siswa_desktop.php'; siswa_desktop_sidebar('scan', BASE_URL . '/portal'); ?>
 <?php
   $logoFile = $settings['logo'] ?? '';
   $logoUrl = ($logoFile !== '' && is_file(__DIR__ . '/../uploads/siswa/' . $logoFile)) ? BASE_URL . '/uploads/siswa/' . rawurlencode($logoFile) : null;
