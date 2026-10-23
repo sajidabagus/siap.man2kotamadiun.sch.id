@@ -27,7 +27,24 @@ function portal_head(string $judul): void
  */
 function portal_url_home(): string
 {
-    return (function_exists('portal_sesi_via_perangkat') && portal_sesi_via_perangkat()) ? BASE_URL . '/' : portal_url();
+    return portal_pakai_beranda_utama() ? BASE_URL . '/' : portal_url();
+}
+
+/**
+ * Siswa memakai beranda utama "/" (tampilan biru beranda.php) bila sesinya masuk otomatis lewat perangkat ATAU
+ * akunnya punya perangkat terdaftar yang aktif (mis. pernah masuk dengan password lalu gerbang hanya meneruskan,
+ * sehingga tanda via_perangkat tidak pernah terpasang — inilah penyebab Home jatuh ke beranda /portal yang hijau).
+ */
+function portal_pakai_beranda_utama(): bool
+{
+    if (function_exists('portal_sesi_via_perangkat') && portal_sesi_via_perangkat()) return true;
+    $akun = function_exists('portal_siswa_sekarang') ? portal_siswa_sekarang() : null;
+    $sid = (int) ($akun['siswa_id'] ?? 0);
+    if ($sid <= 0) return false;
+    require_once __DIR__ . '/../includes/device_binding.php';
+    if (empty(get_settings()['device_binding_aktif'])) return false;
+    $b = get_device_binding($sid);
+    return $b && ($b['status'] ?? '') === 'ACTIVE';
 }
 
 /** Halaman masuk/aktivasi: panel merek + panel formulir. */
