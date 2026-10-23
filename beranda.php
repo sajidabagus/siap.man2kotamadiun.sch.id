@@ -31,7 +31,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { overscroll-behavior: none; }
   body { font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; color: var(--navy);
-         background: #f7f8fa;
+         background: radial-gradient(900px 420px at 10% -10%, #dbe8ff, transparent 60%), radial-gradient(800px 400px at 100% 0, #e6e0ff, transparent 55%), #f4f6fb;
          min-height: 100vh; -webkit-text-size-adjust: 100%; }
   .wrap { max-width: 980px; margin: 0 auto; padding: 18px 16px 40px; }
   .top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
@@ -140,33 +140,32 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   .ap-hello h1 { font-size: 1.6rem; font-weight: 800; line-height: 1.2; }
   .ap-hello p { color: #5b6580; margin-top: 4px; font-weight: 500; }
   .ap-hello .ap-masuk { flex: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; color: var(--navy); background: #fff; border: 1px solid var(--garis); text-decoration: none; font-size: 1.15rem; }
-  .ap-jam { position: relative; overflow: hidden; background: #fff; color: #0f172a; border: 1px solid #e8ebf0; border-radius: 20px; padding: 20px 20px 20px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 8px 24px -18px rgba(15,23,42,.25); }
-  .ap-jam::before { content: ""; position: absolute; left: 0; top: 18px; bottom: 18px; width: 4px; border-radius: 0 4px 4px 0; background: #2563eb; }
-  .ap-jam .lbl { font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #64748b; }
+  .ap-jam { background: linear-gradient(135deg, #1f6feb, #2a5bd7); color: #fff; border-radius: 20px; padding: 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 14px 28px -16px rgba(31,111,235,.9); }
+  .ap-jam .lbl { font-size: .9rem; opacity: .92; font-weight: 600; }
   .ap-jam .w { font-size: 2.9rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; margin: 6px 0 10px; }
-  .ap-jam .w small { font-size: .9rem; font-weight: 700; margin-left: 6px; color: #2563eb; }
-  .ap-jam .lok { font-size: .82rem; display: inline-flex; align-items: center; gap: 6px; color: #475569; background: #f1f5f9; padding: 5px 10px; border-radius: 999px; }
-  .ap-jam svg { width: 96px; height: 96px; flex: none; }
-  .ap-absen { width: 100%; margin: 16px 0; padding: 16px; font-size: 1.08rem; font-weight: 700; background: #2563eb; color: #fff; border-radius: 16px; box-shadow: 0 10px 20px -14px rgba(37,99,235,.8); }
+  .ap-jam .w small { font-size: .95rem; font-weight: 700; margin-left: 6px; }
+  .ap-jam .lok { font-size: .85rem; display: flex; align-items: center; gap: 6px; opacity: .95; }
+  .ap-jam svg { width: 112px; height: 112px; flex: none; }
+  .ap-absen { width: 100%; margin: 16px 0; padding: 18px; font-size: 1.2rem; background: #2fb344; color: #fff; border-radius: 16px; box-shadow: 0 12px 22px -14px rgba(47,179,68,.95); }
   .ap-absen i { font-size: 1.5rem; }
-  .ap-absen:disabled { background: #e2e8f0; color: #64748b; box-shadow: none; cursor: default; }
-  .ap-card { background: #fff; border: 1px solid #e8ebf0; border-radius: 18px; padding: 18px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .ap-absen:disabled { background: #9fd8ab; box-shadow: none; cursor: default; }
+  .ap-card { background: #fff; border: 1px solid var(--garis); border-radius: 18px; padding: 16px; box-shadow: 0 1px 3px rgba(20,33,61,.05); }
   .ap-card h2, .ap-sec h2 { font-size: 1rem; font-weight: 800; }
   .ap-status { display: flex; align-items: center; gap: 14px; margin-top: 12px; text-decoration: none; color: inherit; }
-  .ap-status .lg { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; color: var(--c); font-size: 1.5rem; flex: none; background: color-mix(in srgb, var(--c) 13%, #fff); }
-  .ap-status b { display: block; color: var(--c); font-size: 1.1rem; }
+  .ap-status .lg { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 1.7rem; flex: none; background: var(--c); }
+  .ap-status b { display: block; color: var(--c); font-size: 1.2rem; }
   .ap-status span { display: block; color: #3d4659; font-size: .9rem; margin-top: 2px; }
   .ap-status .ch { margin-left: auto; color: #8a94a6; }
   .ap-sec { display: flex; align-items: center; justify-content: space-between; margin: 20px 0 10px; }
   .ap-sec a { color: var(--biru); font-weight: 600; font-size: .88rem; text-decoration: none; }
   .ap-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
-  .ap-tiles a { position: relative; border-radius: 16px; padding: 14px 12px 40px; text-decoration: none; color: #334155; background: #fff; border: 1px solid #e8ebf0; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+  .ap-tiles a { position: relative; border-radius: 16px; padding: 14px 12px 40px; text-decoration: none; color: var(--navy); border: 1px solid transparent; }
   .ap-tiles b { display: block; font-size: 1.9rem; font-weight: 800; line-height: 1.1; }
   .ap-tiles span { font-weight: 600; font-size: .92rem; }
-  .ap-tiles i { position: absolute; left: 12px; bottom: 10px; width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; font-size: .95rem; }
-  .ap-tiles .h b, .ap-tiles .h i { color: #16a34a; } .ap-tiles .h i { background: #dcfce7; }
-  .ap-tiles .i b, .ap-tiles .i i { color: #7c3aed; } .ap-tiles .i i { background: #ede9fe; }
-  .ap-tiles .a b, .ap-tiles .a i { color: #dc2626; } .ap-tiles .a i { background: #fee2e2; }
+  .ap-tiles i { position: absolute; right: 12px; bottom: 10px; font-size: 1.35rem; }
+  .ap-tiles .h { background: #e9f7ee; border-color: #cdebd6; } .ap-tiles .h b, .ap-tiles .h i { color: #23913a; }
+  .ap-tiles .i { background: #fff5e3; border-color: #f7e2b5; } .ap-tiles .i b, .ap-tiles .i i { color: #d98a00; }
+  .ap-tiles .a { background: #fdeced; border-color: #f6cfd2; } .ap-tiles .a b, .ap-tiles .a i { color: #d63a46; }
 </style>
 </head>
 <body>
@@ -202,7 +201,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   <section class="app" id="appSiswa" aria-label="Absensi saya">
     <header class="ap-hello">
       <div><h1>Halo, <span id="apNama"></span> 👋</h1><p id="apTgl">&nbsp;</p></div>
-      <a class="ap-masuk" href="<?= BASE_URL ?>/portal/gerbang?lanjut=profil" aria-label="Profil siswa"><i class="bi bi-person"></i></a>
+      <a class="ap-masuk" href="<?= BASE_URL ?>/portal/gerbang?lanjut=notifikasi" aria-label="Notifikasi" title="Notifikasi"><i class="bi bi-bell"></i></a>
     </header>
     <div class="ap-jam">
       <div>
@@ -211,10 +210,10 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
         <div class="lok" id="apLok"><i class="bi bi-geo-alt-fill"></i> <span>Memeriksa lokasi…</span></div>
       </div>
       <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">
-        <circle cx="60" cy="60" r="58" fill="#f1f5f9"/><circle cx="60" cy="60" r="51" fill="#fff" stroke="#e2e8f0"/>
-        <?php for ($i = 0; $i < 12; $i++): ?><line x1="60" y1="13" x2="60" y2="<?= $i % 3 === 0 ? 21 : 18 ?>" stroke="#94a3b8" stroke-width="<?= $i % 3 === 0 ? 2.6 : 1.5 ?>" stroke-linecap="round" transform="rotate(<?= $i * 30 ?> 60 60)"/><?php endfor; ?>
-        <line id="apJarumJam" x1="60" y1="60" x2="60" y2="37" stroke="#0f172a" stroke-width="5" stroke-linecap="round"/>
-        <line id="apJarumMenit" x1="60" y1="60" x2="60" y2="22" stroke="#2563eb" stroke-width="3.4" stroke-linecap="round"/>
+        <circle cx="60" cy="60" r="58" fill="rgba(255,255,255,.25)"/><circle cx="60" cy="60" r="51" fill="#fff"/>
+        <?php for ($i = 0; $i < 12; $i++): ?><line x1="60" y1="13" x2="60" y2="<?= $i % 3 === 0 ? 21 : 18 ?>" stroke="#7d8aa3" stroke-width="<?= $i % 3 === 0 ? 2.6 : 1.5 ?>" stroke-linecap="round" transform="rotate(<?= $i * 30 ?> 60 60)"/><?php endfor; ?>
+        <line id="apJarumJam" x1="60" y1="60" x2="60" y2="37" stroke="#14213d" stroke-width="5" stroke-linecap="round"/>
+        <line id="apJarumMenit" x1="60" y1="60" x2="60" y2="22" stroke="#1f6feb" stroke-width="3.4" stroke-linecap="round"/>
         <circle cx="60" cy="60" r="4.5" fill="#14213d"/>
       </svg>
     </div>
@@ -415,9 +414,9 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
     var s = d.saya, kata = String(s.nama || '').trim().split(/\s+/)[0] || '';
     $('apNama').textContent = kata.charAt(0).toUpperCase() + kata.slice(1).toLowerCase();
     var STATUS = {
-      HADIR: ['Hadir', '#16a34a', 'check-lg'], TERLAMBAT: ['Hadir (Terlambat)', '#d97706', 'clock-history'],
-      IZIN: ['Izin', '#7c3aed', 'file-earmark-text-fill'], SAKIT: ['Izin (Sakit)', '#7c3aed', 'file-earmark-medical-fill'],
-      ALPA: ['Alfa', '#dc2626', 'x-lg'], BELUM: ['Belum absen', '#8a94a6', 'hourglass-split']
+      HADIR: ['Hadir', '#2fb344', 'check-lg'], TERLAMBAT: ['Hadir (Terlambat)', '#f08c1a', 'clock-history'],
+      IZIN: ['Izin', '#e0a100', 'file-earmark-text-fill'], SAKIT: ['Izin (Sakit)', '#e0a100', 'file-earmark-medical-fill'],
+      ALPA: ['Alfa', '#e03e4a', 'x-lg'], BELUM: ['Belum absen', '#8a94a6', 'hourglass-split']
     };
     var kunci = s.status || s.izin || 'BELUM', st = STATUS[kunci] || STATUS.BELUM;
     $('apStatus').style.setProperty('--c', st[1]);
