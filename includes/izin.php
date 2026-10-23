@@ -221,6 +221,13 @@ function izin_ambil(int $id): ?array
  * Validasi isi pengajuan. @return array{galat:array,data:array}
  * Kunci galat: jenis, mulai, selesai, alasan, lampiran, umum.
  */
+function tgl_indo_pendek(string $t): string
+{
+    $b = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    $x = strtotime($t);
+    return $x ? date('j', $x) . ' ' . $b[(int) date('n', $x)] . ' ' . date('Y', $x) : $t;
+}
+
 function izin_validasi(int $siswaId, array $in): array
 {
     $g = [];
@@ -259,10 +266,10 @@ function izin_validasi(int $siswaId, array $in): array
                 if (!$efektif) {
                     $g['mulai'] = 'Rentang tanggal itu tidak mencakup hari efektif sekolah (' . label_hari_efektif() . ').';
                 } else {
-                    $st = $db->prepare('SELECT tanggal FROM presensi WHERE siswa_id = :s AND tanggal BETWEEN :a AND :b');
+                    $st = $db->prepare("SELECT tanggal FROM presensi WHERE siswa_id = :s AND tanggal BETWEEN :a AND :b AND metode <> 'PENGAJUAN' ORDER BY tanggal");
                     $st->execute([':s' => $siswaId, ':a' => $mulai, ':b' => $selesai]);
                     $sudah = $st->fetchAll(PDO::FETCH_COLUMN);
-                    if (!array_diff($efektif, $sudah)) $g['mulai'] = 'Anda sudah tercatat presensi pada seluruh tanggal tersebut.';
+                    if ($sudah) $g['mulai'] = 'Anda sudah absen pada ' . tgl_indo_pendek($sudah[0]) . ', jadi tidak bisa mengajukan izin/sakit untuk tanggal itu. Pilih tanggal lain.';
 
                     $st = $db->prepare("SELECT COUNT(*) FROM izin_pengajuan WHERE siswa_id = :s AND status IN ('menunggu','disetujui')
                                         AND tanggal_mulai <= :b AND tanggal_selesai >= :a");
