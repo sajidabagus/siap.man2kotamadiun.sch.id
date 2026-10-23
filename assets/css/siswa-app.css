@@ -31,3 +31,37 @@ body.mode-siswa .ap-nav, body.ap-app .ap-nav { display: flex; }
 ::view-transition-old(ap-nav) { display: none; }
 ::view-transition-new(ap-nav) { animation: none; }
 @media (prefers-reduced-motion: reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; } }
+
+/* =====================================================================
+   DESKTOP / TABLET — tampilan mobile tidak berubah (semua aturan di bawah hanya >= 768px).
+   768–1023px : menu bawah jadi "dock" melayang selebar konten, konten sedikit lebih lebar.
+   >= 1024px  : menu bawah jadi sidebar kiri tetap (Home, Riwayat, Scan QR, Izin, Profile),
+                konten terpusat di sisa layar, padding bawah untuk menu bawah dihapus.
+   ===================================================================== */
+@media (min-width: 768px) {
+  body.mode-siswa .ap-nav, body.ap-app .ap-nav { left: 50%; right: auto; bottom: 16px; width: min(560px, calc(100% - 48px)); transform: translateX(-50%); -webkit-transform: translateX(-50%);
+    border: 1px solid var(--garis); border-radius: 22px; padding: 8px 10px; box-shadow: 0 12px 32px -18px rgba(15,23,42,.35); }
+  .ap-nav a { cursor: pointer; transition: color .15s; }
+  .ap-nav a:hover { color: var(--navy); }
+  .ap-nav a.scan:hover { color: #fff; filter: brightness(1.06); }
+  .ap-nav a:focus-visible { outline: 2px solid var(--biru); outline-offset: 3px; border-radius: 12px; }
+}
+@media (min-width: 1024px) {
+  body.mode-siswa, body.ap-app { padding-left: 240px; padding-bottom: 32px !important; }
+  body.mode-siswa .ap-nav, body.ap-app .ap-nav { top: 0; bottom: 0; left: 0; right: auto; width: 240px; transform: none; -webkit-transform: none;
+    flex-direction: column; justify-content: flex-start; align-items: stretch; gap: 4px; padding: 24px 14px; border: 0; border-right: 1px solid var(--garis); border-radius: 0;
+    background: #fff; box-shadow: none; }
+  body.mode-siswa .ap-nav::before, body.ap-app .ap-nav::before { content: "Portal Siswa"; display: block; padding: 4px 12px 18px; margin-bottom: 8px; border-bottom: 1px solid var(--garis);
+    font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--abu); }
+  .ap-nav a { flex: none; max-width: none; flex-direction: row; justify-content: flex-start; gap: 12px; padding: 11px 12px; border-radius: 12px; font-size: .92rem; color: #475569; }
+  .ap-nav a i { font-size: 1.15rem; width: 22px; text-align: center; }
+  .ap-nav a:hover { background: #f1f5f9; color: var(--navy); }
+  .ap-nav a.on { background: #eff4ff; color: var(--biru); }
+  /* Tombol scan: dari lingkaran melayang jadi tombol utama berlabel di urutan teratas */
+  .ap-nav a.scan { order: -1; width: auto; height: auto; margin: 0 0 12px; padding: 12px; border: 0; border-radius: 12px; justify-content: center; font-weight: 700; color: #fff; }
+  .ap-nav a.scan::after { content: "Scan QR Absen"; }
+  .ap-nav a.scan i { font-size: 1.2rem; width: auto; }
+  .ap-nav a.scan:hover { background: var(--biru); color: #fff; }
+  /* badge notifikasi Izin: di ujung kanan baris, bukan menumpuk ikon */
+  .ap-nav .pt-dot-tab { position: static; margin-left: auto; }
+}

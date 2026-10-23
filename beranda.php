@@ -138,6 +138,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   body.mode-siswa .top, body.mode-siswa .hero, body.mode-siswa #panelDonut { display: none; }
   body.mode-siswa .app { display: block; }
   body.mode-siswa .wrap { max-width: 520px; padding-bottom: 110px; }
+  @media (min-width: 1024px) { body.mode-siswa .wrap { max-width: 760px; padding: 28px 32px 40px; } }
   body.mode-siswa .grid { display: block; }
   .ap-hello { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin: 4px 0 18px; }
   .ap-hello h1 { font-size: 1.6rem; font-weight: 800; line-height: 1.2; }

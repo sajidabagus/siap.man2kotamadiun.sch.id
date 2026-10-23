@@ -430,3 +430,14 @@ body.pt-v2 { --hj: #2563eb; --hj2: #2563eb; --hj-muda: #eff4ff; --teks: #0f172a;
 .pf-baris i { font-size: 1.1rem; color: #475569; width: 22px; text-align: center; }
 .pf-baris .lbl { font-weight: 600; color: #1f2937; min-width: 70px; }
 .pf-baris .val { margin-left: auto; color: #475569; text-align: right; overflow-wrap: anywhere; }
+
+/* DESKTOP (>= 1024px): konten portal lebih lebar & terpusat di samping sidebar (lihat siswa-app.css). Mobile tidak berubah. */
+@media (min-width: 1024px) {
+  body.pt-v2 { padding-bottom: 32px; }
+  .pt-v2 .pt-wrap { max-width: 760px; padding: 24px 32px; }
+  .pt-v2 .pt-bar { padding-left: 24px; padding-right: 24px; }
+  .pt-v2 .pt-hello { padding-top: 8px; }
+  .pt-v2 .pt-jam .waktu { font-size: 52px; }
+  .pt-v2 .pt-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pt-v2 .pt-dl { grid-template-columns: 170px 1fr; }
+}
