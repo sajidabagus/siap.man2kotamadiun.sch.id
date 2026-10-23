@@ -284,6 +284,8 @@ body.pt-v2 { background: #f3f6f4; padding-bottom: calc(96px + env(safe-area-inse
 .pt-hari .isi .r b { display: block; font-size: 14.5px; color: var(--teks); font-weight: 600; }
 .pt-hari .ikon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: var(--c); color: #fff; font-size: 18px; }
 .pt-daftar { display: grid; gap: 12px; }
+.pt-hari .isi .r2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pt-hari.pt-c-IZIN .ikon, .pt-hari.pt-c-SAKIT .ikon { border-radius: 8px; }
 
 /* Profil */
 .pt-menu-baris { display: grid; gap: 0; }
@@ -304,3 +306,4 @@ body.pt-gerbang { min-height: 100vh; min-height: 100svh; display: grid; place-it
 .pt-gerbang-link { color: #cfe3d8; font-size: 13px; }
 @keyframes pt-putar { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .pt-spin { animation-duration: 2.4s; } }
+.pt-hari.pt-c-IZIN, .pt-hari.pt-c-SAKIT { --c: #e0a100; --cb: #fff5e3; }

@@ -128,6 +128,50 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   #qrBox video { border-radius: 14px; }
   .tutup-x { border: 0; background: #f1f3f8; width: 34px; height: 34px; border-radius: 10px; cursor: pointer; font-size: 1rem; color: #5b6580; flex: none; }
   .hide { display: none !important; }
+
+  /* ===== Tampilan siswa (perangkat terdaftar & aktif) — tanpa login ===== */
+  .app { display: none; }
+  body.mode-siswa .top, body.mode-siswa .hero, body.mode-siswa #panelDonut { display: none; }
+  body.mode-siswa .app { display: block; }
+  body.mode-siswa .wrap { max-width: 520px; padding-bottom: 110px; }
+  body.mode-siswa .grid { display: block; }
+  .ap-hello { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin: 4px 0 18px; }
+  .ap-hello h1 { font-size: 1.6rem; font-weight: 800; line-height: 1.2; }
+  .ap-hello p { color: #5b6580; margin-top: 4px; font-weight: 500; }
+  .ap-hello .ap-masuk { flex: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; color: var(--navy); background: #fff; border: 1px solid var(--garis); text-decoration: none; font-size: 1.15rem; }
+  .ap-jam { background: linear-gradient(135deg, #1f6feb, #2a5bd7); color: #fff; border-radius: 20px; padding: 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 14px 28px -16px rgba(31,111,235,.9); }
+  .ap-jam .lbl { font-size: .9rem; opacity: .92; font-weight: 600; }
+  .ap-jam .w { font-size: 2.9rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; margin: 6px 0 10px; }
+  .ap-jam .w small { font-size: .95rem; font-weight: 700; margin-left: 6px; }
+  .ap-jam .lok { font-size: .85rem; display: flex; align-items: center; gap: 6px; opacity: .95; }
+  .ap-jam svg { width: 112px; height: 112px; flex: none; }
+  .ap-absen { width: 100%; margin: 16px 0; padding: 18px; font-size: 1.2rem; background: #2fb344; color: #fff; border-radius: 16px; box-shadow: 0 12px 22px -14px rgba(47,179,68,.95); }
+  .ap-absen i { font-size: 1.5rem; }
+  .ap-absen:disabled { background: #9fd8ab; box-shadow: none; cursor: default; }
+  .ap-card { background: #fff; border: 1px solid var(--garis); border-radius: 18px; padding: 16px; box-shadow: 0 1px 3px rgba(20,33,61,.05); }
+  .ap-card h2, .ap-sec h2 { font-size: 1rem; font-weight: 800; }
+  .ap-status { display: flex; align-items: center; gap: 14px; margin-top: 12px; text-decoration: none; color: inherit; }
+  .ap-status .lg { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 1.7rem; flex: none; background: var(--c); }
+  .ap-status b { display: block; color: var(--c); font-size: 1.2rem; }
+  .ap-status span { display: block; color: #3d4659; font-size: .9rem; margin-top: 2px; }
+  .ap-status .ch { margin-left: auto; color: #8a94a6; }
+  .ap-sec { display: flex; align-items: center; justify-content: space-between; margin: 20px 0 10px; }
+  .ap-sec a { color: var(--biru); font-weight: 600; font-size: .88rem; text-decoration: none; }
+  .ap-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  .ap-tiles a { position: relative; border-radius: 16px; padding: 14px 12px 40px; text-decoration: none; color: var(--navy); border: 1px solid transparent; }
+  .ap-tiles b { display: block; font-size: 1.9rem; font-weight: 800; line-height: 1.1; }
+  .ap-tiles span { font-weight: 600; font-size: .92rem; }
+  .ap-tiles i { position: absolute; right: 12px; bottom: 10px; font-size: 1.35rem; }
+  .ap-tiles .h { background: #e9f7ee; border-color: #cdebd6; } .ap-tiles .h b, .ap-tiles .h i { color: #23913a; }
+  .ap-tiles .i { background: #fff5e3; border-color: #f7e2b5; } .ap-tiles .i b, .ap-tiles .i i { color: #d98a00; }
+  .ap-tiles .a { background: #fdeced; border-color: #f6cfd2; } .ap-tiles .a b, .ap-tiles .a i { color: #d63a46; }
+  .ap-nav { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid var(--garis); display: none; justify-content: space-around; align-items: flex-end; padding: 8px 6px calc(8px + env(safe-area-inset-bottom)); z-index: 50; }
+  body.mode-siswa .ap-nav { display: flex; }
+  .ap-nav a { flex: 1; max-width: 90px; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: .74rem; font-weight: 600; color: #6b7487; text-decoration: none; }
+  .ap-nav a i { font-size: 1.3rem; }
+  .ap-nav a.on { color: var(--biru); }
+  .ap-nav a.scan { flex: none; width: 62px; height: 62px; margin-top: -30px; border-radius: 50%; background: var(--biru); color: #fff; justify-content: center; box-shadow: 0 10px 20px -8px rgba(13,110,253,.9); border: 4px solid #fff; cursor: pointer; }
+  .ap-nav a.scan i { font-size: 1.6rem; }
 </style>
 </head>
 <body>
@@ -159,8 +203,45 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
     </div>
   </div>
 
+  <!-- Tampilan siswa: hanya diisi bila perangkat ini terdaftar & aktif (lihat render()). Semua teks diisi via textContent. -->
+  <section class="app" id="appSiswa" aria-label="Absensi saya">
+    <header class="ap-hello">
+      <div><h1>Halo, <span id="apNama"></span> 👋</h1><p id="apTgl">&nbsp;</p></div>
+      <a class="ap-masuk" href="<?= BASE_URL ?>/portal/gerbang" aria-label="Portal siswa"><i class="bi bi-person"></i></a>
+    </header>
+    <div class="ap-jam">
+      <div>
+        <div class="lbl">Jam Sekarang</div>
+        <div class="w"><span id="apJam">--:--</span><small>WIB</small></div>
+        <div class="lok" id="apLok"><i class="bi bi-geo-alt-fill"></i> <span>Memeriksa lokasi…</span></div>
+      </div>
+      <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+        <circle cx="60" cy="60" r="58" fill="rgba(255,255,255,.25)"/><circle cx="60" cy="60" r="51" fill="#fff"/>
+        <?php for ($i = 0; $i < 12; $i++): ?><line x1="60" y1="13" x2="60" y2="<?= $i % 3 === 0 ? 21 : 18 ?>" stroke="#7d8aa3" stroke-width="<?= $i % 3 === 0 ? 2.6 : 1.5 ?>" stroke-linecap="round" transform="rotate(<?= $i * 30 ?> 60 60)"/><?php endfor; ?>
+        <line id="apJarumJam" x1="60" y1="60" x2="60" y2="37" stroke="#14213d" stroke-width="5" stroke-linecap="round"/>
+        <line id="apJarumMenit" x1="60" y1="60" x2="60" y2="22" stroke="#1f6feb" stroke-width="3.4" stroke-linecap="round"/>
+        <circle cx="60" cy="60" r="4.5" fill="#14213d"/>
+      </svg>
+    </div>
+    <button type="button" class="btn ap-absen" id="apAbsen"><i class="bi bi-fingerprint"></i> <span>Absen Masuk</span></button>
+    <div class="ap-card">
+      <h2>Status Hari Ini</h2>
+      <a class="ap-status" id="apStatus" href="<?= BASE_URL ?>/portal/gerbang?lanjut=riwayat">
+        <span class="lg"><i class="bi bi-hourglass-split" id="apStIkon"></i></span>
+        <span><b id="apStJudul">Belum absen</b><span id="apStMasuk">Masuk: -</span><span>Pulang: -</span></span>
+        <i class="bi bi-chevron-right ch"></i>
+      </a>
+    </div>
+    <div class="ap-sec"><h2>Ringkasan Bulan Ini</h2><a href="<?= BASE_URL ?>/portal/gerbang?lanjut=riwayat">Lihat Semua</a></div>
+    <div class="ap-tiles">
+      <a class="h" href="<?= BASE_URL ?>/portal/gerbang?lanjut=riwayat"><b id="apHadir">0</b><span>Hadir</span><i class="bi bi-calendar-check"></i></a>
+      <a class="i" href="<?= BASE_URL ?>/portal/gerbang?lanjut=riwayat"><b id="apIzin">0</b><span>Izin</span><i class="bi bi-file-earmark-text-fill"></i></a>
+      <a class="a" href="<?= BASE_URL ?>/portal/gerbang?lanjut=riwayat"><b id="apAlfa">0</b><span>Alfa</span><i class="bi bi-calendar-x-fill"></i></a>
+    </div>
+  </section>
+
   <div class="grid">
-    <div class="card panel">
+    <div class="card panel" id="panelDonut">
       <h2 id="jdlDonut">Kehadiran Hari Ini</h2>
       <div class="ket" id="ketDonut">dari seluruh siswa aktif</div>
       <div class="donut-box">
@@ -191,6 +272,14 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
 
   <div class="foot">SIAP ABSEN &copy; <?= date('Y') ?></div>
 </div>
+
+<nav class="ap-nav" aria-label="Menu siswa">
+  <a href="<?= BASE_URL ?>/" class="on" aria-current="page"><i class="bi bi-house-door-fill"></i>Home</a>
+  <a href="<?= BASE_URL ?>/portal/gerbang?lanjut=riwayat"><i class="bi bi-journal-text"></i>Riwayat</a>
+  <a class="scan" id="apNavScan" role="button" aria-label="Scan QR absen"><i class="bi bi-qr-code-scan"></i></a>
+  <a href="<?= BASE_URL ?>/portal/gerbang?lanjut=izin"><i class="bi bi-file-earmark-text"></i>Izin</a>
+  <a href="<?= BASE_URL ?>/portal/gerbang?lanjut=profil"><i class="bi bi-person"></i>Profile</a>
+</nav>
 
 <!-- Dialog: Perangkat belum terdaftar -->
 <div class="ov" id="mdBelum" role="dialog" aria-modal="true">
@@ -313,7 +402,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
     [['Tepat', d.tepat], ['Terlambat', d.terlambat], ['Tidak', d.tidak_hadir], ['Belum', d.belum]].forEach(function (r) {
       $('n' + r[0]).textContent = r[1]; $('p' + r[0]).textContent = pct(r[1], d.total) + '%';
     });
-    gambarDonut(d); gambarFeed(d);
+    gambarDonut(d); gambarFeed(d); renderSiswa(d);
     var cb = $('chipBuka');
     cb.className = 'chip ' + (d.efektif ? 'ok' : 'tutup');
     cb.textContent = d.efektif ? 'Presensi dibuka hari ini' : 'Hari ini libur — presensi ditutup';
@@ -321,6 +410,53 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
     $('waktuUpdate').textContent = (modeKelas ? d.terbaru.length + ' siswa sudah presensi' + (d.terbaru.length > 5 ? ' · gulir untuk melihat semua' : '') + ' · ' : '') + 'Diperbarui ' + d.waktu;
     $('liveBadge').classList.remove('putus'); $('liveBadge').textContent = 'LIVE';
   }
+
+  /* ---------- tampilan siswa (perangkat terdaftar & aktif) ---------- */
+  var lokasiDicek = false;
+  function renderSiswa(d) {
+    var aktif = d.mode === 'kelas' && !!d.saya;
+    document.body.classList.toggle('mode-siswa', aktif);
+    if (!aktif) return;
+    var s = d.saya, kata = String(s.nama || '').trim().split(/\s+/)[0] || '';
+    $('apNama').textContent = kata.charAt(0).toUpperCase() + kata.slice(1).toLowerCase();
+    var STATUS = {
+      HADIR: ['Hadir', '#2fb344', 'check-lg'], TERLAMBAT: ['Hadir (Terlambat)', '#f08c1a', 'clock-history'],
+      IZIN: ['Izin', '#e0a100', 'file-earmark-text-fill'], SAKIT: ['Izin (Sakit)', '#e0a100', 'file-earmark-medical-fill'],
+      ALPA: ['Alfa', '#e03e4a', 'x-lg'], BELUM: ['Belum absen', '#8a94a6', 'hourglass-split']
+    };
+    var kunci = s.status || s.izin || 'BELUM', st = STATUS[kunci] || STATUS.BELUM;
+    $('apStatus').style.setProperty('--c', st[1]);
+    $('apStJudul').textContent = st[0];
+    $('apStIkon').className = 'bi bi-' + st[2];
+    $('apStMasuk').textContent = 'Masuk: ' + (s.jam && s.jam !== '00:00' ? s.jam + ' WIB' : '-');
+    var sudah = !!(s.status && s.status !== 'ALPA');
+    var b = $('apAbsen');
+    b.disabled = sudah || !d.efektif;
+    b.querySelector('span').textContent = sudah ? 'Sudah Absen Masuk' : (d.efektif ? 'Absen Masuk' : 'Presensi ditutup hari ini');
+    if (s.bulan) { $('apHadir').textContent = s.bulan.hadir; $('apIzin').textContent = s.bulan.izin; $('apAlfa').textContent = s.bulan.alfa; }
+    if (!lokasiDicek) { lokasiDicek = true; cekLokasi(!!d.gps_aktif); }
+  }
+  function cekLokasi(wajib) {
+    var el = $('apLok').querySelector('span');
+    if (!navigator.geolocation) { el.textContent = wajib ? 'Lokasi tidak didukung perangkat' : 'Lokasi tidak diwajibkan'; return; }
+    navigator.geolocation.getCurrentPosition(
+      function () { el.textContent = 'Lokasi aktif terdeteksi'; },
+      function () { el.textContent = wajib ? 'Aktifkan lokasi (GPS) untuk absen' : 'Lokasi tidak aktif'; },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+    );
+  }
+  function jamSiswa() {
+    var d = new Date();
+    try { d = new Date(d.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' })); } catch (e) {}
+    var h = d.getHours(), m = d.getMinutes(), p = function (n) { return String(n).padStart(2, '0'); };
+    $('apJam').textContent = p(h) + ':' + p(m);
+    $('apTgl').textContent = HARI[d.getDay()] + ', ' + d.getDate() + ' ' + BULAN[d.getMonth()] + ' ' + d.getFullYear();
+    $('apJarumJam').setAttribute('transform', 'rotate(' + ((h % 12) * 30 + m * 0.5) + ' 60 60)');
+    $('apJarumMenit').setAttribute('transform', 'rotate(' + (m * 6) + ' 60 60)');
+  }
+  jamSiswa(); setInterval(jamSiswa, 1000);
+  $('apAbsen').addEventListener('click', function () { $('btnScan').click(); });
+  $('apNavScan').addEventListener('click', function () { $('btnScan').click(); });
 
   var memuat = false;
   function muat() {
