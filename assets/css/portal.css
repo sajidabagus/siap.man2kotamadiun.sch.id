@@ -410,3 +410,8 @@ body.pt-v2 { --hj: #2563eb; --hj2: #2563eb; --hj-muda: #eff4ff; --teks: #0f172a;
   border: 1.5px solid #e2e8f0; background: #fff; color: #2563eb; font-size: 13px; font-weight: 600; cursor: pointer; }
 .pt-unggah-btn.hapus { padding: 0; color: #b42318; }
 .pt-unggah .pt-err-f { margin-top: 6px; }
+
+/* Nama file panjang tidak boleh melebarkan form */
+.pt-field, .pt-unggah, .pt-unggah-pilih, .pt-unggah-zona { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.pt-unggah { width: 100%; overflow: hidden; }
+.pt-unggah-pilih .nm b, .pt-unggah-pilih .nm small { display: block; max-width: 100%; }

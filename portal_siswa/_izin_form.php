@@ -83,7 +83,7 @@ function portal_izin_form(array $in, array $galat): void
     if (!f) { kosong(); return; }
     if (!(tipeOk.test(f.type) || (!f.type && extOk.test(f.name)))) { kosong('Jenis file tidak diizinkan. Gunakan foto (JPG/PNG/WEBP) atau PDF.'); return; }
     if (f.size > maks) { kosong('Ukuran file ' + ukuran(f.size) + ', maksimal ' + ukuran(maks) + '. Kecilkan foto lalu pilih lagi.'); return; }
-    gl.hidden = true; nm.textContent = f.name; uk.textContent = ukuran(f.size);
+    gl.hidden = true; nm.textContent = (f.name.length > 32 ? f.name.slice(0, 18) + '…' + f.name.slice(-11) : f.name); nm.title = f.name; uk.textContent = ukuran(f.size);
     if (url) URL.revokeObjectURL(url);
     pv.innerHTML = '';
     if (/^image\//.test(f.type)) { url = URL.createObjectURL(f); var im = new Image(); im.alt = ''; im.src = url; pv.appendChild(im); }
