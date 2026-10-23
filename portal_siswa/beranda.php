@@ -40,8 +40,9 @@ portal_app_awal('Home', $akun, 'beranda', ['tanpa_header' => true]);
 ?>
 <header class="pt-hello">
   <div>
-    <h1>Halo, <?= e($namaDepan) ?> 👋</h1>
-    <p><?= e(portal_tanggal_panjang($hariIni)) ?></p>
+    <h1><span class="sd-wave" aria-hidden="true">👋</span>Halo, <?= e($namaDepan) ?> <span class="m-wave">👋</span></h1>
+    <p class="sd-sub">Selamat datang kembali di sistem informasi siswa</p>
+    <p class="tgl"><i class="bi bi-calendar-check sd-ik"></i><?= e(portal_tanggal_panjang($hariIni)) ?></p>
   </div>
   <a class="pt-lonceng" href="<?= e(portal_url('notifikasi')) ?>" aria-label="Notifikasi<?= $notifBaru > 0 ? ', ' . $notifBaru . ' baru' : '' ?>"><i class="bi bi-bell"></i><?php if ($notifBaru > 0): ?><b><?= $notifBaru > 9 ? '9+' : $notifBaru ?></b><?php endif; ?></a>
 </header>
@@ -52,7 +53,7 @@ if ($galatFlash !== '') portal_alert('err', $galatFlash);
 
 <section class="pt-jam" aria-label="Jam sekarang">
   <div>
-    <div class="lbl">Jam Sekarang</div>
+    <div class="lbl"><i class="bi bi-clock sd-ik"></i>Jam Sekarang</div>
     <div class="waktu"><span id="jamTeks">--:--</span><span class="dt" id="jamDetik">:--</span><small><?= e($zona) ?></small></div>
     <div class="ket"><i class="bi bi-calendar-check"></i> <?= e(portal_tanggal_panjang($hariIni)) ?></div>
   </div>
@@ -74,18 +75,19 @@ if ($galatFlash !== '') portal_alert('err', $galatFlash);
   <div class="pt-peringatan merah"><i class="bi bi-slash-circle"></i><span>Perangkat presensi Anda diblokir. Hubungi petugas sekolah.</span></div>
 <?php endif; ?>
 
-<div class="pt-sec"><h2>Status Hari Ini</h2></div>
+<div class="pt-sec sd-hide"><h2>Status Hari Ini</h2></div>
 <a class="pt-status pt-c-<?= e($kunciStatus) ?>" href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni])) ?>">
   <span class="lingkar" style="background:var(--c)"><i class="bi bi-<?= e($ikonStatus) ?>"></i></span>
-  <span class="isi"><b style="color:var(--c)"><?= e($judulStatus) ?></b><span><?= e($subStatus) ?></span></span>
-  <i class="bi bi-chevron-right"></i>
+  <span class="isi"><em class="sd-lbl">Status Hari Ini</em><b style="color:var(--c)"><?= e($judulStatus) ?></b><span><?= e($subStatus) ?></span></span>
+  <span class="sd-detail"><i class="bi bi-clock"></i> Lihat Detail <i class="bi bi-chevron-right"></i></span>
+  <i class="bi bi-chevron-right m-ch"></i>
 </a>
 
-<div class="pt-sec"><h2>Ringkasan Bulan Ini</h2><a href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni])) ?>">Lihat Semua</a></div>
+<div class="pt-sec"><h2>Ringkasan Bulan Ini</h2><a href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni])) ?>">Lihat Semua <i class="bi bi-chevron-right sd-ik"></i></a></div>
 <div class="pt-ringkas">
-  <a class="h" href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni])) ?>"><b><?= $hadir ?></b><span>Hadir</span><?php if ($rekap['TERLAMBAT'] > 0): ?><small><?= $rekap['TERLAMBAT'] ?> terlambat</small><?php endif; ?><i class="bi bi-calendar-check"></i></a>
-  <a class="i" href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni])) ?>"><b><?= $izin ?></b><span>Izin / Sakit</span><i class="bi bi-file-earmark-text-fill"></i></a>
-  <a class="a" href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni, 'status' => 'ALPA'])) ?>"><b><?= $rekap['ALPA'] ?></b><span>Alpa</span><i class="bi bi-x-lg"></i></a>
+  <a class="h" href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni])) ?>"><em class="sd-bul"><i class="bi bi-check-lg"></i></em><b><?= $hadir ?></b><span>Hadir</span><?php if ($rekap['TERLAMBAT'] > 0): ?><small><?= $rekap['TERLAMBAT'] ?> terlambat</small><?php else: ?><small class="sd-only">Tepat waktu</small><?php endif; ?><i class="bi bi-calendar-check"></i><s class="sd-ch bi bi-chevron-right"></s></a>
+  <a class="i" href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni])) ?>"><em class="sd-bul"><i class="bi bi-clock"></i></em><b><?= $izin ?></b><span>Izin / Sakit</span><small class="sd-only"><?= $rekap['IZIN'] ?> izin · <?= $rekap['SAKIT'] ?> sakit</small><i class="bi bi-file-earmark-text-fill"></i><s class="sd-ch bi bi-chevron-right"></s></a>
+  <a class="a" href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni, 'status' => 'ALPA'])) ?>"><em class="sd-bul"><i class="bi bi-x-lg"></i></em><b><?= $rekap['ALPA'] ?></b><span>Alpa</span><small class="sd-only"><?= $rekap['ALPA'] > 0 ? $rekap['ALPA'] . ' hari' : 'Tidak ada' ?></small><i class="bi bi-x-lg"></i><s class="sd-ch bi bi-chevron-right"></s></a>
 </div>
 
 <script>
