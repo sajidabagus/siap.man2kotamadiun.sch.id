@@ -36,7 +36,21 @@ function portal_izin_form(array $in, array $galat): void
       <textarea id="alasan" name="alasan" maxlength="<?= IZIN_ALASAN_MAKS ?>" placeholder="Tuliskan alasan dengan jelas (minimal <?= IZIN_ALASAN_MIN ?> karakter)" required><?= e($in['alasan']) ?></textarea>
       <div class="pt-hitung"><span id="hitung">0</span>/<?= IZIN_ALASAN_MAKS ?></div><?= $f('alasan') ?></div>
     <div class="pt-field"><label for="lampiran">Lampiran surat <span id="wajibLamp" style="color:#b42318"></span></label>
-      <input type="file" id="lampiran" name="lampiran" accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"><?= $f('lampiran') ?></div>
+      <div class="pt-unggah" id="unggah" data-maks="<?= (int) IZIN_LAMPIRAN_MAKS ?>">
+        <input type="file" id="lampiran" name="lampiran" class="pt-unggah-input" accept="image/*,.jpg,.jpeg,.png,.webp,.pdf,application/pdf" aria-describedby="lampiranInfo">
+        <label for="lampiran" class="pt-unggah-zona" id="unggahZona">
+          <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+          <span class="j">Pilih file / foto surat</span>
+          <span class="k" id="lampiranInfo">Foto (JPG/PNG/WEBP) atau PDF · maks. <?= (int) round(IZIN_LAMPIRAN_MAKS / 1048576) ?> MB</span>
+        </label>
+        <div class="pt-unggah-pilih" id="unggahPilih" hidden>
+          <div class="pv" id="unggahPv"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i></div>
+          <div class="nm"><b id="unggahNama"></b><small id="unggahUkuran"></small></div>
+          <label for="lampiran" class="pt-unggah-btn">Ganti</label>
+          <button type="button" class="pt-unggah-btn hapus" id="unggahHapus" aria-label="Hapus lampiran"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="pt-err-f" id="unggahGalat" role="alert" hidden></div>
+      </div><?= $f('lampiran') ?></div>
     <button type="submit" class="pt-btn">Kirim pengajuan</button>
   </form>
 </section>
@@ -54,6 +68,29 @@ function portal_izin_form(array $in, array $galat): void
   s.addEventListener('change', wajib); a.addEventListener('input', hitung);
   document.querySelectorAll('input[name=jenis]').forEach(function (r) { r.addEventListener('change', wajib); });
   hitung(); wajib();
+  var fi = document.getElementById('lampiran'), zona = document.getElementById('unggahZona'), pilih = document.getElementById('unggahPilih'),
+      pv = document.getElementById('unggahPv'), nm = document.getElementById('unggahNama'), uk = document.getElementById('unggahUkuran'),
+      gl = document.getElementById('unggahGalat'), maks = +document.getElementById('unggah').dataset.maks, url = null;
+  var tipeOk = /^(image\/(jpeg|png|webp)|application\/pdf)$/i, extOk = /\.(jpe?g|png|webp|pdf)$/i;
+  function ukuran(b) { return b >= 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB'; }
+  function kosong(pesan) {
+    fi.value = ''; if (url) { URL.revokeObjectURL(url); url = null; }
+    pilih.hidden = true; zona.hidden = false;
+    gl.textContent = pesan || ''; gl.hidden = !pesan;
+  }
+  fi.addEventListener('change', function () {
+    var f = fi.files && fi.files[0];
+    if (!f) { kosong(); return; }
+    if (!(tipeOk.test(f.type) || (!f.type && extOk.test(f.name)))) { kosong('Jenis file tidak diizinkan. Gunakan foto (JPG/PNG/WEBP) atau PDF.'); return; }
+    if (f.size > maks) { kosong('Ukuran file ' + ukuran(f.size) + ', maksimal ' + ukuran(maks) + '. Kecilkan foto lalu pilih lagi.'); return; }
+    gl.hidden = true; nm.textContent = (f.name.length > 32 ? f.name.slice(0, 18) + '…' + f.name.slice(-11) : f.name); nm.title = f.name; uk.textContent = ukuran(f.size);
+    if (url) URL.revokeObjectURL(url);
+    pv.innerHTML = '';
+    if (/^image\//.test(f.type)) { url = URL.createObjectURL(f); var im = new Image(); im.alt = ''; im.src = url; pv.appendChild(im); }
+    else pv.innerHTML = '<i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>';
+    zona.hidden = true; pilih.hidden = false;
+  });
+  document.getElementById('unggahHapus').addEventListener('click', function () { kosong(); fi.focus(); });
 })();
 </script>
 <?php

@@ -34,20 +34,25 @@ function portal_url_home(): string
 }
 
 /**
- * Siswa memakai beranda utama "/" (tampilan biru beranda.php) bila sesinya masuk otomatis lewat perangkat ATAU
- * akunnya punya perangkat terdaftar yang aktif (mis. pernah masuk dengan password lalu gerbang hanya meneruskan,
- * sehingga tanda via_perangkat tidak pernah terpasang — inilah penyebab Home jatuh ke beranda /portal yang hijau).
+ * Siswa memakai beranda utama "/" (tampilan biru beranda.php) HANYA bila browser INI adalah perangkat terdaftar (ACTIVE)
+ * milik siswa tersebut: sesinya masuk otomatis lewat perangkat, ATAU cookie UUID perangkat (presensi_device_uuid dari
+ * device.js, path=/) cocok dengan binding ACTIVE siswa ini. "/" mengenali siswa hanya dari UUID perangkat, jadi di
+ * browser/perangkat lain (login dengan password) Home harus tetap di /portal — kalau tidak, siswa jatuh ke tampilan tamu.
  */
 function portal_pakai_beranda_utama(): bool
 {
-    if (function_exists('portal_sesi_via_perangkat') && portal_sesi_via_perangkat()) return true;
+    static $hasil = null;
+    if ($hasil !== null) return $hasil;
+    if (function_exists('portal_sesi_via_perangkat') && portal_sesi_via_perangkat()) return $hasil = true;
     $akun = function_exists('portal_siswa_sekarang') ? portal_siswa_sekarang() : null;
     $sid = (int) ($akun['siswa_id'] ?? 0);
-    if ($sid <= 0) return false;
+    if ($sid <= 0) return $hasil = false;
     require_once __DIR__ . '/../includes/device_binding.php';
-    if (empty(get_settings()['device_binding_aktif'])) return false;
-    $b = get_device_binding($sid);
-    return $b && ($b['status'] ?? '') === 'ACTIVE';
+    if (empty(get_settings()['device_binding_aktif'])) return $hasil = false;
+    $uuid = (string) ($_COOKIE['presensi_device_uuid'] ?? '');
+    if ($uuid === '' || !is_valid_install_uuid($uuid)) return $hasil = false;
+    $b = get_device_binding_by_hash(build_device_hash($uuid));
+    return $hasil = ($b && ($b['status'] ?? '') === 'ACTIVE' && (int) $b['siswa_id'] === $sid);
 }
 
 /** Halaman masuk/aktivasi: panel merek + panel formulir. */

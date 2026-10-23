@@ -166,6 +166,20 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
         ];
     }
 
+    // 6b. Sudah mengajukan izin/sakit (menunggu atau disetujui) untuk hari ini? Tidak boleh absen.
+    try {
+        $iz = $db->prepare("SELECT jenis, status FROM izin_pengajuan WHERE siswa_id = :s AND status IN ('menunggu','disetujui')
+                            AND tanggal_mulai <= :t AND tanggal_selesai >= :t LIMIT 1");
+        $iz->execute([':s' => $siswaId, ':t' => date('Y-m-d')]);
+        $izRow = $iz->fetch();
+    } catch (Throwable $e) { $izRow = null; } // tabel izin belum ada
+    if ($izRow) {
+        $lbl = $izRow['jenis'] === 'sakit' ? 'sakit' : 'izin';
+        security_log($siswaId, 'PRESENCE_REJECTED', null, 'Sudah mengajukan ' . $lbl . ' hari ini.');
+        return ['success' => false, 'code' => 'HAS_LEAVE',
+            'message' => 'Anda sudah mengajukan ' . $lbl . ' untuk hari ini (' . ($izRow['status'] === 'disetujui' ? 'disetujui' : 'menunggu persetujuan') . '), jadi tidak bisa absen. Batalkan pengajuan dulu bila ternyata masuk sekolah.'];
+    }
+
     // 7 & 8. Tanggal & jam server (SUMBER WAKTU SELALU DARI SERVER, bukan dari klien)
     $tanggal = date('Y-m-d');
     $jam = date('H:i:s');
@@ -198,6 +212,10 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
     if (!empty($settings['gps_aktif'])) {
         if ($lat === null || $lng === null) {
             return ['success' => false, 'code' => 'GPS_REQUIRED', 'message' => 'Lokasi perangkat tidak terdeteksi. Aktifkan GPS dan izinkan akses lokasi.'];
+        }
+        if (!is_finite($lat) || !is_finite($lng) || abs($lat) > 90 || abs($lng) > 180) {
+            security_log($siswaId, 'PRESENCE_REJECTED', null, 'Koordinat GPS tidak valid.');
+            return ['success' => false, 'code' => 'GPS_REQUIRED', 'message' => 'Lokasi perangkat tidak valid. Aktifkan GPS lalu coba lagi.'];
         }
         $jarak = distance_meter((float)$settings['latitude_sekolah'], (float)$settings['longitude_sekolah'], $lat, $lng);
         if ($jarak > (float)$settings['radius_meter']) {

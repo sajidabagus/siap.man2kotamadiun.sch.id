@@ -136,7 +136,7 @@ function izin_label_jenis(string $j): string
 function izin_dir(): string
 {
     $dir = __DIR__ . '/../uploads/izin';
-    if (!is_dir($dir)) @mkdir($dir, 0750, true);
+    if (!is_dir($dir)) @mkdir($dir, 0755, true);
     $ht = $dir . '/.htaccess';
     if (!is_file($ht)) @file_put_contents($ht, "Require all denied\n<IfModule !mod_authz_core.c>\n  Order allow,deny\n  Deny from all\n</IfModule>\n");
     return $dir;
@@ -153,8 +153,7 @@ function izin_periksa_lampiran(?array $f): array
     if ((int) $f['size'] > IZIN_LAMPIRAN_MAKS) return ['ok' => false, 'ada' => true, 'pesan' => 'Ukuran file maksimal 3 MB.'];
     if ((int) $f['size'] <= 0) return ['ok' => false, 'ada' => true, 'pesan' => 'File kosong.'];
 
-    $fi = new finfo(FILEINFO_MIME_TYPE);
-    $mime = (string) $fi->file($f['tmp_name']);
+    $mime = deteksi_mime_file((string) $f['tmp_name']);   // finfo -> mime_content_type -> magic bytes (lihat includes/compat.php)
     if (!isset(IZIN_LAMPIRAN_TIPE[$mime])) return ['ok' => false, 'ada' => true, 'pesan' => 'Jenis file tidak diizinkan. Gunakan foto (JPG/PNG/WEBP) atau PDF.'];
     if ($mime === 'application/pdf') {
         $h = (string) file_get_contents($f['tmp_name'], false, null, 0, 5);
@@ -218,6 +217,13 @@ function izin_ambil(int $id): ?array
     return $st->fetch() ?: null;
 }
 
+function tgl_indo_pendek(string $t): string
+{
+    $b = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    $x = strtotime($t);
+    return $x ? date('j', $x) . ' ' . $b[(int) date('n', $x)] . ' ' . date('Y', $x) : $t;
+}
+
 /**
  * Validasi isi pengajuan. @return array{galat:array,data:array}
  * Kunci galat: jenis, mulai, selesai, alasan, lampiran, umum.
@@ -260,10 +266,10 @@ function izin_validasi(int $siswaId, array $in): array
                 if (!$efektif) {
                     $g['mulai'] = 'Rentang tanggal itu tidak mencakup hari efektif sekolah (' . label_hari_efektif() . ').';
                 } else {
-                    $st = $db->prepare('SELECT tanggal FROM presensi WHERE siswa_id = :s AND tanggal BETWEEN :a AND :b');
+                    $st = $db->prepare("SELECT tanggal FROM presensi WHERE siswa_id = :s AND tanggal BETWEEN :a AND :b AND metode <> 'PENGAJUAN' ORDER BY tanggal");
                     $st->execute([':s' => $siswaId, ':a' => $mulai, ':b' => $selesai]);
                     $sudah = $st->fetchAll(PDO::FETCH_COLUMN);
-                    if (!array_diff($efektif, $sudah)) $g['mulai'] = 'Anda sudah tercatat presensi pada seluruh tanggal tersebut.';
+                    if ($sudah) $g['mulai'] = 'Anda sudah absen pada ' . tgl_indo_pendek($sudah[0]) . ', jadi tidak bisa mengajukan izin/sakit untuk tanggal itu. Pilih tanggal lain.';
 
                     $st = $db->prepare("SELECT COUNT(*) FROM izin_pengajuan WHERE siswa_id = :s AND status IN ('menunggu','disetujui')
                                         AND tanggal_mulai <= :b AND tanggal_selesai >= :a");
@@ -438,6 +444,21 @@ function izin_cabut(int $id, array $admin, string $catatan): array
 // ---------------------------------------------------------------------
 // RINGKASAN & PEMBERSIHAN
 // ---------------------------------------------------------------------
+/** Daftar pengajuan menunggu terbaru untuk lonceng notifikasi panel. */
+function izin_menunggu_terbaru(int $batas = 6): array
+{
+    try {
+        if (!izin_siapkan_tabel()) return [];
+        $st = getDB()->query("SELECT p.id, p.jenis, p.tanggal_mulai, p.tanggal_selesai, p.diajukan_at, s.nama
+            FROM izin_pengajuan p JOIN siswa s ON s.id = p.siswa_id
+            WHERE p.status = 'menunggu' ORDER BY p.diajukan_at DESC, p.id DESC LIMIT " . max(1, min(20, $batas)));
+        return $st->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Throwable $e) {
+        error_log('izin_menunggu_terbaru: ' . $e->getMessage());
+        return [];
+    }
+}
+
 function izin_menunggu_jumlah(): int
 {
     static $n = null;

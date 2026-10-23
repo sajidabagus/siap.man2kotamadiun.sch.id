@@ -55,7 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db->commit();
             } catch (Throwable $e) {
                 $db->rollBack();
-                $errors[] = 'Gagal mengganti nama kelas: ' . $e->getMessage();
+                error_log('master_kelas: ' . $e->getMessage());
+                $errors[] = 'Gagal mengganti nama kelas (nama mungkin sudah dipakai). Tidak ada perubahan yang disimpan.';
             }
 
             if (!$errors) {

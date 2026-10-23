@@ -146,6 +146,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   .ap-jam { background: linear-gradient(135deg, #1f6feb, #2a5bd7); color: #fff; border-radius: 20px; padding: 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 14px 28px -16px rgba(31,111,235,.9); }
   .ap-jam .lbl { font-size: .9rem; opacity: .92; font-weight: 600; }
   .ap-jam .w { font-size: 2.9rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; margin: 6px 0 10px; }
+  .ap-jam .w .dt { font-size: 1.35rem; font-weight: 700; opacity: .75; margin-left: 2px; }
   .ap-jam .w small { font-size: .95rem; font-weight: 700; margin-left: 6px; }
   .ap-jam .lok { font-size: .85rem; display: flex; align-items: center; gap: 6px; opacity: .95; }
   .ap-jam svg { width: 112px; height: 112px; flex: none; }
@@ -217,15 +218,16 @@ try { var _s = JSON.parse(localStorage.getItem('siapBerandaV1') || 'null');
     <div class="ap-jam">
       <div>
         <div class="lbl">Jam Sekarang</div>
-        <div class="w"><span id="apJam">--:--</span><small>WIB</small></div>
+        <div class="w"><span id="apJam">--:--</span><span class="dt" id="apDetik">:--</span><small>WIB</small></div>
         <div class="lok" id="apLok"><i class="bi bi-geo-alt-fill"></i> <span>Memeriksa lokasi…</span></div>
       </div>
       <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">
         <circle cx="60" cy="60" r="58" fill="rgba(255,255,255,.25)"/><circle cx="60" cy="60" r="51" fill="#fff"/>
-        <?php for ($i = 0; $i < 12; $i++): ?><line x1="60" y1="13" x2="60" y2="<?= $i % 3 === 0 ? 21 : 18 ?>" stroke="#7d8aa3" stroke-width="<?= $i % 3 === 0 ? 2.6 : 1.5 ?>" stroke-linecap="round" transform="rotate(<?= $i * 30 ?> 60 60)"/><?php endfor; ?>
-        <line id="apJarumJam" x1="60" y1="60" x2="60" y2="37" stroke="#14213d" stroke-width="5" stroke-linecap="round"/>
-        <line id="apJarumMenit" x1="60" y1="60" x2="60" y2="22" stroke="#1f6feb" stroke-width="3.4" stroke-linecap="round"/>
-        <circle cx="60" cy="60" r="4.5" fill="#14213d"/>
+        <?php for ($i = 0; $i < 60; $i++): $b = $i % 5 === 0; ?><line x1="60" y1="<?= $b ? 13 : 13.5 ?>" x2="60" y2="<?= $b ? 21 : 16.5 ?>" stroke="<?= $b ? '#14213d' : '#c3cad6' ?>" stroke-width="<?= $b ? 2.8 : 1 ?>" stroke-linecap="round" transform="rotate(<?= $i * 6 ?> 60 60)"/><?php endfor; ?>
+        <line id="apJarumJam" x1="60" y1="60" x2="60" y2="35" stroke="#14213d" stroke-width="5" stroke-linecap="round"/>
+        <line id="apJarumMenit" x1="60" y1="60" x2="60" y2="20" stroke="#14213d" stroke-width="3.6" stroke-linecap="round"/>
+        <line id="apJarumDetik" x1="60" y1="68" x2="60" y2="18" stroke="#2f80ff" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="60" cy="60" r="4.5" fill="#14213d"/><circle cx="60" cy="60" r="1.6" fill="#2f80ff"/>
       </svg>
     </div>
     <button type="button" class="btn ap-absen" id="apAbsen"><i class="bi bi-fingerprint"></i> <span>Absen Masuk</span></button>
@@ -456,11 +458,13 @@ try { var _s = JSON.parse(localStorage.getItem('siapBerandaV1') || 'null');
   function jamSiswa() {
     var d = new Date();
     try { d = new Date(d.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' })); } catch (e) {}
-    var h = d.getHours(), m = d.getMinutes(), p = function (n) { return String(n).padStart(2, '0'); };
+    var h = d.getHours(), m = d.getMinutes(), sd = d.getSeconds(), p = function (n) { return String(n).padStart(2, '0'); };
     $('apJam').textContent = p(h) + ':' + p(m);
     $('apTgl').textContent = HARI[d.getDay()] + ', ' + d.getDate() + ' ' + BULAN[d.getMonth()] + ' ' + d.getFullYear();
     $('apJarumJam').setAttribute('transform', 'rotate(' + ((h % 12) * 30 + m * 0.5) + ' 60 60)');
-    $('apJarumMenit').setAttribute('transform', 'rotate(' + (m * 6) + ' 60 60)');
+    $('apJarumMenit').setAttribute('transform', 'rotate(' + (m * 6 + sd * 0.1) + ' 60 60)');
+    $('apDetik').textContent = ':' + p(sd);
+    $('apJarumDetik').setAttribute('transform', 'rotate(' + (sd * 6) + ' 60 60)');
   }
   jamSiswa(); setInterval(jamSiswa, 1000);
   $('apAbsen').addEventListener('click', function () { $('btnScan').click(); });
