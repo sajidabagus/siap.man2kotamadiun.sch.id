@@ -307,3 +307,14 @@ body.pt-gerbang { min-height: 100vh; min-height: 100svh; display: grid; place-it
 @keyframes pt-putar { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .pt-spin { animation-duration: 2.4s; } }
 .pt-hari.pt-c-IZIN, .pt-hari.pt-c-SAKIT { --c: #e0a100; --cb: #fff5e3; }
+
+/* ===== Riwayat / Izin / Profil: tampilan aplikasi (kartu) ===== */
+.pt-sub-judul { margin: 6px 2px 0; font-size: 15px; font-weight: 700; color: var(--teks); }
+.pt-sub-judul small { color: var(--redup); font-weight: 500; }
+.pt-v2 .pt-item { border-radius: 18px; box-shadow: 0 6px 18px -14px rgba(17,78,46,.45); border-left: 4px solid var(--hj2); }
+.pt-v2 .pt-item:has(.pt-st.ditolak) { border-left-color: #dc2626; }
+.pt-v2 .pt-item:has(.pt-st.menunggu) { border-left-color: #f59e0b; }
+.pt-profil-kartu .pt-profil { flex-direction: column; text-align: center; }
+.pt-profil-kartu .pt-avatar { width: 88px; height: 88px; font-size: 30px; }
+.pt-profil-kartu .pt-chip { margin: 6px 3px 0; display: inline-block; }
+#formIzin h3 { margin-bottom: 10px; }

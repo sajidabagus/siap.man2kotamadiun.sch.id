@@ -691,7 +691,7 @@ function portal_lanjut_aman(string $sub): string
  *  - perangkat tidak diblokir. Ganti HP oleh petugas langsung memutus masuk otomatis.
  * UUID acak 122-bit dan di server hanya tersimpan hash-nya (UUID mentah dikosongkan, lihat portal_bersihkan_uuid_lama), jadi mencoba-coba tidak mungkin dan bocornya database tidak membocorkan kunci masuk; sengaja TIDAK ada kunci
  * percobaan per IP karena satu WiFi sekolah dipakai banyak siswa (HP yang belum terdaftar tidak boleh menguncinya).
- * @return array{ok:bool}
+ * @return array{ok:bool, perlu?:string}
  */
 function portal_masuk_perangkat(string $uuid): array
 {
@@ -706,9 +706,13 @@ function portal_masuk_perangkat(string $uuid): array
     $st->execute([':s' => (int) $b['siswa_id']]);
     $akunId = (int) $st->fetchColumn();
     $akun = $akunId > 0 ? portal_cari_akun_id($akunId) : null;
-    if (!$akun || $akun['status'] !== 'aktif' || $akun['siswa_status'] !== 'aktif' || empty($akun['password_hash']) || !empty($akun['password_sementara'])) {
-        return $gagal;
+    // Perangkat bisa terdaftar lewat presensi QR tanpa siswa pernah mengaktifkan akun portal. Dulu kasus ini jatuh ke
+    // halaman login (yang tidak bisa dipakai karena belum ada password); sekarang gerbang diarahkan ke aktivasi.
+    if (!$akun || empty($akun['password_hash'])) {
+        return ($akun === null || $akun['status'] !== 'nonaktif') ? ['ok' => false, 'perlu' => 'aktivasi'] : $gagal;
     }
+    if ($akun['status'] !== 'aktif' || $akun['siswa_status'] !== 'aktif') return $gagal;
+    if (!empty($akun['password_sementara'])) return ['ok' => false, 'perlu' => 'login'];
     portal_mulai_sesi();
     portal_masuk_sesi($akun, true);
     return ['ok' => true];

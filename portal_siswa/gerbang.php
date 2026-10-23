@@ -22,7 +22,7 @@ $logo = portal_logo_url();
 <script src="<?= BASE_URL ?>/assets/js/device.js"></script>
 <script>
 (function () {
-  var tujuan = <?= json_encode($tujuan) ?>, login = <?= json_encode($login) ?>, api = <?= json_encode(portal_url('masuk-perangkat')) ?>;
+  var tujuan = <?= json_encode($tujuan) ?>, login = <?= json_encode($login) ?>, aktivasi = <?= json_encode(portal_url('aktivasi', ['dari' => 'perangkat'])) ?>, api = <?= json_encode(portal_url('masuk-perangkat')) ?>;
   var selesai = false;
   function ke(u) { if (selesai) return; selesai = true; location.replace(u); }
   var uuid = '';
@@ -31,7 +31,7 @@ $logo = portal_logo_url();
   setTimeout(function () { ke(login); }, 8000);           // jaring pengaman bila jaringan macet
   fetch(api, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uuid: uuid }) })
     .then(function (r) { return r.json(); })
-    .then(function (d) { ke(d && d.ok ? tujuan : login); })
+    .then(function (d) { ke(d && d.ok ? tujuan : (d && d.perlu === 'aktivasi' ? aktivasi : login)); })
     .catch(function () { ke(login); });
 })();
 </script>

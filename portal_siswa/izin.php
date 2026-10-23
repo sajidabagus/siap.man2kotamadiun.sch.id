@@ -1,5 +1,6 @@
 <?php
-// /portal/izin — daftar pengajuan izin/sakit milik siswa
+// /portal/izin — formulir pengajuan izin/sakit (dengan lampiran) + daftar pengajuan sebelumnya milik siswa
+require_once __DIR__ . '/_izin_form.php';
 $akun = portal_wajib_login();
 $sid = (int) $akun['siswa_id'];
 $db = getDB();
@@ -17,14 +18,16 @@ $hal = min($hal, $totalHal);
 $st = $db->prepare('SELECT * FROM izin_pengajuan WHERE siswa_id = :s ORDER BY id DESC LIMIT ' . $perHalaman . ' OFFSET ' . (($hal - 1) * $perHalaman));
 $st->execute([':s' => $sid]);
 $daftar = $st->fetchAll();
-$menunggu = (int) $db->query('SELECT COUNT(*) FROM izin_pengajuan WHERE siswa_id = ' . $sid . " AND status = 'menunggu'")->fetchColumn();
+$st = $db->prepare("SELECT COUNT(*) FROM izin_pengajuan WHERE siswa_id = :s AND status = 'menunggu'");
+$st->execute([':s' => $sid]);
+$menunggu = (int) $st->fetchColumn();
 
-portal_app_awal('Izin / Sakit', $akun, 'izin');
+portal_app_awal('Izin / Sakit', $akun, 'izin', ['kembali' => '']);
 if ($info !== '') portal_alert('ok', $info);
+// Formulir langsung di halaman ini (hanya halaman pertama, agar paginasi daftar tetap ringkas).
+if ($hal === 1) portal_izin_form(['jenis' => '', 'mulai' => '', 'selesai' => '', 'alasan' => ''], []);
 ?>
-<div class="pt-judul-halaman" style="justify-content:flex-end">
-  <a class="pt-btn kecil" href="<?= e(portal_url('izin/baru')) ?>"><i class="bi bi-plus-lg"></i> Ajukan baru</a>
-</div>
+<h2 class="pt-sub-judul">Pengajuan sebelumnya<?= $total > 0 ? ' <small>(' . $total . ')</small>' : '' ?></h2>
 <?php if ($menunggu > 0): ?>
   <div class="pt-alert info" role="status"><i class="bi bi-hourglass-split"></i><span>Ada <?= $menunggu ?> pengajuan yang menunggu persetujuan petugas.</span></div>
 <?php endif; ?>
@@ -50,6 +53,6 @@ if ($info !== '') portal_alert('ok', $info);
 </div>
 <?php endif; ?>
 <?php else: ?>
-<section class="pt-card"><p class="pt-kosong">Belum ada pengajuan. Tidak masuk sekolah? Ajukan izin atau sakit di sini, tidak perlu lewat kertas.</p></section>
+<section class="pt-card"><p class="pt-kosong">Belum ada pengajuan. Tidak masuk sekolah? Isi formulir di atas, tidak perlu lewat kertas.</p></section>
 <?php endif; ?>
 <?php portal_app_akhir();

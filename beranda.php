@@ -207,7 +207,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   <section class="app" id="appSiswa" aria-label="Absensi saya">
     <header class="ap-hello">
       <div><h1>Halo, <span id="apNama"></span> 👋</h1><p id="apTgl">&nbsp;</p></div>
-      <a class="ap-masuk" href="<?= BASE_URL ?>/portal/gerbang" aria-label="Portal siswa"><i class="bi bi-person"></i></a>
+      <a class="ap-masuk" href="<?= BASE_URL ?>/portal/gerbang?lanjut=profil" aria-label="Profil siswa"><i class="bi bi-person"></i></a>
     </header>
     <div class="ap-jam">
       <div>

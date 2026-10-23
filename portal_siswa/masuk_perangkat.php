@@ -29,4 +29,6 @@ if ($h['ok']) {
     require_once __DIR__ . '/../includes/device_binding.php';
     device_cookie_pertahankan($uuid);        // iPhone: perpanjang cadangan identitas dari server
 }
-echo json_encode(['ok' => (bool) $h['ok']]);
+// 'perlu' hanya terisi bila UUID memang milik perangkat terdaftar yang AKTIF (pemiliknya sendiri), jadi tidak membocorkan
+// apa pun kepada orang lain: 'aktivasi' = siswa belum punya akun portal, 'login' = wajib masuk dengan password dulu.
+echo json_encode(['ok' => (bool) $h['ok'], 'perlu' => (string) ($h['perlu'] ?? '')]);
