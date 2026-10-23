@@ -385,3 +385,22 @@ body {
   .content { width: 100% !important; }
   .container-fluid { padding: 0 !important; }
 }
+/* Lonceng notifikasi topbar */
+.topbar-bell { position: relative; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: 12px; color: #4a5568; font-size: 1.2rem; cursor: pointer; transition: background .15s; }
+.topbar-bell:hover, .topbar-bell.show { background: #f1f4f9; color: #14213d; }
+.topbar-bell .dot { position: absolute; top: 3px; right: 2px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #e5484d; color: #fff; font-size: .65rem; font-weight: 700; line-height: 18px; text-align: center; box-shadow: 0 0 0 2px #fff; }
+.menu-notif { width: 340px; max-width: calc(100vw - 24px); padding: 0; border-radius: 14px; overflow: hidden; border: 1px solid #e6eaf0; box-shadow: 0 12px 32px rgba(20,33,61,.12); }
+.menu-notif-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; font-weight: 600; color: #14213d; border-bottom: 1px solid #eef1f5; }
+.menu-notif-item { display: flex; gap: 12px; padding: 12px 16px; text-decoration: none; color: inherit; border-bottom: 1px solid #f3f5f8; }
+.menu-notif-item:hover { background: #f7f9fc; }
+.menu-notif-item .ic { flex: 0 0 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.menu-notif-item .ic.izin { background: #fff4d6; color: #b7791f; }
+.menu-notif-item .ic.sakit { background: #fde8e8; color: #c53030; }
+.menu-notif-item .tx { min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
+.menu-notif-item .jd { font-weight: 600; font-size: .875rem; color: #14213d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.menu-notif-item .ds { font-size: .8rem; color: #4a5568; }
+.menu-notif-item .wk { font-size: .72rem; color: #8a94a6; }
+.menu-notif-kosong { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 28px 16px; color: #8a94a6; font-size: .85rem; }
+.menu-notif-kosong i { font-size: 1.6rem; }
+.menu-notif-foot { display: block; text-align: center; padding: 10px; font-size: .85rem; font-weight: 600; color: #1d4ed8; text-decoration: none; background: #fafbfd; }
+.menu-notif-foot:hover { background: #f1f4f9; }

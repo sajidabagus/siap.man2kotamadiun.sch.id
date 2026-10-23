@@ -444,6 +444,21 @@ function izin_cabut(int $id, array $admin, string $catatan): array
 // ---------------------------------------------------------------------
 // RINGKASAN & PEMBERSIHAN
 // ---------------------------------------------------------------------
+/** Daftar pengajuan menunggu terbaru untuk lonceng notifikasi panel. */
+function izin_menunggu_terbaru(int $batas = 6): array
+{
+    try {
+        if (!izin_siapkan_tabel()) return [];
+        $st = getDB()->query("SELECT p.id, p.jenis, p.tanggal_mulai, p.tanggal_selesai, p.diajukan_at, s.nama
+            FROM izin_pengajuan p JOIN siswa s ON s.id = p.siswa_id
+            WHERE p.status = 'menunggu' ORDER BY p.diajukan_at DESC, p.id DESC LIMIT " . max(1, min(20, $batas)));
+        return $st->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Throwable $e) {
+        error_log('izin_menunggu_terbaru: ' . $e->getMessage());
+        return [];
+    }
+}
+
 function izin_menunggu_jumlah(): int
 {
     static $n = null;

@@ -155,7 +155,35 @@ $inisialAdmin = mb_strtoupper(mb_substr($namaAdminHdr !== '' ? $namaAdminHdr : (
             <span class="now"><?= e($labelCrumb[$modulAktif]) ?></span>
           </nav>
         <?php endif; ?>
-        <div class="dropdown ms-auto">
+        <?php
+          $notifIzin = []; $nNotif = 0;
+          if (can_modul('izin')) { require_once __DIR__ . '/izin.php'; $nNotif = izin_menunggu_jumlah(); $notifIzin = $nNotif > 0 ? izin_menunggu_terbaru(6) : []; }
+        ?>
+        <?php if (can_modul('izin')): ?>
+        <div class="dropdown ms-auto me-1">
+          <button type="button" class="topbar-bell" data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false" aria-label="Notifikasi" title="Notifikasi">
+            <i class="bi bi-bell"></i>
+            <?php if ($nNotif > 0): ?><span class="dot"><?= $nNotif > 99 ? '99+' : $nNotif ?></span><?php endif; ?>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end menu-notif">
+            <div class="menu-notif-head"><span>Notifikasi</span><?php if ($nNotif > 0): ?><span class="badge rounded-pill bg-warning text-dark"><?= $nNotif ?> menunggu</span><?php endif; ?></div>
+            <?php if (!$notifIzin): ?>
+              <div class="menu-notif-kosong"><i class="bi bi-bell-slash"></i><span>Tidak ada notifikasi baru</span></div>
+            <?php else: foreach ($notifIzin as $nz): ?>
+              <a class="menu-notif-item" href="<?= e(modul_url('izin_detail', ['id' => (int) $nz['id']])) ?>">
+                <span class="ic <?= $nz['jenis'] === 'sakit' ? 'sakit' : 'izin' ?>"><i class="bi <?= $nz['jenis'] === 'sakit' ? 'bi-bandaid' : 'bi-envelope-paper' ?>"></i></span>
+                <span class="tx">
+                  <span class="jd"><?= e($nz['nama']) ?></span>
+                  <span class="ds">Mengajukan <?= $nz['jenis'] === 'sakit' ? 'sakit' : 'izin' ?> · <?= e(date('d/m', strtotime($nz['tanggal_mulai']))) ?><?= $nz['tanggal_selesai'] !== $nz['tanggal_mulai'] ? '–' . e(date('d/m', strtotime($nz['tanggal_selesai']))) : '' ?></span>
+                  <span class="wk"><?= e(date('d/m/Y H:i', strtotime($nz['diajukan_at']))) ?></span>
+                </span>
+              </a>
+            <?php endforeach; endif; ?>
+            <a class="menu-notif-foot" href="<?= e(modul_url('izin', ['status' => 'menunggu'])) ?>">Lihat semua pengajuan</a>
+          </div>
+        </div>
+        <?php endif; ?>
+        <div class="dropdown <?= can_modul('izin') ? '' : 'ms-auto' ?>">
           <button type="button" class="topbar-user" data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false" aria-label="Menu akun">
             <span class="topbar-user-info d-none d-md-block text-end">
               <span class="nama"><?= e($admin['nama'] ?? '') ?></span>
