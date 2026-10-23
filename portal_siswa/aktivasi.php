@@ -85,7 +85,7 @@ elseif (($_GET['dari'] ?? '') === 'perangkat') portal_alert('info', 'HP ini suda
         <?php endif; ?>
         <button type="submit" class="pt-btn">Aktifkan Akun</button>
       </form>
-      <script src="<?= BASE_URL ?>/assets/js/device.js"></script>
+      <script src="<?= BASE_URL ?>/assets/js/device.js?v=<?= @filemtime(__DIR__ . '/../assets/js/device.js') ?: 0 ?>"></script>
       <script>
         (function () {
           var f = document.getElementById('device_uuid');

@@ -10,7 +10,10 @@ function portal_head(string $judul): void
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#f7f8fa">
+<style>html{background:#f7f8fa}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <title><?= e($judul) ?> — Portal Siswa <?= e($s['nama_sekolah'] ?? '') ?></title>
 <?= favicon_tag() ?>
 <link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap-icons.min.css" rel="stylesheet">
@@ -80,7 +83,7 @@ function portal_auth_akhir(): void
     </div>
   </section>
 </main>
-<script src="<?= BASE_URL ?>/assets/js/portal.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/portal.js?v=<?= @filemtime(__DIR__ . '/../assets/js/portal.js') ?: 0 ?>"></script>
 </body>
 </html>
 <?php
@@ -143,7 +146,9 @@ function portal_app_akhir(): void
   <a href="<?= e(portal_url('izin')) ?>"<?= $on('izin') ?>><i class="bi bi-file-earmark-text"></i>Izin<?php if ($baru > 0): ?><b class="pt-dot-tab" aria-label="<?= $baru ?> notifikasi baru"><?= $baru > 9 ? '9+' : $baru ?></b><?php endif; ?></a>
   <a href="<?= e(portal_url('profil')) ?>"<?= $on('profil') ?>><i class="bi bi-person"></i>Profile</a>
 </nav>
-<script src="<?= BASE_URL ?>/assets/js/portal.js"></script>
+<?php $vtBase = rtrim((string) (parse_url(BASE_URL, PHP_URL_PATH) ?? ''), '/'); ?>
+<script type="speculationrules">{"prerender":[{"where":{"and":[{"selector_matches":".ap-nav a[href], .ap-tiles a, .ap-sec a"},{"href_matches":"<?= $vtBase ?>/portal/(riwayat|izin|profil)"}]},"eagerness":"moderate"}],"prefetch":[{"where":{"and":[{"selector_matches":".ap-nav a[href]"},{"href_matches":"<?= $vtBase ?>/"}]},"eagerness":"moderate"}]}</script>
+<script src="<?= BASE_URL ?>/assets/js/portal.js?v=<?= @filemtime(__DIR__ . '/../assets/js/portal.js') ?: 0 ?>"></script>
 </body>
 </html>
 <?php

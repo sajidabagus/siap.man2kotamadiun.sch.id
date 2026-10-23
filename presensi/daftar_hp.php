@@ -61,7 +61,7 @@ $token = strtolower(preg_replace('/[^0-9a-fA-F]/', '', (string) ($_GET['t'] ?? '
   </div>
 </div>
 
-<script src="<?= BASE_URL ?>/assets/js/device.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/device.js?v=<?= @filemtime(__DIR__ . '/../assets/js/device.js') ?: 0 ?>"></script>
 <script>
 const token = <?= json_encode($token) ?>;
 function tampil(id) {

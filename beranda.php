@@ -24,6 +24,9 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= e($namaSekolah) ?> — Absensi Siswa</title>
 <?= favicon_tag() ?>
+<meta name="theme-color" content="#f7f8fa">
+<style>html{background:#f7f8fa}</style>
+<link rel="preload" href="<?= BASE_URL ?>/assets/css/siswa-app.css?v=<?= @filemtime(__DIR__ . '/assets/css/siswa-app.css') ?: time() ?>" as="style">
 <link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap-icons.min.css" rel="stylesheet">
 <link href="<?= BASE_URL ?>/assets/css/siswa-app.css?v=<?= @filemtime(__DIR__ . '/assets/css/siswa-app.css') ?: time() ?>" rel="stylesheet">
 <style>
@@ -169,6 +172,14 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
 </style>
 </head>
 <body>
+<script>
+/* Tampilkan langsung tampilan terakhir (cuplikan hari yang sama di perangkat ini) agar tidak "meloncat" dari tampilan publik
+   ke tampilan siswa saat data baru dimuat. Data segar tetap diambil dan menimpa cuplikan ini. */
+window.SIAP_SNAP = null;
+try { var _s = JSON.parse(localStorage.getItem('siapBerandaV1') || 'null');
+  if (_s && _s.hari === new Date().toDateString() && _s.d) { window.SIAP_SNAP = _s.d; if (_s.d.mode === 'kelas' && _s.d.saya) document.body.classList.add('mode-siswa'); }
+} catch (e) {}
+</script>
 <div class="wrap">
 
   <div class="top">
@@ -201,7 +212,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   <section class="app" id="appSiswa" aria-label="Absensi saya">
     <header class="ap-hello">
       <div><h1>Halo, <span id="apNama"></span> 👋</h1><p id="apTgl">&nbsp;</p></div>
-      <a class="ap-masuk" href="<?= BASE_URL ?>/portal/gerbang?lanjut=notifikasi" aria-label="Notifikasi" title="Notifikasi"><i class="bi bi-bell"></i></a>
+      <a class="ap-masuk" href="<?= BASE_URL ?>/portal/notifikasi" aria-label="Notifikasi" title="Notifikasi"><i class="bi bi-bell"></i></a>
     </header>
     <div class="ap-jam">
       <div>
@@ -220,17 +231,17 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
     <button type="button" class="btn ap-absen" id="apAbsen"><i class="bi bi-fingerprint"></i> <span>Absen Masuk</span></button>
     <div class="ap-card">
       <h2>Status Hari Ini</h2>
-      <a class="ap-status" id="apStatus" href="<?= BASE_URL ?>/portal/gerbang?lanjut=riwayat">
+      <a class="ap-status" id="apStatus" href="<?= BASE_URL ?>/portal/riwayat">
         <span class="lg"><i class="bi bi-hourglass-split" id="apStIkon"></i></span>
         <span><b id="apStJudul">Belum absen</b><span id="apStMasuk">Masuk: -</span><span>Pulang: -</span></span>
         <i class="bi bi-chevron-right ch"></i>
       </a>
     </div>
-    <div class="ap-sec"><h2>Ringkasan Bulan Ini</h2><a href="<?= BASE_URL ?>/portal/gerbang?lanjut=riwayat">Lihat Semua</a></div>
+    <div class="ap-sec"><h2>Ringkasan Bulan Ini</h2><a href="<?= BASE_URL ?>/portal/riwayat">Lihat Semua</a></div>
     <div class="ap-tiles">
-      <a class="h" href="<?= BASE_URL ?>/portal/gerbang?lanjut=riwayat"><b id="apHadir">0</b><span>Hadir</span><i class="bi bi-calendar-check"></i></a>
-      <a class="i" href="<?= BASE_URL ?>/portal/gerbang?lanjut=riwayat"><b id="apIzin">0</b><span>Izin</span><i class="bi bi-file-earmark-text-fill"></i></a>
-      <a class="a" href="<?= BASE_URL ?>/portal/gerbang?lanjut=riwayat"><b id="apAlfa">0</b><span>Alfa</span><i class="bi bi-calendar-x-fill"></i></a>
+      <a class="h" href="<?= BASE_URL ?>/portal/riwayat"><b id="apHadir">0</b><span>Hadir</span><i class="bi bi-calendar-check"></i></a>
+      <a class="i" href="<?= BASE_URL ?>/portal/riwayat"><b id="apIzin">0</b><span>Izin</span><i class="bi bi-file-earmark-text-fill"></i></a>
+      <a class="a" href="<?= BASE_URL ?>/portal/riwayat"><b id="apAlfa">0</b><span>Alfa</span><i class="bi bi-calendar-x-fill"></i></a>
     </div>
   </section>
 
@@ -269,11 +280,13 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
 
 <nav class="ap-nav" aria-label="Menu siswa">
   <a href="<?= BASE_URL ?>/" class="on" aria-current="page"><i class="bi bi-house-door-fill"></i>Home</a>
-  <a href="<?= BASE_URL ?>/portal/gerbang?lanjut=riwayat"><i class="bi bi-journal-text"></i>Riwayat</a>
+  <a href="<?= BASE_URL ?>/portal/riwayat"><i class="bi bi-journal-text"></i>Riwayat</a>
   <a class="scan" id="apNavScan" role="button" aria-label="Scan QR absen"><i class="bi bi-qr-code-scan"></i></a>
-  <a href="<?= BASE_URL ?>/portal/gerbang?lanjut=izin"><i class="bi bi-file-earmark-text"></i>Izin</a>
-  <a href="<?= BASE_URL ?>/portal/gerbang?lanjut=profil"><i class="bi bi-person"></i>Profile</a>
+  <a href="<?= BASE_URL ?>/portal/izin"><i class="bi bi-file-earmark-text"></i>Izin</a>
+  <a href="<?= BASE_URL ?>/portal/profil"><i class="bi bi-person"></i>Profile</a>
 </nav>
+<?php $vtBase = rtrim((string) (parse_url(BASE_URL, PHP_URL_PATH) ?? ''), '/'); ?>
+<script type="speculationrules">{"prerender":[{"where":{"and":[{"selector_matches":".ap-nav a[href], .ap-tiles a, .ap-sec a"},{"href_matches":"<?= $vtBase ?>/portal/(riwayat|izin|profil)"}]},"eagerness":"moderate"}],"prefetch":[{"where":{"and":[{"selector_matches":".ap-nav a[href]"},{"href_matches":"<?= $vtBase ?>/"}]},"eagerness":"moderate"}]}</script>
 
 <!-- Dialog: Perangkat belum terdaftar -->
 <div class="ov" id="mdBelum" role="dialog" aria-modal="true">
@@ -301,7 +314,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   </div>
 </div>
 
-<script src="<?= BASE_URL ?>/assets/js/device.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/device.js?v=<?= @filemtime(__DIR__ . '/assets/js/device.js') ?: 0 ?>"></script>
 <script>
 (function () {
   var BASE = <?= json_encode(BASE_URL) ?>;
@@ -382,6 +395,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   }
 
   function render(d) {
+    try { localStorage.setItem('siapBerandaV1', JSON.stringify({ hari: new Date().toDateString(), d: d })); } catch (e) {}
     $('persen').textContent = d.persen;
     var modeKelas = d.mode === 'kelas';
     $('jdlDonut').textContent = modeKelas ? 'Kehadiran Kelas ' + d.kelas : 'Kehadiran Hari Ini';
@@ -462,6 +476,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
       .catch(function () { $('liveBadge').classList.add('putus'); $('liveBadge').textContent = 'TERPUTUS'; })
       .then(function () { memuat = false; });
   }
+  if (window.SIAP_SNAP) { try { render(window.SIAP_SNAP); } catch (e) {} }
   muat(); setInterval(muat, 8000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) muat(); });
 

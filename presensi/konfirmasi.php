@@ -133,7 +133,7 @@ $autoKonfirmasi = $infoGate && !empty($infoGate['kelas_target']);
   <div class="ps-foot">SIAP ABSEN &copy; <?= date('Y') ?></div>
 </div>
 
-<script src="<?= BASE_URL ?>/assets/js/device.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/device.js?v=<?= @filemtime(__DIR__ . '/../assets/js/device.js') ?: 0 ?>"></script>
 <script>
 const deviceUuid = getOrCreateDeviceUuid();
 const autoKonfirmasi = <?= $autoKonfirmasi ? 'true' : 'false' ?>;

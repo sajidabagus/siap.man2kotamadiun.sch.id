@@ -82,7 +82,7 @@ if ($galatFlash !== '') portal_alert('err', $galatFlash);
   <?php endif; ?>
 </section>
 <form id="fCek" method="post" action="<?= e(portal_url('perangkat')) ?>" hidden><?= csrf_field() ?><input type="hidden" name="aksi" value="cek"><input type="hidden" name="device_uuid" class="devuuid" value=""></form>
-<script src="<?= BASE_URL ?>/assets/js/device.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/device.js?v=<?= @filemtime(__DIR__ . '/../assets/js/device.js') ?: 0 ?>"></script>
 <script>
 (function () {
   var uuid = ''; try { uuid = getOrCreateDeviceUuid(); } catch (e) {}

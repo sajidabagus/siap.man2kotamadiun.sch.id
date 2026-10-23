@@ -19,7 +19,7 @@ $logo = portal_logo_url();
   <p>Memeriksa perangkat…</p>
   <a class="pt-gerbang-link" href="<?= e($login) ?>">Masuk dengan password</a>
 </main>
-<script src="<?= BASE_URL ?>/assets/js/device.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/device.js?v=<?= @filemtime(__DIR__ . '/../assets/js/device.js') ?: 0 ?>"></script>
 <script>
 (function () {
   var tujuan = <?= json_encode($tujuan) ?>, login = <?= json_encode($login) ?>, aktivasi = <?= json_encode(portal_url('aktivasi', ['dari' => 'perangkat'])) ?>, api = <?= json_encode(portal_url('masuk-perangkat')) ?>;

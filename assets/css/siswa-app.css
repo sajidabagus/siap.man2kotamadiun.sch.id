@@ -22,3 +22,12 @@ body.mode-siswa .ap-nav, body.ap-app .ap-nav { display: flex; }
 .ap-nav a.on { color: var(--biru); }
 .ap-nav a.scan { flex: none; width: 62px; height: 62px; margin-top: -30px; border-radius: 50%; background: var(--biru); color: #fff; justify-content: center; box-shadow: 0 8px 18px -8px rgba(37,99,235,.6); border: 4px solid #fff; cursor: pointer; }
 .ap-nav a.scan i { font-size: 1.6rem; }
+
+/* ===== Navigasi halus antarhalaman (View Transitions lintas dokumen; browser lama mengabaikan) ===== */
+@view-transition { navigation: auto; }
+.ap-nav { view-transition-name: ap-nav; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 160ms; animation-timing-function: ease-out; }
+::view-transition-group(ap-nav) { animation: none; }
+::view-transition-old(ap-nav) { display: none; }
+::view-transition-new(ap-nav) { animation: none; }
+@media (prefers-reduced-motion: reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; } }
