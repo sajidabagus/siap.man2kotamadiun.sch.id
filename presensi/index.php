@@ -130,7 +130,7 @@ $gateValidInSession = !empty($_SESSION['gate_token']) && validate_qr_dinamis_ses
 </div>
 
 <script src="<?= BASE_URL ?>/assets/js/vendor/html5-qrcode.min.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/device.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/device.js?v=<?= @filemtime(__DIR__ . '/../assets/js/device.js') ?: 0 ?>"></script>
 <script>
 function extractGateToken(text) {
   try {

@@ -10,12 +10,16 @@ function portal_head(string $judul): void
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#114e2e">
+<meta name="theme-color" content="#f7f8fa">
+<style>html{background:#f7f8fa}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <title><?= e($judul) ?> — Portal Siswa <?= e($s['nama_sekolah'] ?? '') ?></title>
 <?= favicon_tag() ?>
 <link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap-icons.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link href="<?= BASE_URL ?>/assets/css/portal.css" rel="stylesheet">
+<link href="<?= BASE_URL ?>/assets/css/portal.css?v=<?= @filemtime(__DIR__ . '/../assets/css/portal.css') ?: time() ?>" rel="stylesheet">
+<link href="<?= BASE_URL ?>/assets/css/siswa-app.css?v=<?= @filemtime(__DIR__ . '/../assets/css/siswa-app.css') ?: time() ?>" rel="stylesheet">
 </head>
 <?php
 }
@@ -26,7 +30,24 @@ function portal_head(string $judul): void
  */
 function portal_url_home(): string
 {
-    return (function_exists('portal_sesi_via_perangkat') && portal_sesi_via_perangkat()) ? BASE_URL . '/' : portal_url();
+    return portal_pakai_beranda_utama() ? BASE_URL . '/' : portal_url();
+}
+
+/**
+ * Siswa memakai beranda utama "/" (tampilan biru beranda.php) bila sesinya masuk otomatis lewat perangkat ATAU
+ * akunnya punya perangkat terdaftar yang aktif (mis. pernah masuk dengan password lalu gerbang hanya meneruskan,
+ * sehingga tanda via_perangkat tidak pernah terpasang — inilah penyebab Home jatuh ke beranda /portal yang hijau).
+ */
+function portal_pakai_beranda_utama(): bool
+{
+    if (function_exists('portal_sesi_via_perangkat') && portal_sesi_via_perangkat()) return true;
+    $akun = function_exists('portal_siswa_sekarang') ? portal_siswa_sekarang() : null;
+    $sid = (int) ($akun['siswa_id'] ?? 0);
+    if ($sid <= 0) return false;
+    require_once __DIR__ . '/../includes/device_binding.php';
+    if (empty(get_settings()['device_binding_aktif'])) return false;
+    $b = get_device_binding($sid);
+    return $b && ($b['status'] ?? '') === 'ACTIVE';
 }
 
 /** Halaman masuk/aktivasi: panel merek + panel formulir. */
@@ -62,7 +83,7 @@ function portal_auth_akhir(): void
     </div>
   </section>
 </main>
-<script src="<?= BASE_URL ?>/assets/js/portal.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/portal.js?v=<?= @filemtime(__DIR__ . '/../assets/js/portal.js') ?: 0 ?>"></script>
 </body>
 </html>
 <?php
@@ -97,7 +118,7 @@ function portal_app_awal(string $judul, array $akun, string $aktif = 'beranda', 
     $GLOBALS['PORTAL_NOTIF'] = portal_notif_belum_dibaca((int) $akun['siswa_id']);
     portal_head($judul);
     ?>
-<body class="pt-body pt-app pt-v2">
+<body class="pt-body pt-app pt-v2 ap-app">
 <?php if (empty($opsi['tanpa_header'])): ?>
 <header class="pt-bar">
   <?php if (isset($opsi['kembali'])): ?>
@@ -118,14 +139,16 @@ function portal_app_akhir(): void
     $on = fn(string $k): string => $aktif === $k ? ' class="on" aria-current="page"' : '';
     ?>
 </main>
-<nav class="pt-tab" aria-label="Menu utama">
-  <a href="<?= e(portal_url_home()) ?>"<?= $on('beranda') ?>><i class="bi bi-house-door-fill"></i><span>Home</span></a>
-  <a href="<?= e(portal_url('riwayat')) ?>"<?= $on('riwayat') ?>><i class="bi bi-journal-text"></i><span>Riwayat</span></a>
-  <a class="pt-scan" href="<?= e(BASE_URL) ?>/presensi/" aria-label="Scan QR untuk absen"><i class="bi bi-qr-code-scan"></i></a>
-  <a href="<?= e(portal_url('izin')) ?>"<?= $on('izin') ?>><i class="bi bi-file-earmark-text-fill"></i><span>Izin</span><?php if ($baru > 0): ?><b class="pt-dot-tab" aria-label="<?= $baru ?> notifikasi baru"><?= $baru > 9 ? '9+' : $baru ?></b><?php endif; ?></a>
-  <a href="<?= e(portal_url('profil')) ?>"<?= $on('profil') ?>><i class="bi bi-person-circle"></i><span>Profil</span></a>
+<nav class="ap-nav" aria-label="Menu utama">
+  <a href="<?= e(portal_url_home()) ?>"<?= $on('beranda') ?>><i class="bi bi-house-door-fill"></i>Home</a>
+  <a href="<?= e(portal_url('riwayat')) ?>"<?= $on('riwayat') ?>><i class="bi bi-journal-text"></i>Riwayat</a>
+  <a class="scan" href="<?= e(BASE_URL) ?>/presensi/" aria-label="Scan QR untuk absen"><i class="bi bi-qr-code-scan"></i></a>
+  <a href="<?= e(portal_url('izin')) ?>"<?= $on('izin') ?>><i class="bi bi-file-earmark-text"></i>Izin<?php if ($baru > 0): ?><b class="pt-dot-tab" aria-label="<?= $baru ?> notifikasi baru"><?= $baru > 9 ? '9+' : $baru ?></b><?php endif; ?></a>
+  <a href="<?= e(portal_url('profil')) ?>"<?= $on('profil') ?>><i class="bi bi-person"></i>Profile</a>
 </nav>
-<script src="<?= BASE_URL ?>/assets/js/portal.js"></script>
+<?php $vtBase = rtrim((string) (parse_url(BASE_URL, PHP_URL_PATH) ?? ''), '/'); ?>
+<script type="speculationrules">{"prerender":[{"where":{"and":[{"selector_matches":".ap-nav a[href], .ap-tiles a, .ap-sec a"},{"href_matches":"<?= $vtBase ?>/portal/(riwayat|izin|profil)"}]},"eagerness":"moderate"}],"prefetch":[{"where":{"and":[{"selector_matches":".ap-nav a[href]"},{"href_matches":"<?= $vtBase ?>/"}]},"eagerness":"moderate"}]}</script>
+<script src="<?= BASE_URL ?>/assets/js/portal.js?v=<?= @filemtime(__DIR__ . '/../assets/js/portal.js') ?: 0 ?>"></script>
 </body>
 </html>
 <?php

@@ -1,0 +1,33 @@
+/* =====================================================================
+   Tampilan aplikasi siswa (netral putih, aksen biru) — dipakai bersama oleh beranda.php (mode-siswa)
+   dan halaman portal Riwayat / Izin / Profil (body.pt-v2), agar keduanya identik.
+   ===================================================================== */
+.ap-app, body.mode-siswa {
+  --biru: #2563eb; --navy: #0f172a; --abu: #64748b; --garis: #e8ebf0;
+}
+body.ap-app {
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; color: var(--navy);
+  background: #f7f8fa; min-height: 100vh; -webkit-text-size-adjust: 100%;
+}
+/* kartu */
+.ap-card { background: #fff; border: 1px solid var(--garis); border-radius: 18px; padding: 16px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+
+/* menu bawah: selalu menempel di dasar layar */
+.ap-nav { position: fixed !important; top: auto; left: 0; right: 0; bottom: 0; width: 100%; background: rgba(255,255,255,.96); border-top: 1px solid var(--garis); box-shadow: 0 -6px 20px -16px rgba(15,23,42,.25);
+  display: none; justify-content: space-around; align-items: flex-end; padding: 8px 6px calc(8px + env(safe-area-inset-bottom)); z-index: 50;
+  transform: translateZ(0); -webkit-transform: translateZ(0); }
+body.mode-siswa .ap-nav, body.ap-app .ap-nav { display: flex; }
+.ap-nav a { position: relative; flex: 1; max-width: 90px; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: .74rem; font-weight: 600; color: #94a3b8; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+.ap-nav a i { font-size: 1.3rem; }
+.ap-nav a.on { color: var(--biru); }
+.ap-nav a.scan { flex: none; width: 62px; height: 62px; margin-top: -30px; border-radius: 50%; background: var(--biru); color: #fff; justify-content: center; box-shadow: 0 8px 18px -8px rgba(37,99,235,.6); border: 4px solid #fff; cursor: pointer; }
+.ap-nav a.scan i { font-size: 1.6rem; }
+
+/* ===== Navigasi halus antarhalaman (View Transitions lintas dokumen; browser lama mengabaikan) ===== */
+@view-transition { navigation: auto; }
+.ap-nav { view-transition-name: ap-nav; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 160ms; animation-timing-function: ease-out; }
+::view-transition-group(ap-nav) { animation: none; }
+::view-transition-old(ap-nav) { display: none; }
+::view-transition-new(ap-nav) { animation: none; }
+@media (prefers-reduced-motion: reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; } }

@@ -1078,7 +1078,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
     })();
   </script>
   <?php if ($_SERVER['REQUEST_METHOD'] !== 'POST' && ($_GET['keluar'] ?? '') !== '1' && ($_GET['aktif'] ?? '') !== '1'): ?>
-    <script src="<?= BASE_URL ?>/assets/js/device.js"></script>
+    <script src="<?= BASE_URL ?>/assets/js/device.js?v=<?= @filemtime(__DIR__ . '/assets/js/device.js') ?: 0 ?>"></script>
     <script>
       // Perangkat siswa yang sudah terdaftar masuk otomatis (tanpa password). Gagal/belum terdaftar: formulir ini tetap dipakai.
       (function() {

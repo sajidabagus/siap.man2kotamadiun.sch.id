@@ -2,6 +2,8 @@
 // /portal — Home: sapaan, jam, tombol scan absen, status hari ini, ringkasan bulan ini
 require_once __DIR__ . '/../includes/device_binding.php';
 $akun = portal_wajib_login();
+// Beranda lama (/portal, tampilan hijau) tidak dipakai bagi siswa berperangkat terdaftar: alihkan ke beranda utama.
+if (portal_pakai_beranda_utama()) { header('Location: ' . BASE_URL . '/', true, 302); exit; }
 $sid = (int) $akun['siswa_id'];
 
 $info = (string) ($_SESSION['portal_info'] ?? '');
