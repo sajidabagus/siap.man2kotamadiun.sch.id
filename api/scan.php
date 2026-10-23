@@ -84,7 +84,7 @@ if ($mode === 'preview') {
         if ($sudahDipakaiSiswaLain && (int) $sudahDipakaiSiswaLain['siswa_id'] !== $siswaId) {
             $deviceState = 'CLAIMED_BY_OTHER';
         } else {
-            // Mode "Wajib Kode Pasangan": HP baru harus didaftarkan dengan kode dari admin
+            // Mode "Wajib kode aktivasi": HP baru hanya bisa didaftarkan lewat aktivasi akun (kode dari Akun Siswa)
             $deviceState = !empty($settings['device_wajib_kode']) ? 'NEED_PAIRING' : 'NEW';
         }
     } elseif ($binding['status'] === 'BLOCKED') {

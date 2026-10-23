@@ -320,7 +320,7 @@ $sasaranAwal = ($kelas !== '' && isset($massal['kelas:' . $kelas])) ? 'kelas:' .
                   </div>
                 </div>
               <?php else: ?>
-                <a href="#" data-popup="<?= e(modul_url('kode_pasangan', ['siswa_id' => (int) $d['siswa_id']])) ?>" data-popup-title="Kode Pasangan — <?= e($d['nama']) ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-key"></i> Kode Pasangan</a>
+                <?php if (can_modul('akun_siswa')): ?><a href="<?= e(modul_url('akun_siswa', ['q' => $d['nisn'] ?? ($d['nis'] ?? $d['nama'])])) ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-key"></i> Kode aktivasi</a><?php endif; ?>
               <?php endif; ?>
               <?php endif; ?>
             </div>

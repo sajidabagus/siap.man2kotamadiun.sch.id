@@ -25,6 +25,7 @@ try {
         json_response(['success' => true, 'wajib' => true, 'terdaftar' => false, 'status' => 'BELUM']);
     }
 
+    if ($b['status'] === 'ACTIVE') device_cookie_pertahankan($uuid);   // iPhone: perpanjang cadangan identitas dari server
 
     json_response([
         'success' => true, 'wajib' => true,

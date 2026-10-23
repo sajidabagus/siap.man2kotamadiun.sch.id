@@ -9,8 +9,11 @@ if (is_logged_in()) {
 
 $error = '';
 $info = '';
-if (($_GET['aktif'] ?? '') === '1') $info = 'Akun berhasil diaktifkan. Silakan masuk dengan NISN dan password baru Anda.';
-elseif (($_GET['keluar'] ?? '') === '1') $info = 'Anda sudah keluar.';
+if (($_GET['aktif'] ?? '') === '1') {
+  $p = (string) ($_GET['p'] ?? '');
+  $info = 'Akun berhasil diaktifkan. ' . (PESAN_PERANGKAT[$p] ?? '') . ' Silakan masuk dengan NISN dan password baru Anda.';
+  $info = trim((string) preg_replace('/\s+/', ' ', $info));
+} elseif (($_GET['keluar'] ?? '') === '1') $info = 'Anda sudah keluar.';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (!csrf_verify($_POST['csrf_token'] ?? '')) {
@@ -199,11 +202,26 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
       font-size: 15px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, .25);
       transition: transform .15s;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
+    }
+
+    /* Area sentuh diperluas (34px tampak -> ~50px sentuh) supaya mudah ditekan di HP */
+    .lg-back::after {
+      content: "";
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
     }
 
     .lg-back:hover {
       color: var(--hj-tua);
       transform: translateX(-2px);
+    }
+
+    .lg-back:active {
+      transform: scale(.94);
     }
 
     .lg-back:focus-visible {
@@ -510,6 +528,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
 
       .lg-back {
         top: calc(16px + env(safe-area-inset-top, 0px));
+        z-index: 5;
       }
 
       .lg-logo {
@@ -928,7 +947,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
       <!-- Hanya tampil di desktop (>= 900px) -->
       <div class="lg-info">
         <h2>Portal Absensi Digital</h2>
-        <p>Sistem Informasi Terpadu <?= e($namaSekolah) ?>. Tingkatkan kedisiplinan dan semangat belajar melalui pemantauan kehadiran yang akurat secara real&#8209;time.</p>
+        <p>Sistem Informasi Terpadu <?= e($namaSekolah) ?>. Tingkatkan kedisiplinan dan kinerja melalui pemantauan kehadiran yang akurat secara real&#8209;time.</p>
         <div class="lg-garis"></div>
       </div>
     </div>
@@ -968,20 +987,8 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   </main>
   <script>
     (function() {
-      // Tombol kembali: pindah ke halaman sebelumnya bila datang dari halaman lain di situs ini.
-      // Jika dibuka langsung (tanpa halaman sebelumnya), atau sebelumnya halaman login itu sendiri
-      // (mis. setelah salah password), tautan bawaannya mengarah ke beranda.
-      document.getElementById('btnKembali').addEventListener('click', function(e) {
-        try {
-          var ref = document.referrer ? new URL(document.referrer) : null;
-          if (ref && ref.origin === location.origin && ref.pathname !== location.pathname && history.length > 1) {
-            e.preventDefault();
-            history.back();
-          }
-        } catch (err) {
-          /* biarkan tautan ke beranda berjalan */
-        }
-      });
+      // Tombol kembali (#btnKembali) sengaja TIDAK dicegat skrip: ia hanya tautan biasa ke beranda ("/"),
+      // sehingga satu kali sentuh langsung membuka beranda (bukan halaman sebelumnya / riwayat browser).
 
       // Kunci tinggi tampilan di HP: ukuran diambil saat keyboard BELUM muncul, lalu tidak ikut mengecil
       // ketika keyboard terbuka. Hanya diperbarui bila lebar layar berubah (layar diputar) atau tinggi benar-benar membesar.
@@ -1070,6 +1077,35 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
       });
     })();
   </script>
+  <?php if ($_SERVER['REQUEST_METHOD'] !== 'POST' && ($_GET['keluar'] ?? '') !== '1' && ($_GET['aktif'] ?? '') !== '1'): ?>
+    <script src="<?= BASE_URL ?>/assets/js/device.js"></script>
+    <script>
+      // Perangkat siswa yang sudah terdaftar masuk otomatis (tanpa password). Gagal/belum terdaftar: formulir ini tetap dipakai.
+      (function() {
+        try {
+          var u = getDeviceUuidIfExists();
+          if (!u) return;
+          fetch(<?= json_encode(portal_url('masuk-perangkat')) ?>, {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                uuid: u
+              })
+            })
+            .then(function(r) {
+              return r.json();
+            })
+            .then(function(d) {
+              if (d && d.ok) location.replace(<?= json_encode(portal_url('', ['_g' => 1])) ?>);
+            })
+            .catch(function() {});
+        } catch (e) {}
+      })();
+    </script>
+  <?php endif; ?>
 </body>
 
 </html>

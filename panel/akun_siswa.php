@@ -86,9 +86,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         if ($aksi === 'reset_satu') {
             $h = portal_terbitkan_kode($sid, $adminId);
             if ($h['ok']) {
+                // RESET = semuanya hilang: password, sesi (lewat portal_terbitkan_kode) DAN perangkat terdaftar.
+                // Siswa aktivasi ulang dengan kode ini; perangkat terdaftar lagi saat aktivasi di aplikasi SIAP.
+                $perangkatDilepas = lepas_perangkat_reset_akun($sid, $adminId);
                 $s = $db->prepare('SELECT id, nama, kelas, nisn FROM siswa WHERE id = :id'); $s->execute([':id' => $sid]);
                 $berhasil = [$s->fetch() + ['kode' => $h['kode_tampil'], 'berlaku' => $h['berlaku']]]; $dilewati = [];
-                catat_aktivitas('RESET', 'akun_siswa', 'Reset akun portal & kode baru: ' . nama_siswa_log($sid));
+                catat_aktivitas('RESET', 'akun_siswa', 'Reset akun portal, perangkat' . ($perangkatDilepas ? ' dilepas' : ' (tidak ada)') . ' & kode baru: ' . nama_siswa_log($sid));
             } else { $berhasil = []; $dilewati = [['nama' => nama_siswa_log($sid), 'kelas' => '', 'alasan' => $h['alasan']]]; }
         } else {
             if ($aksi === 'kode_satu') $ids = [$sid];
@@ -107,6 +110,50 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             }
         }
         $hasil = ['berhasil' => $berhasil, 'dilewati' => $dilewati];
+
+    } elseif ($aksi === 'ganti_hp') {
+        // Siswa ganti HP: HANYA mereset perangkat terdaftar (kuota bulanan berlaku). Akun AKTIF tidak diubah sama
+        // sekali (password, status, sesi tetap); siswa mendaftarkan HP baru dari portal (tombol "Daftarkan perangkat
+        // ini"). Hanya akun yang MASIH MENUNGGU yang sekalian mendapat kode aktivasi baru (belum ada yang hilang).
+        // Menghapus akun + perangkat sekaligus adalah tugas tombol "Reset".
+        $st = $db->prepare('SELECT status FROM siswa_akun WHERE siswa_id = :id'); $st->execute([':id' => $sid]);
+        $statusAkun = (string) ($st->fetchColumn() ?: '');
+        $dev = get_device_binding($sid);
+        $perluKode = $statusAkun === 'menunggu';   // akun AKTIF tidak pernah disentuh oleh Ganti HP
+        if ($statusAkun === '' || $statusAkun === 'nonaktif') {
+            set_flash('danger', 'Akun tidak ditemukan atau sedang diblokir.'); header('Location: ' . akun_url_kembali()); exit;
+        }
+        if (!$dev || $dev['status'] === 'BLOCKED') {
+            set_flash('warning', 'Tidak ada perangkat aktif yang bisa direset untuk siswa ini.'); header('Location: ' . akun_url_kembali()); exit;
+        }
+        if ($perluKode && !akun_nonce_pakai((string) ($_POST['nonce'] ?? ''))) {
+            set_flash('warning', 'Permintaan ini sudah diproses atau halaman sudah kedaluwarsa. Muat ulang halaman bila perlu membuat kode lagi.');
+            header('Location: ' . akun_url_kembali()); exit;
+        }
+        $r = reset_device($sid, $adminId, 'Ganti HP (via Akun Siswa)');
+        if (!$r['success']) { set_flash('danger', $r['message']); header('Location: ' . akun_url_kembali()); exit; }
+
+        if (!$perluKode) {
+            set_flash('success', 'Perangkat lama direset. Akun dan password siswa TIDAK berubah dan tetap aktif. Klik "Kode perangkat" untuk menerbitkan kode pendaftaran HP baru (wajib bila pendaftaran mandiri dimatikan), lalu minta siswa masuk ke portal dari aplikasi SIAP di HP barunya dan pilih "Daftarkan perangkat ini".');
+            header('Location: ' . akun_url_kembali()); exit;
+        }
+        $h = portal_terbitkan_kode($sid, $adminId);
+        if (!$h['ok']) { set_flash('warning', 'Perangkat direset, tetapi kode gagal diterbitkan: ' . $h['alasan']); header('Location: ' . akun_url_kembali()); exit; }
+        $s = $db->prepare('SELECT id, nama, kelas, nisn FROM siswa WHERE id = :id'); $s->execute([':id' => $sid]);
+        $hasil = ['berhasil' => [$s->fetch() + ['kode' => $h['kode_tampil'], 'berlaku' => $h['berlaku']]], 'dilewati' => []];
+        catat_aktivitas('RESET', 'akun_siswa', 'Ganti HP: reset perangkat & kode aktivasi baru: ' . nama_siswa_log($sid));
+
+    } elseif ($aksi === 'kode_perangkat') {
+        // Akun AKTIF, perangkat sudah dilepas: terbitkan KODE PERANGKAT. Akun/password/sesi tidak disentuh.
+        if (!akun_nonce_pakai((string) ($_POST['nonce'] ?? ''))) {
+            set_flash('warning', 'Permintaan ini sudah diproses atau halaman sudah kedaluwarsa. Muat ulang halaman bila perlu membuat kode lagi.');
+            header('Location: ' . akun_url_kembali()); exit;
+        }
+        $h = portal_terbitkan_kode_perangkat($sid, $adminId);
+        if (!$h['ok']) { set_flash('warning', $h['alasan']); header('Location: ' . akun_url_kembali()); exit; }
+        $s = $db->prepare('SELECT id, nama, kelas, nisn FROM siswa WHERE id = :id'); $s->execute([':id' => $sid]);
+        $hasil = ['berhasil' => [$s->fetch() + ['kode' => $h['kode_tampil'], 'berlaku' => $h['berlaku']]], 'dilewati' => [], 'jenis' => 'perangkat'];
+        catat_aktivitas('GENERATE', 'akun_siswa', 'Menerbitkan kode perangkat: ' . nama_siswa_log($sid));
 
     } elseif ($aksi === 'blokir' || $aksi === 'aktifkan') {
         if ($aksi === 'blokir') {
@@ -136,6 +183,7 @@ if ($hasil !== null) {
     header('Cache-Control: no-store, max-age=0');
     $nSekolah = (string) (get_settings()['nama_sekolah'] ?? '');
     $urlAktivasi = BASE_URL . '/portal/aktivasi';
+    $kodePerangkat = ($hasil['jenis'] ?? '') === 'perangkat';
     ?>
 <style>
   .slip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
@@ -155,7 +203,7 @@ if ($hasil !== null) {
 </style>
 
 <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-3 mb-3 no-print">
-  <h4 class="mb-0"><i class="bi bi-person-lock"></i> Kode Aktivasi Diterbitkan</h4>
+  <h4 class="mb-0"><i class="bi bi-person-lock"></i> <?= $kodePerangkat ? 'Kode Perangkat Diterbitkan' : 'Kode Aktivasi Diterbitkan' ?></h4>
   <div class="d-flex flex-wrap gap-2">
     <?php if ($hasil['berhasil']): ?>
     <button type="button" class="btn btn-primary" onclick="window.print()"><i class="bi bi-printer"></i> Cetak</button>
@@ -169,7 +217,7 @@ if ($hasil !== null) {
 <div class="alert alert-warning no-print">
   <i class="bi bi-exclamation-triangle-fill"></i>
   <strong>Kode ini hanya tampil sekali.</strong> Cetak atau unduh sekarang; setelah halaman ini ditutup kode tidak bisa dilihat lagi
-  (bila hilang, terbitkan kode baru). Setiap kode berlaku <?= PORTAL_KODE_HARI ?> hari dan hanya untuk satu siswa.
+  (bila hilang, terbitkan kode baru). Setiap kode berlaku <?= $kodePerangkat ? PORTAL_KODE_PERANGKAT_HARI : PORTAL_KODE_HARI ?> hari dan hanya untuk satu siswa.<?= $kodePerangkat ? ' Kode perangkat tidak mengubah akun atau password siswa.' : '' ?>
 </div>
 <div id="areaCetak">
   <div class="slip-grid">
@@ -179,7 +227,7 @@ if ($hasil !== null) {
       <div class="nm"><?= e($r['nama']) ?></div>
       <div class="mt">Kelas <?= e($r['kelas']) ?> · NISN <?= e($r['nisn']) ?></div>
       <div class="kd"><?= e($r['kode']) ?></div>
-      <div class="ft">Berlaku s.d. <?= e(format_tanggal_indonesia(substr($r['berlaku'], 0, 10))) ?><br>Buka <strong><?= e($urlAktivasi) ?></strong>, isi NISN &amp; kode ini, lalu buat password sendiri.</div>
+      <div class="ft">Berlaku s.d. <?= e(format_tanggal_indonesia(substr($r['berlaku'], 0, 10))) ?><br><?php if ($kodePerangkat): ?>Buka <strong>aplikasi SIAP</strong> di HP baru, masuk ke portal, isi kode ini pada kartu Perangkat presensi, lalu pilih Daftarkan perangkat ini.<?php else: ?>Buka <strong><?= e($urlAktivasi) ?></strong>, isi NISN &amp; kode ini, lalu buat password sendiri.<?php endif; ?></div>
     </div>
     <?php endforeach; ?>
   </div>
@@ -206,14 +254,14 @@ if ($hasil !== null) {
 
 <script>
 document.getElementById('btnCsv')?.addEventListener('click', function () {
-  var baris = [['Kelas', 'Nama', 'NISN', 'Kode Aktivasi', 'Berlaku Hingga']];
+  var baris = [['Kelas', 'Nama', 'NISN', <?= json_encode($kodePerangkat ? 'Kode Perangkat' : 'Kode Aktivasi') ?>, 'Berlaku Hingga']];
   document.querySelectorAll('.slip').forEach(function (s) {
     baris.push([s.dataset.kelas, s.dataset.nama, s.dataset.nisn, s.dataset.kode, s.dataset.berlaku]);
   });
   var csv = '\ufeff' + baris.map(function (r) { return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(','); }).join('\r\n');
   var a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-  a.download = 'kode-aktivasi-' + new Date().toISOString().slice(0, 10) + '.csv';
+  a.download = '<?= $kodePerangkat ? 'kode-perangkat' : 'kode-aktivasi' ?>-' + new Date().toISOString().slice(0, 10) + '.csv';
   document.body.appendChild(a); a.click(); a.remove();
 });
 </script>
@@ -234,6 +282,7 @@ if (!isset($daftarStatus[$statusF])) $statusF = '';
 // Status turunan dihitung di SQL agar bisa disaring dan dipaginasi.
 $dasar = "SELECT s.id, s.nama, s.nis, s.nisn, s.kelas, s.foto,
         a.id AS akun_id, a.status AS akun_status, a.kode_berlaku_hingga, a.login_terakhir,
+        dv.status AS dev_status, dv.os AS dev_os, dv.browser AS dev_browser, dv.last_used_at AS dev_terakhir,
         CASE WHEN s.nisn IS NULL OR TRIM(s.nisn) = '' THEN 'NISN kosong'
              WHEN d.c > 1 THEN CONCAT('NISN dipakai ', d.c, ' siswa') END AS masalah_nisn,
         CASE WHEN s.nisn IS NULL OR TRIM(s.nisn) = '' OR d.c > 1 THEN 'masalah'
@@ -244,6 +293,7 @@ $dasar = "SELECT s.id, s.nama, s.nis, s.nisn, s.kelas, s.foto,
              ELSE 'menunggu' END AS st
     FROM siswa s
     LEFT JOIN siswa_akun a ON a.siswa_id = s.id
+    LEFT JOIN device_bindings dv ON dv.siswa_id = s.id
     LEFT JOIN (SELECT nisn, COUNT(*) c FROM siswa WHERE nisn IS NOT NULL AND TRIM(nisn) <> '' GROUP BY nisn) d ON d.nisn = s.nisn
     WHERE s.status = 'aktif'";
 
@@ -359,7 +409,7 @@ $jumlahBelumAktif = $ringkas['belum'] + $ringkas['menunggu'] + $ringkas['kedaluw
       <thead>
         <tr>
           <?php if ($bolehKelola): ?><th style="width:1%"><input type="checkbox" class="form-check-input" id="cekSemua" aria-label="Pilih semua"></th><?php endif; ?>
-          <th>Nama</th><th>NISN</th><th>Kelas</th><th>Status akun</th><th>Terakhir masuk</th><?php if ($bolehKelola): ?><th style="width:1%"></th><?php endif; ?>
+          <th>Nama</th><th>NISN</th><th>Kelas</th><th>Status akun</th><th>Perangkat</th><th>Terakhir masuk</th><?php if ($bolehKelola): ?><th style="width:1%"></th><?php endif; ?>
         </tr>
       </thead>
       <tbody>
@@ -379,15 +429,31 @@ $jumlahBelumAktif = $ringkas['belum'] + $ringkas['menunggu'] + $ringkas['kedaluw
             <?php if ($r['masalah_nisn']): ?><div class="small text-danger"><?= e($r['masalah_nisn']) ?></div><?php endif; ?>
             <?php if ($r['st'] === 'menunggu' && $r['kode_berlaku_hingga']): ?><div class="small text-muted">s.d. <?= e(format_tanggal_indonesia(substr($r['kode_berlaku_hingga'], 0, 10))) ?></div><?php endif; ?>
           </td>
+          <td>
+            <?php if ($r['st'] === 'aktif' && !$r['dev_status'] && $r['kode_berlaku_hingga'] && $r['kode_berlaku_hingga'] >= date('Y-m-d H:i:s')): ?>
+              <div class="small text-primary"><i class="bi bi-key"></i> Kode perangkat berlaku s.d. <?= e(date('d/m H:i', strtotime($r['kode_berlaku_hingga']))) ?></div>
+            <?php endif; ?>
+            <?php if ($r['dev_status'] === 'BLOCKED'): ?><span class="badge bg-dark">Diblokir</span>
+            <?php elseif ($r['dev_status']): ?><span class="badge bg-success">Terdaftar</span><div class="small text-muted"><?= e(trim(($r['dev_os'] ?: '-') . ' · ' . ($r['dev_browser'] ?: '-'))) ?></div>
+            <?php else: ?><span class="badge bg-secondary">Belum</span><?php endif; ?>
+          </td>
           <td class="small text-muted"><?= $r['login_terakhir'] ? e(date('d/m/Y H:i', strtotime($r['login_terakhir']))) : '-' ?></td>
           <?php if ($bolehKelola): ?>
           <td class="text-nowrap">
+            <?php if ($r['dev_status'] === 'ACTIVE' && in_array($r['st'], ['aktif', 'menunggu', 'kedaluwarsa'], true)): ?>
+              <form method="post" class="d-inline" onsubmit="return confirm('Ganti HP <?= e(addslashes($r['nama'])) ?>?\n\nHanya PERANGKAT terdaftar yang dilepas; perangkat lama tidak bisa dipakai presensi lagi.<?= $r['st'] === 'aktif' ? '\n\nAkun, password, dan login siswa TIDAK berubah. Siswa mendaftarkan HP baru dari portal (tombol Daftarkan perangkat ini).' : '\n\nAkun belum aktif, jadi kode aktivasi baru akan diterbitkan.' ?>')"><?= csrf_field() ?><input type="hidden" name="aksi" value="ganti_hp"><input type="hidden" name="id" value="<?= (int) $r['id'] ?>"><input type="hidden" name="nonce" value="<?= e($nonce) ?>"><input type="hidden" name="kembali" value="<?= e($kembali) ?>">
+                <button class="btn btn-sm btn-outline-secondary" title="Siswa ganti HP: hanya melepas perangkat terdaftar, akun tidak berubah"><i class="bi bi-phone"></i> Ganti HP</button></form>
+            <?php endif; ?>
             <?php if ($bisaKode): ?>
               <form method="post" class="d-inline"><?= csrf_field() ?><input type="hidden" name="aksi" value="kode_satu"><input type="hidden" name="id" value="<?= (int) $r['id'] ?>"><input type="hidden" name="nonce" value="<?= e($nonce) ?>"><input type="hidden" name="kembali" value="<?= e($kembali) ?>">
                 <button class="btn btn-sm btn-outline-primary"><i class="bi bi-key"></i> <?= $r['st'] === 'belum' ? 'Buat kode' : 'Kode baru' ?></button></form>
             <?php elseif ($r['st'] === 'aktif'): ?>
-              <form method="post" class="d-inline" onsubmit="return confirm('Reset akun <?= e(addslashes($r['nama'])) ?>?\n\nPassword lama dihapus, semua perangkat yang sedang masuk keluar otomatis, dan siswa harus aktivasi ulang dengan kode baru.')"><?= csrf_field() ?><input type="hidden" name="aksi" value="reset_satu"><input type="hidden" name="id" value="<?= (int) $r['id'] ?>"><input type="hidden" name="nonce" value="<?= e($nonce) ?>"><input type="hidden" name="kembali" value="<?= e($kembali) ?>">
-                <button class="btn btn-sm btn-outline-warning" title="Lupa password / akun diambil alih"><i class="bi bi-arrow-repeat"></i> Reset</button></form>
+              <?php if (!$r['dev_status']): ?>
+              <form method="post" class="d-inline"><?= csrf_field() ?><input type="hidden" name="aksi" value="kode_perangkat"><input type="hidden" name="id" value="<?= (int) $r['id'] ?>"><input type="hidden" name="nonce" value="<?= e($nonce) ?>"><input type="hidden" name="kembali" value="<?= e($kembali) ?>">
+                <button class="btn btn-sm btn-primary" title="Perangkat sudah dilepas: terbitkan kode untuk mendaftarkan HP baru. Akun tidak berubah."><i class="bi bi-phone-vibrate"></i> Kode perangkat</button></form>
+              <?php endif; ?>
+              <form method="post" class="d-inline" onsubmit="return confirm('Reset akun <?= e(addslashes($r['nama'])) ?>?\n\nSEMUANYA dihapus: password lama, perangkat presensi terdaftar, dan semua login yang sedang berjalan. Siswa harus aktivasi ulang dengan kode baru (perangkat terdaftar lagi saat aktivasi di aplikasi SIAP).')"><?= csrf_field() ?><input type="hidden" name="aksi" value="reset_satu"><input type="hidden" name="id" value="<?= (int) $r['id'] ?>"><input type="hidden" name="nonce" value="<?= e($nonce) ?>"><input type="hidden" name="kembali" value="<?= e($kembali) ?>">
+                <button class="btn btn-sm btn-outline-warning" title="Hapus semuanya (akun + perangkat): lupa password / akun diambil alih"><i class="bi bi-arrow-repeat"></i> Reset</button></form>
               <form method="post" class="d-inline" onsubmit="return confirm('Blokir akun portal <?= e(addslashes($r['nama'])) ?>?')"><?= csrf_field() ?><input type="hidden" name="aksi" value="blokir"><input type="hidden" name="id" value="<?= (int) $r['id'] ?>"><input type="hidden" name="kembali" value="<?= e($kembali) ?>">
                 <button class="btn btn-sm btn-outline-danger" title="Blokir"><i class="bi bi-slash-circle"></i></button></form>
             <?php elseif ($r['st'] === 'nonaktif'): ?>
@@ -399,7 +465,7 @@ $jumlahBelumAktif = $ringkas['belum'] + $ringkas['menunggu'] + $ringkas['kedaluw
         </tr>
       <?php endforeach; ?>
       <?php if (!$daftar): ?>
-        <tr><td colspan="<?= $bolehKelola ? 7 : 5 ?>" class="text-center text-muted py-4">Tidak ada data yang cocok.</td></tr>
+        <tr><td colspan="<?= $bolehKelola ? 8 : 6 ?>" class="text-center text-muted py-4">Tidak ada data yang cocok.</td></tr>
       <?php endif; ?>
       </tbody>
     </table>

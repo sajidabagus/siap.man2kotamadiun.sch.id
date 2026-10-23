@@ -269,9 +269,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="col-12">
         <div class="form-check form-switch">
           <input class="form-check-input" type="checkbox" name="device_wajib_kode" id="devkode" <?= !empty($settings['device_wajib_kode']) ? 'checked' : '' ?>>
-          <label class="form-check-label" for="devkode"><strong>Wajib Kode/QR Pasangan</strong> untuk mendaftarkan perangkat (lebih aman dari pendaftaran otomatis)</label>
+          <label class="form-check-label" for="devkode"><strong>Wajib kode aktivasi dari petugas</strong> untuk mendaftarkan perangkat (lebih aman dari pendaftaran otomatis)</label>
         </div>
-        <div class="form-text">Bila aktif, perangkat siswa tidak lagi terdaftar otomatis saat scan pertama. Admin membuat QR Pasangan + Kode 6 angka (berlaku 10 menit, sekali pakai) dari menu Manajemen Perangkat atau Data Siswa; siswa memilih salah satu cara.</div>
+        <div class="form-text">Bila aktif, perangkat siswa tidak lagi terdaftar otomatis saat scan pertama maupun lewat tombol di portal. Satu-satunya jalan adalah kode aktivasi yang diterbitkan petugas di menu Akun Siswa: siswa memasukkan kode di aplikasi SIAP dan akun aktif sekaligus perangkat terdaftar. Untuk ganti HP, gunakan tombol Ganti HP di Akun Siswa (kode baru otomatis terbit).</div>
       </div>
       <div class="col-md-6">
         <label class="form-label">Durasi Token QR Gerbang (detik)</label>

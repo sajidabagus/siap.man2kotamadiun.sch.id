@@ -1,122 +1,111 @@
 <?php
-// /portal — beranda siswa: profil, kehadiran bulan ini, riwayat, perangkat
+// /portal — Home: sapaan, jam, tombol scan absen, status hari ini, ringkasan bulan ini
 require_once __DIR__ . '/../includes/device_binding.php';
 $akun = portal_wajib_login();
-$db = getDB();
 $sid = (int) $akun['siswa_id'];
 
 $info = (string) ($_SESSION['portal_info'] ?? '');
-unset($_SESSION['portal_info']);
+$galatFlash = (string) ($_SESSION['portal_galat'] ?? '');
+unset($_SESSION['portal_info'], $_SESSION['portal_galat']);
 
-// Rekap bulan berjalan
-$awalBulan = date('Y-m-01');
-$st = $db->prepare('SELECT status, COUNT(*) c FROM presensi WHERE siswa_id = :id AND tanggal >= :awal GROUP BY status');
-$st->execute([':id' => $sid, ':awal' => $awalBulan]);
-$rekap = ['HADIR' => 0, 'TERLAMBAT' => 0, 'IZIN' => 0, 'SAKIT' => 0, 'ALPA' => 0];
-foreach ($st->fetchAll() as $r) if (isset($rekap[$r['status']])) $rekap[$r['status']] = (int) $r['c'];
-
-// 10 presensi terakhir
-$st = $db->prepare('SELECT tanggal, jam_masuk, status, metode FROM presensi WHERE siswa_id = :id ORDER BY tanggal DESC, id DESC LIMIT 10');
-$st->execute([':id' => $sid]);
-$riwayat = $st->fetchAll();
-
+$hariIni = date('Y-m-d');
+$bulanIni = date('Y-m');
+$p = portal_presensi_hari($sid, $hariIni);
+$rekap = portal_rekap_bulan($sid, $bulanIni);
 $binding = get_device_binding($sid);
+$bindingAktif = !empty(get_settings()['device_binding_aktif']);
+$notifBaru = portal_notif_belum_dibaca($sid);
+$zona = portal_zona_label();
 
 $kata = preg_split('/\s+/', trim((string) $akun['nama']));
-$inisial = mb_strtoupper(mb_substr($kata[0] ?? '', 0, 1) . (isset($kata[1]) ? mb_substr($kata[1], 0, 1) : ''));
 $namaDepan = mb_convert_case(mb_strtolower($kata[0] ?? ''), MB_CASE_TITLE, 'UTF-8');
-$labelStatus = ['HADIR' => 'Hadir', 'TERLAMBAT' => 'Terlambat', 'IZIN' => 'Izin', 'SAKIT' => 'Sakit', 'ALPA' => 'Alpa'];
-$namaBulan = [1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'][(int) date('n')];
 
-// Pengajuan terakhir & notifikasi baru
-$st = $db->prepare('SELECT id, jenis, tanggal_mulai, tanggal_selesai, status FROM izin_pengajuan WHERE siswa_id = :id ORDER BY id DESC LIMIT 3');
-$st->execute([':id' => $sid]);
-$izinTerakhir = $st->fetchAll();
-$notifBaru = portal_notif_belum_dibaca($sid);
+// Status hari ini (hanya yang ada di data; tidak ada jam pulang)
+$kunciStatus = $p['status'] ?? 'BELUM';
+$ikonStatus = ['HADIR' => 'check-lg', 'TERLAMBAT' => 'clock-history', 'IZIN' => 'file-earmark-text-fill', 'SAKIT' => 'heart-pulse-fill', 'ALPA' => 'x-lg', 'BELUM' => 'hourglass-split'][$kunciStatus];
+$judulStatus = $p ? (PORTAL_LABEL_STATUS[$p['status']] ?? $p['status']) : 'Belum absen';
+if (!$p) {
+    $subStatus = 'Scan QR absen saat tiba di sekolah.';
+} elseif (in_array($p['status'], ['HADIR', 'TERLAMBAT'], true) && $p['metode'] !== 'PENGAJUAN' && substr((string) $p['jam_masuk'], 0, 5) !== '00:00') {
+    $subStatus = 'Masuk: ' . substr((string) $p['jam_masuk'], 0, 5) . ' ' . $zona;
+} else {
+    $subStatus = $p['metode'] === 'PENGAJUAN' ? 'Pengajuan disetujui' : 'Dicatat petugas';
+}
+$hadir = $rekap['HADIR'] + $rekap['TERLAMBAT'];
+$izin = $rekap['IZIN'] + $rekap['SAKIT'];
 
-portal_app_awal('Beranda', $akun, 'beranda');
+portal_app_awal('Home', $akun, 'beranda', ['tanpa_header' => true]);
+?>
+<header class="pt-hello">
+  <div>
+    <h1>Halo, <?= e($namaDepan) ?> 👋</h1>
+    <p><?= e(portal_tanggal_panjang($hariIni)) ?></p>
+  </div>
+  <a class="pt-lonceng" href="<?= e(portal_url('notifikasi')) ?>" aria-label="Notifikasi<?= $notifBaru > 0 ? ', ' . $notifBaru . ' baru' : '' ?>"><i class="bi bi-bell"></i><?php if ($notifBaru > 0): ?><b><?= $notifBaru > 9 ? '9+' : $notifBaru ?></b><?php endif; ?></a>
+</header>
+<?php
 if ($info !== '') portal_alert('ok', $info);
-if ($notifBaru > 0): ?>
-<a class="pt-banner" href="<?= e(portal_url('notifikasi')) ?>"><i class="bi bi-bell-fill"></i><span>Anda punya <?= $notifBaru ?> notifikasi baru tentang pengajuan Anda.</span></a>
+if ($galatFlash !== '') portal_alert('err', $galatFlash);
+?>
+
+<section class="pt-jam" aria-label="Jam sekarang">
+  <div>
+    <div class="lbl">Jam Sekarang</div>
+    <div class="waktu"><span id="jamTeks">--:--</span><small><?= e($zona) ?></small></div>
+    <div class="ket"><i class="bi bi-calendar-check"></i> <?= e(portal_tanggal_panjang($hariIni)) ?></div>
+  </div>
+  <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+    <circle cx="60" cy="60" r="58" fill="rgba(255,255,255,.28)"/>
+    <circle cx="60" cy="60" r="52" fill="#fff"/>
+    <?php for ($i = 0; $i < 12; $i++): $sudut = $i * 30; ?>
+      <line x1="60" y1="12" x2="60" y2="<?= $i % 3 === 0 ? 20 : 17 ?>" stroke="#9db3a6" stroke-width="<?= $i % 3 === 0 ? 2.6 : 1.6 ?>" stroke-linecap="round" transform="rotate(<?= $sudut ?> 60 60)"/>
+    <?php endfor; ?>
+    <line id="jmJam" x1="60" y1="60" x2="60" y2="38" stroke="#0b3a27" stroke-width="5" stroke-linecap="round"/>
+    <line id="jmMenit" x1="60" y1="60" x2="60" y2="23" stroke="#167a4a" stroke-width="3.4" stroke-linecap="round"/>
+    <circle cx="60" cy="60" r="4.2" fill="#0b3a27"/>
+  </svg>
+</section>
+
+<a class="pt-absen" href="<?= e(BASE_URL) ?>/presensi/"><i class="bi bi-qr-code-scan"></i> Scan QR Absen</a>
+
+<?php if ($bindingAktif && !$binding): ?>
+  <a class="pt-peringatan kuning" href="<?= e(portal_url('profil')) ?>#kartuPerangkat"><i class="bi bi-phone"></i><span>Perangkat presensi belum terdaftar, jadi absen dari HP ini belum bisa. Daftarkan sekarang.</span><i class="bi bi-chevron-right p"></i></a>
+<?php elseif ($bindingAktif && $binding && ($binding['status'] ?? '') === 'BLOCKED'): ?>
+  <div class="pt-peringatan merah"><i class="bi bi-slash-circle"></i><span>Perangkat presensi Anda diblokir. Hubungi petugas sekolah.</span></div>
 <?php endif; ?>
-<section class="pt-card">
-  <div class="pt-profil">
-    <?php if ($akun['foto'] && is_file(__DIR__ . '/../uploads/siswa/' . $akun['foto'])): ?>
-      <img class="pt-avatar" src="<?= e(BASE_URL . '/uploads/siswa/' . rawurlencode($akun['foto'])) ?>" alt="">
-    <?php else: ?>
-      <span class="pt-avatar"><?= e($inisial) ?></span>
-    <?php endif; ?>
-    <div>
-      <div class="m">Halo,</div>
-      <h2><?= e($namaDepan) ?> 👋</h2>
-      <div>
-        <span class="pt-chip">Kelas <?= e($akun['kelas']) ?></span>
-        <span class="pt-chip">NISN <?= e($akun['nisn']) ?></span>
-        <?php if ($akun['jurusan']): ?><span class="pt-chip"><?= e($akun['jurusan']) ?></span><?php endif; ?>
-      </div>
-    </div>
-  </div>
-</section>
 
-<section class="pt-card">
-  <h3>Kehadiran <?= e($namaBulan) ?></h3>
-  <div class="pt-stat">
-    <div class="h"><b><?= $rekap['HADIR'] ?></b><span>Hadir</span></div>
-    <div class="t"><b><?= $rekap['TERLAMBAT'] ?></b><span>Terlambat</span></div>
-    <div class="i"><b><?= $rekap['IZIN'] ?></b><span>Izin</span></div>
-    <div class="s"><b><?= $rekap['SAKIT'] ?></b><span>Sakit</span></div>
-    <div class="a"><b><?= $rekap['ALPA'] ?></b><span>Alpa</span></div>
-  </div>
-</section>
+<div class="pt-sec"><h2>Status Hari Ini</h2></div>
+<a class="pt-status pt-c-<?= e($kunciStatus) ?>" href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni])) ?>">
+  <span class="lingkar" style="background:var(--c)"><i class="bi bi-<?= e($ikonStatus) ?>"></i></span>
+  <span class="isi"><b style="color:var(--c)"><?= e($judulStatus) ?></b><span><?= e($subStatus) ?></span></span>
+  <i class="bi bi-chevron-right"></i>
+</a>
 
-<section class="pt-card">
-  <h3>Riwayat terakhir</h3>
-  <?php if ($riwayat): ?>
-  <ul class="pt-list">
-    <?php foreach ($riwayat as $r): ?>
-    <li>
-      <span><?= e(format_tanggal_indonesia($r['tanggal'])) ?><br><small><?= $r['metode'] === 'PENGAJUAN' ? 'Pengajuan disetujui' : 'Masuk ' . e(substr((string) $r['jam_masuk'], 0, 5)) ?></small></span>
-      <span class="pt-badge <?= e($r['status']) ?>"><?= e($labelStatus[$r['status']] ?? $r['status']) ?></span>
-    </li>
-    <?php endforeach; ?>
-  </ul>
-  <?php else: ?>
-    <p class="pt-kosong">Belum ada data presensi.</p>
-  <?php endif; ?>
-</section>
+<div class="pt-sec"><h2>Ringkasan Bulan Ini</h2><a href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni])) ?>">Lihat Semua</a></div>
+<div class="pt-ringkas">
+  <a class="h" href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni])) ?>"><b><?= $hadir ?></b><span>Hadir</span><?php if ($rekap['TERLAMBAT'] > 0): ?><small><?= $rekap['TERLAMBAT'] ?> terlambat</small><?php endif; ?><i class="bi bi-calendar-check"></i></a>
+  <a class="i" href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni])) ?>"><b><?= $izin ?></b><span>Izin / Sakit</span><i class="bi bi-file-earmark-text-fill"></i></a>
+  <a class="a" href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni, 'status' => 'ALPA'])) ?>"><b><?= $rekap['ALPA'] ?></b><span>Alpa</span><i class="bi bi-x-lg"></i></a>
+</div>
 
-<section class="pt-card">
-  <h3>Perangkat presensi</h3>
-  <?php if ($binding): ?>
-    <ul class="pt-list">
-      <li><span>Perangkat<br><small><?= e(trim(($binding['os'] ?: '-') . ' · ' . ($binding['browser'] ?: '-'))) ?></small></span>
-          <span class="pt-badge <?= $binding['status'] === 'BLOCKED' ? 'ALPA' : 'HADIR' ?>"><?= $binding['status'] === 'BLOCKED' ? 'Diblokir' : 'Terdaftar' ?></span></li>
-      <li><span>Terakhir dipakai</span><small><?= e($binding['last_used_at'] ?: '-') ?></small></li>
-    </ul>
-    <p class="pt-kosong" style="margin-top:8px">Ganti HP atau perangkat tidak terdaftar? Hubungi petugas sekolah.</p>
-  <?php else: ?>
-    <p class="pt-kosong">Belum ada perangkat terdaftar. Perangkat akan terdaftar saat Anda presensi pertama kali.</p>
-  <?php endif; ?>
-</section>
-
-<section class="pt-card">
-  <div class="pt-judul-halaman" style="margin-bottom:10px">
-    <h3 style="margin:0">Izin &amp; sakit</h3>
-    <a class="pt-btn kecil" href="<?= e(portal_url('izin/baru')) ?>"><i class="bi bi-plus-lg"></i> Ajukan</a>
-  </div>
-  <?php if ($izinTerakhir): ?>
-  <ul class="pt-list">
-    <?php foreach ($izinTerakhir as $z): ?>
-    <li>
-      <a href="<?= e(portal_url('izin/' . (int) $z['id'])) ?>" style="color:inherit;text-decoration:none">
-        <?= e(izin_teks_rentang($z['tanggal_mulai'], $z['tanggal_selesai'])) ?><br><small><?= e(izin_label_jenis($z['jenis'])) ?></small></a>
-      <span class="pt-st <?= e($z['status']) ?>"><?= e(IZIN_STATUS_LABEL[$z['status']] ?? $z['status']) ?></span>
-    </li>
-    <?php endforeach; ?>
-  </ul>
-  <p style="margin:8px 0 0"><a href="<?= e(portal_url('izin')) ?>" style="font-size:13px;font-weight:600">Lihat semua pengajuan &rarr;</a></p>
-  <?php else: ?>
-    <p class="pt-kosong">Tidak masuk sekolah? Ajukan izin atau sakit langsung dari sini.</p>
-  <?php endif; ?>
-</section>
+<script>
+(function () {
+  var teks = document.getElementById('jamTeks'), jam = document.getElementById('jmJam'), menit = document.getElementById('jmMenit');
+  if (!teks || !jam || !menit) return;
+  var tz = <?= json_encode(date_default_timezone_get()) ?>, selisih = <?= (int) time() * 1000 ?> - Date.now(), fmt = null;
+  try { fmt = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false }); } catch (e) {}
+  function waktu() {
+    var d = new Date(Date.now() + selisih), h = d.getHours(), m = d.getMinutes();
+    if (fmt) { fmt.formatToParts(d).forEach(function (x) { if (x.type === 'hour') h = parseInt(x.value, 10) % 24; if (x.type === 'minute') m = parseInt(x.value, 10); }); }
+    return [h, m];
+  }
+  function gambar() {
+    var t = waktu(), h = t[0], m = t[1];
+    teks.textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+    jam.setAttribute('transform', 'rotate(' + ((h % 12) * 30 + m * 0.5) + ' 60 60)');
+    menit.setAttribute('transform', 'rotate(' + (m * 6) + ' 60 60)');
+  }
+  gambar(); setInterval(gambar, 1000);
+})();
+</script>
 <?php portal_app_akhir();

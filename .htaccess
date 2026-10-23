@@ -1,6 +1,12 @@
 # Mencegah listing direktori
 Options -Indexes
 
+# Halaman "tidak ada" untuk SEMUA kesalahan alamat. 403 dari Apache (folder internal, berkas .sql/.md, berkas
+# tersembunyi, daftar folder) ikut menampilkan halaman yang sama supaya keberadaan folder/berkas internal tidak
+# terbaca dari tampilannya. (Penolakan izin buatan aplikasi tetap memakai 403.html sendiri.)
+ErrorDocument 404 /404.html
+ErrorDocument 403 /404.html
+
 # Lindungi file konfigurasi & folder internal dari akses langsung browser
 <FilesMatch "\.(sql|md)$">
   Require all denied
@@ -12,6 +18,10 @@ Options -Indexes
 # =====================================================================
 <IfModule mod_rewrite.c>
   RewriteEngine On
+
+  # 0) Berkas/folder tersembunyi (.user.ini, .git, .env, dll.) tidak boleh dibuka. .well-known dikecualikan
+  #    (dipakai verifikasi aplikasi Android).
+  RewriteRule "(^|/)\.(?!well-known(/|$))" - [F,L]
 
   # 1) Kalau ada yang mengakses URL yang MASIH mengandung .php secara
   #    langsung (misal dari bookmark lama), arahkan (redirect 301) ke

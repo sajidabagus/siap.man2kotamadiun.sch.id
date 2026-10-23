@@ -49,7 +49,7 @@ $extraParams = ['q' => $q, 'kelas' => $kelas, 'jurusan' => $jurusan, 'limit' => 
 </div>
 
 <?php
-$bolehUbah = can('siswa.ubah'); $bolehQr = can('qr_siswa.lihat'); $bolehDevice = can('device.lihat'); $bolehHapus = can('siswa.hapus'); $bolehKode = can('device.kelola');
+$bolehUbah = can('siswa.ubah'); $bolehQr = can('qr_siswa.lihat'); $bolehDevice = can('device.lihat'); $bolehHapus = can('siswa.hapus'); $bolehKode = can_modul('akun_siswa');
 $adaAksi = $bolehUbah || $bolehQr || $bolehDevice || $bolehKode || $bolehHapus;
 $warnaAvatar = ['#20b2a0', '#4a9be8', '#a855c8', '#f59f0b', '#e5484d', '#2fb344', '#1d6fd8', '#8b5cf6'];
 $adaFilter = ($q !== '' || $kelas !== '' || $jurusan !== '');
@@ -128,7 +128,7 @@ $sampai = $offset + count($daftarSiswa);
                 <li><a class="dropdown-item" href="<?= e(modul_url('device', ['siswa_id' => (int) $s['id']])) ?>"><i class="bi bi-phone me-2"></i>Perangkat</a></li>
                 <?php endif; ?>
                 <?php if ($bolehKode): ?>
-                <li><a class="dropdown-item" href="#" data-popup="<?= e(modul_url('kode_pasangan', ['siswa_id' => (int) $s['id']])) ?>" data-popup-title="Kode Pasangan — <?= e($s['nama']) ?>"><i class="bi bi-key me-2"></i>Kode Pasangan</a></li>
+                <li><a class="dropdown-item" href="<?= e(modul_url('akun_siswa', ['q' => $s['nisn'] ?: $s['nis']])) ?>"><i class="bi bi-key me-2"></i>Kode aktivasi &amp; akun</a></li>
                 <?php endif; ?>
                 <?php if ($bolehHapus): ?>
                 <li><hr class="dropdown-divider"></li>

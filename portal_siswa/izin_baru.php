@@ -28,9 +28,8 @@ $minTgl = date('Y-m-d', strtotime('-' . IZIN_MUNDUR_HARI . ' days'));
 $maxTgl = date('Y-m-d', strtotime('+' . IZIN_MAJU_HARI . ' days'));
 $f = fn(string $k) => isset($galat[$k]) ? '<div class="pt-err-f">' . e($galat[$k]) . '</div>' : '';
 
-portal_app_awal('Ajukan Izin / Sakit', $akun, 'izin');
+portal_app_awal('Ajukan Izin / Sakit', $akun, 'izin', ['kembali' => 'izin']);
 ?>
-<div class="pt-judul-halaman"><h2>Ajukan izin / sakit</h2><a class="pt-btn kecil garis" href="<?= e(portal_url('izin')) ?>">Batal</a></div>
 <section class="pt-card">
   <?php if (isset($galat['umum'])) portal_alert('err', $galat['umum']); ?>
   <div class="pt-aturan">

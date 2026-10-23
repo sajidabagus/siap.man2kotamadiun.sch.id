@@ -39,7 +39,7 @@ Presensi dari HP yang tidak terdaftar ditolak dan dicatat di Log Keamanan.
 - Master Kelas dan Kenaikan Kelas.
 - QR Siswa, QR Kelas, QR Gerbang (lihat, cetak, regenerate).
 - Presensi harian (ekspor & cetak), Rekap bulanan (cetak).
-- Manajemen Perangkat, Kode/QR Pasangan, Kode Pasangan Massal, Reset Massal.
+- Manajemen Perangkat dan Reset Massal. Kode untuk mendaftarkan perangkat kini satu dengan **kode aktivasi** di menu Akun Siswa.
 - **Akun Siswa**: menerbitkan kode aktivasi, reset, dan blokir akun portal siswa (lihat bagian 8b).
 - **Pengajuan Izin**: antrean persetujuan izin/sakit siswa untuk petugas piket (lihat bagian 8c).
 - Log Keamanan, Log Aktivitas, Log Cetak.
@@ -56,8 +56,8 @@ Presensi dari HP yang tidak terdaftar ditolak dan dicatat di Log Keamanan.
 ├── config/database.php
 ├── panel/               → halaman panel admin & operator
 ├── portal_siswa/        → halaman portal siswa (aktivasi, beranda, izin, notifikasi, password); hanya lewat router
-├── presensi/            → halaman publik siswa (scan, konfirmasi, daftar_hp, berhasil)
-├── api/                 → endpoint JSON: scan, presensi, pasangan, cek_perangkat, beranda
+├── presensi/            → halaman publik siswa (scan, konfirmasi, berhasil)
+├── api/                 → endpoint JSON: scan, presensi, cek_perangkat, beranda
 ├── includes/            → auth, functions, device_binding, presensi_core, qr_dinamis,
 │                          keamanan, xlsx_reader, header, footer
 ├── assets/              → css, js (device.js, app.js), vendor (bootstrap, qrcode, html5-qrcode)
@@ -131,7 +131,7 @@ Semua dilayani `index.php` (front controller) lewat aturan di `.htaccess`.
 | Riwayat absensi | `/absensi` · ekspor `/absensi/ekspor?type=csv` · cetak `/absensi/cetak` |
 | Rekap | `/rekap` · cetak `/rekap/cetak` |
 | Papan langsung | `/papan` |
-| Perangkat | `/perangkat` · kode pasangan `/perangkat/kode?siswa_id=…` · massal `/perangkat/kode-massal` |
+| Perangkat | `/perangkat` |
 | QR | `/qr/siswa` · `/qr/siswa/cetak` · `/qr/kelas` · `/qr/kelas/cetak` · `/qr/gerbang` |
 | Log | `/log/keamanan` · `/log/aktivitas` · `/log/cetak` |
 | Pengaturan | `/pengaturan` |
@@ -181,16 +181,19 @@ Semua dilayani `index.php` (front controller) lewat aturan di `.htaccess`.
 
 **Aturan**
 - 1 siswa = 1 perangkat (`UNIQUE(siswa_id)`), dan 1 perangkat = 1 siswa (`UNIQUE(device_hash)`).
-- Perangkat baru didaftarkan lewat salah satu cara (dibuat admin, sekali pakai):
-  1. **QR Pasangan** — siswa scan QR dari admin (`presensi/daftar_hp.php`).
-  2. **Kode Pasangan 6 angka** — diketik siswa saat konfirmasi presensi.
-- Berlaku 10 menit (pembuatan massal bisa tanpa batas waktu), terkunci setelah 5 kali salah.
-  Yang tersimpan di database hanya hash.
-- Pengaturan **"Wajib Kode Pasangan"**: bila aktif, perangkat baru tidak didaftarkan otomatis.
+- Perangkat baru didaftarkan lewat salah satu cara (**kode pasangan dan QR pasangan sudah dihapus**; satu kode untuk semuanya):
+  1. **Kode aktivasi akun portal** (menu *Akun Siswa*) — mendaftarkan akun *dan* perangkat dalam satu tindakan, lalu siswa
+     langsung masuk ke portal (lihat bagian 8b).
+  2. **Tombol "Daftarkan perangkat ini"** di portal siswa, dari dalam aplikasi SIAP (hanya bila pendaftaran tidak diwajibkan kode).
+  3. **Otomatis saat presensi pertama** (hanya bila pendaftaran tidak diwajibkan kode).
+- Kode aktivasi berlaku 7 hari, terkunci setelah 5 kali salah. Yang tersimpan di database hanya hash.
+- Perangkat hanya untuk **presensi**. Akun portal tidak terikat perangkat dan boleh dibuka di perangkat mana pun.
+- Pengaturan **"Wajib kode aktivasi dari petugas"**: bila aktif, perangkat baru tidak didaftarkan otomatis maupun lewat tombol di
+  portal; satu-satunya jalan adalah aktivasi dengan kode dari Akun Siswa. Ganti HP pada mode ini otomatis menerbitkan kode baru.
 - Admin dapat **memblokir**, **mengaktifkan kembali**, atau **mereset** perangkat
   (satu per satu atau massal per kelas/jenjang/pilihan). Reset individual dibatasi per bulan;
   reset massal tidak menghabiskan jatah tersebut.
-- Semua kejadian (match, mismatch, blokir, reset, pairing gagal, presensi sukses/ditolak)
+- Semua kejadian (match, mismatch, blokir, reset, pendaftaran gagal, presensi sukses/ditolak)
   tercatat di `security_logs`.
 
 **Migrasi dari versi lama**
@@ -221,6 +224,27 @@ Siswa **tidak mendaftar sendiri** dan
    (minimal 8 karakter, huruf + angka, tidak boleh sama dengan NISN/NIS atau password umum).
 4. Lupa password / akun diambil alih → admin menekan **Reset**: password lama dihapus, semua sesi berhenti,
    siswa aktivasi ulang dengan kode baru.
+
+**Aktivasi akun = daftar perangkat (satu langkah).** Saat siswa memasukkan kode aktivasi dan membuat password,
+perangkat yang dipakai ikut didaftarkan untuk presensi, dengan aturan berikut:
+- **Hanya dari dalam aplikasi SIAP** (User-Agent memuat `SIAPApp/`). Yang terdaftar adalah penyimpanan *aplikasi*; bila
+  siswa mengaktifkan lewat Chrome, yang terdaftar Chrome, lalu presensi di aplikasi dianggap "perangkat tidak dikenal".
+  Karena itu di browser biasa akun tetap dibuat tetapi perangkat **tidak** didaftarkan; siswa diberi petunjuk membuka
+  aplikasi, masuk, lalu menekan **Daftarkan perangkat ini** (kartu *Perangkat presensi* di beranda portal).
+- Kotak **"Jadikan HP ini perangkat presensi saya"** (tercentang di aplikasi) bisa dilepas bila itu bukan HP siswa sendiri.
+- Perangkat didaftarkan **dalam transaksi yang sama** dengan penetapan password dan hanya setelah kode terbukti benar dan
+  password lolos syarat. Kode salah atau password lemah tidak mendaftarkan apa pun; galat server membatalkan seluruhnya
+  sehingga kode belum terpakai.
+- **Tidak pernah menimpa** perangkat yang sudah ada (siswa lama tetap memakai perangkatnya) dan tetap satu perangkat untuk
+  satu siswa. Perangkat milik siswa lain / yang diblokir tidak didaftarkan; akun tetap aktif dan kejadiannya tercatat di
+  Log Keamanan tanpa menyebut nama siswa lain di layar.
+- Portal memeriksa kecocokan penyimpanan perangkat dan memberi peringatan bila siswa membuka dari Chrome padahal yang
+  terdaftar aplikasi. Bila petugas mewajibkan **kode aktivasi**, tombol pendaftaran mandiri di portal dimatikan.
+- **Ganti HP:** di Akun Siswa tekan **Ganti HP** (memakai kuota reset bulanan). Akun aktif (mode wajib kode mati): siswa
+  mendaftarkan HP baru dari portal tanpa kode. Akun menunggu aktivasi, atau mode wajib kode aktif: perangkat direset sekaligus
+  terbit kode aktivasi baru (password lama dihapus, siswa aktivasi ulang di aplikasi SIAP).
+- QR kartu siswa tetap hanya untuk presensi; sengaja **tidak** dijadikan syarat aktivasi karena berupa token tetap yang
+  mudah difoto atau dipinjam.
 
 **Pemisahan dari admin**
 - Sesi sendiri (cookie `SIAP_SISWA`, path `/portal`); cookie admin tidak dibaca portal dan sebaliknya.

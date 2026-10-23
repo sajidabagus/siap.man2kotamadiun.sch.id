@@ -3,8 +3,15 @@
  * HALAMAN DEPAN PUBLIK (tanpa login)
  * Ringkasan kehadiran hari ini (diagram lingkaran + persentase), histori absensi realtime,
  * tombol Scan Absen (mengecek apakah perangkat sudah terdaftar) dan pendaftaran perangkat
- * (kode pasangan atau scan QR pasangan). Dimuat oleh index.php bila belum login.
+ * (lewat aktivasi akun dengan kode dari petugas). Dimuat oleh index.php bila belum login.
  */
+// Berkas ini HANYA templat halaman depan yang dimuat index.php (alamat "/"). Alamat /beranda bukan halaman:
+// bila berkas ini dijalankan langsung (aturan .htaccess memetakan /beranda -> beranda.php), tampilkan 404.
+if (!defined('APP_ROUTER')) {
+    http_response_code(404);
+    readfile(__DIR__ . '/404.html');
+    exit;
+}
 $settings = get_settings();
 $namaSekolah = $settings['nama_sekolah'] ?? 'Sekolah';
 $logo = $settings['logo'] ?? '';
@@ -198,51 +205,19 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   </div>
 </div>
 
-<!-- Dialog: pendaftaran perangkat -->
+<!-- Dialog: pendaftaran perangkat (satu langkah lewat aktivasi akun) -->
 <div class="ov" id="mdDaftar" role="dialog" aria-modal="true" aria-labelledby="dfJudul">
   <div class="kotak">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
       <div><div class="eyebrow">PENDAFTARAN PERANGKAT</div><h3 id="dfJudul">Daftarkan Perangkat</h3></div>
       <button type="button" class="tutup-x" id="dfTutup" aria-label="Tutup"><i class="bi bi-x-lg"></i></button>
     </div>
-
-    <div id="dfForm">
-      <div class="tab" role="tablist">
-        <button type="button" id="tabKode" class="aktif"><i class="bi bi-123"></i> Pakai Kode</button>
-        <button type="button" id="tabQr"><i class="bi bi-qr-code"></i> Pakai QR</button>
-      </div>
-
-      <div id="paneKode">
-        <p class="d" style="margin:0 0 4px;color:#5b6580;font-size:.9rem">Minta admin membuat <strong>Kode Pasangan 6 angka</strong>. Berlaku 10 menit dan hanya bisa dipakai sekali.</p>
-        <label class="f" for="inNis">NIS / NISN</label>
-        <input class="in" id="inNis" inputmode="numeric" autocomplete="off" placeholder="Nomor induk siswa">
-        <label class="f" for="inKode">Kode Pasangan</label>
-        <input class="in kode" id="inKode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="••••••">
-        <div class="err" id="errKode"></div>
-        <button type="button" class="btn btn-primary" id="btnKirim" style="width:100%;margin-top:16px" disabled><i class="bi bi-phone"></i> Daftarkan Perangkat Ini</button>
-      </div>
-
-      <div id="paneQr" class="hide">
-        <p class="d" style="margin:0 0 12px;color:#5b6580;font-size:.9rem">Arahkan kamera ke <strong>QR Pasangan</strong> yang ditampilkan admin.</p>
-        <div id="qrBox"><div><i class="bi bi-camera" style="font-size:2rem"></i><div style="margin-top:6px">Kamera belum aktif</div></div></div>
-        <div class="err" id="errQr"></div>
-        <button type="button" class="btn btn-primary" id="btnKamera" style="width:100%;margin-top:14px"><i class="bi bi-camera-video"></i> Aktifkan Kamera</button>
-        <div class="info">Bisa juga memindai QR Pasangan dengan <strong>kamera bawaan perangkat</strong>, lalu ketuk <em>Daftarkan Perangkat Ini</em>.</div>
-      </div>
-    </div>
-
-    <div id="dfOk" class="tengah hide">
-      <div class="ik" style="color:var(--hijau)"><i class="bi bi-check-circle-fill"></i></div>
-      <h3>Perangkat Berhasil Didaftarkan</h3>
-      <p style="font-weight:800;margin-top:8px" id="okNama"></p>
-      <p style="color:var(--abu);font-size:.9rem" id="okKelas"></p>
-      <div class="info">Sekarang tekan <strong>Scan Absen</strong> untuk presensi. Gunakan <strong>browser yang sama</strong> dengan yang Anda pakai sekarang.</div>
-      <button type="button" class="btn btn-primary" id="dfSelesai" style="width:100%;margin-top:16px">Selesai</button>
-    </div>
+    <p class="d" style="margin:10px 0 4px;color:#5b6580;font-size:.92rem">Perangkat didaftarkan bersamaan dengan <strong>aktivasi akun</strong>. Minta <strong>kode aktivasi</strong> ke petugas sekolah, lalu masukkan di halaman aktivasi pada <strong>aplikasi SIAP</strong> (Android) atau <strong>Safari</strong> (iPhone). Cukup satu kali.</p>
+    <a class="btn btn-primary" href="<?= BASE_URL ?>/portal/aktivasi" style="width:100%;margin-top:14px;text-align:center"><i class="bi bi-key"></i> Aktivasi Akun &amp; Daftarkan Perangkat</a>
+    <div class="info">Sudah punya akun? Masuk ke portal dari aplikasi SIAP, lalu pilih <strong>Daftarkan perangkat ini</strong> (isi <strong>kode perangkat</strong> bila diminta petugas). Perangkat hanya dipakai untuk presensi; akun tetap bisa dibuka di perangkat lain.</div>
   </div>
 </div>
 
-<script src="<?= BASE_URL ?>/assets/js/vendor/html5-qrcode.min.js"></script>
 <script src="<?= BASE_URL ?>/assets/js/device.js"></script>
 <script>
 (function () {
@@ -407,87 +382,9 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   $('belumDaftar').addEventListener('click', function () { tutup('mdBelum'); bukaDaftar(); });
   $('btnDaftar').addEventListener('click', bukaDaftar);
 
-  /* ---------- pendaftaran perangkat ---------- */
-  var scanner = null;
-  function bukaDaftar() {
-    $('dfForm').classList.remove('hide'); $('dfOk').classList.add('hide');
-    pilihTab('kode'); buka('mdDaftar');
-    setTimeout(function () { $('inNis').focus(); }, 150);
-  }
-  function hentikanKamera() {
-    if (scanner) { var s = scanner; scanner = null; s.stop().then(function () { s.clear(); }).catch(function () {}); }
-    $('qrBox').innerHTML = '<div><i class="bi bi-camera" style="font-size:2rem"></i><div style="margin-top:6px">Kamera belum aktif</div></div>';
-    $('btnKamera').classList.remove('hide');
-  }
-  function tutupDaftar() { hentikanKamera(); tutup('mdDaftar'); }
-  $('dfTutup').addEventListener('click', tutupDaftar);
-  $('dfSelesai').addEventListener('click', function () { tutupDaftar(); cekPerangkat().then(function () { sudahAda = null; muat(); }); });
-
-  function pilihTab(t) {
-    var kode = t === 'kode';
-    $('tabKode').classList.toggle('aktif', kode); $('tabQr').classList.toggle('aktif', !kode);
-    $('paneKode').classList.toggle('hide', !kode); $('paneQr').classList.toggle('hide', kode);
-    if (kode) hentikanKamera();
-  }
-  $('tabKode').addEventListener('click', function () { pilihTab('kode'); });
-  $('tabQr').addEventListener('click', function () { pilihTab('qr'); });
-
-  function berhasil(res) {
-    hentikanKamera();
-    $('okNama').textContent = (res.data && res.data.nama) || '';
-    $('okKelas').textContent = (res.data && res.data.kelas) ? 'Kelas ' + res.data.kelas : '';
-    $('dfForm').classList.add('hide'); $('dfOk').classList.remove('hide');
-  }
-  function kirim(body, errEl, tombol, labelAwal) {
-    body.device_uuid = uuid;
-    errEl.classList.remove('tampil');
-    return fetch(BASE + '/api/pasangan.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      .then(function (r) { return r.json(); })
-      .then(function (res) {
-        if (res.success) { berhasil(res); return true; }
-        errEl.textContent = res.message || 'Gagal mendaftarkan perangkat.'; errEl.classList.add('tampil'); return false;
-      })
-      .catch(function () { errEl.textContent = 'Gagal terhubung ke server. Coba lagi.'; errEl.classList.add('tampil'); return false; });
-  }
-
-  // -- jalur kode --
-  var inNis = $('inNis'), inKode = $('inKode'), btnKirim = $('btnKirim');
-  function cekForm() { btnKirim.disabled = !(inNis.value.trim().length >= 4 && inKode.value.length === 6); $('errKode').classList.remove('tampil'); }
-  inNis.addEventListener('input', cekForm);
-  inKode.addEventListener('input', function () { this.value = this.value.replace(/\D/g, '').slice(0, 6); cekForm(); });
-  btnKirim.addEventListener('click', function () {
-    var label = btnKirim.innerHTML;
-    btnKirim.disabled = true; btnKirim.textContent = 'Memeriksa…';
-    kirim({ nis: inNis.value.trim(), kode: inKode.value }, $('errKode')).then(function (ok) {
-      if (!ok) { btnKirim.innerHTML = label; cekForm(); }
-    });
-  });
-
-  // -- jalur QR (kamera di halaman ini) --
-  function ambilToken(teks) {
-    var m = String(teks).match(/[?&]t=([0-9a-f]{32})/i) || String(teks).match(/\b([0-9a-f]{32})\b/i);
-    return m ? m[1].toLowerCase() : null;
-  }
-  $('btnKamera').addEventListener('click', function () {
-    var err = $('errQr'); err.classList.remove('tampil');
-    if (typeof Html5Qrcode === 'undefined') { err.textContent = 'Pemindai QR tidak tersedia. Gunakan kamera bawaan perangkat atau kode.'; err.classList.add('tampil'); return; }
-    $('qrBox').innerHTML = '';
-    $('btnKamera').classList.add('hide');
-    scanner = new Html5Qrcode('qrBox');
-    var selesai = false;
-    scanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: 220, height: 220 } }, function (teks) {
-      if (selesai) return;
-      var token = ambilToken(teks);
-      if (!token) { err.textContent = 'QR ini bukan QR Pasangan. Gunakan QR dari admin.'; err.classList.add('tampil'); return; }
-      selesai = true;
-      kirim({ token: token }, err).then(function (ok) { if (!ok) { selesai = false; hentikanKamera(); } });
-    }, function () {}).catch(function () {
-      scanner = null;
-      $('qrBox').innerHTML = '<div><i class="bi bi-camera-video-off" style="font-size:2rem"></i><div style="margin-top:6px">Kamera tidak dapat diakses</div></div>';
-      $('btnKamera').classList.remove('hide');
-      err.textContent = 'Izinkan akses kamera pada browser, atau pakai kode / kamera bawaan perangkat.'; err.classList.add('tampil');
-    });
-  });
+  /* ---------- pendaftaran perangkat: arahkan ke aktivasi akun ---------- */
+  function bukaDaftar() { buka('mdDaftar'); }
+  $('dfTutup').addEventListener('click', function () { tutup('mdDaftar'); });
 })();
 </script>
 </body>

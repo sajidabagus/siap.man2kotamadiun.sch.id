@@ -24,11 +24,10 @@ $q = getDB()->prepare('SELECT hasil, COUNT(*) c FROM izin_hari WHERE pengajuan_i
 $q->execute([':p' => $izinId]);
 foreach ($q->fetchAll() as $x) $ringkas[$x['hasil']] = (int) $x['c'];
 
-portal_app_awal('Detail Pengajuan', $akun, 'izin');
+portal_app_awal('Detail Pengajuan', $akun, 'izin', ['kembali' => 'izin']);
 if ($info !== '') portal_alert('ok', $info);
 if ($galat !== '') portal_alert('err', $galat);
 ?>
-<div class="pt-judul-halaman"><h2>Detail pengajuan</h2><a class="pt-btn kecil garis" href="<?= e(portal_url('izin')) ?>">&laquo; Kembali</a></div>
 <section class="pt-card">
   <dl class="pt-dl">
     <dt>Status</dt><dd><span class="pt-st <?= e($row['status']) ?>"><?= e(IZIN_STATUS_LABEL[$row['status']] ?? $row['status']) ?></span></dd>

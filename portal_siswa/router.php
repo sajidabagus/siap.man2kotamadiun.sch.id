@@ -9,12 +9,17 @@
  *   /portal/notifikasi      notifikasi status pengajuan
  *   /portal/password   ganti password
  *   /portal/keluar     keluar (POST)
+ *   /portal/riwayat    riwayat absensi per bulan  ·  /portal/profil  profil, perangkat, akun
+ *   /portal/gerbang    (tanpa sesi) mencoba masuk otomatis lewat perangkat terdaftar  ·  /portal/masuk-perangkat  (POST)
+ *   /portal/verifikasi minta password sebelum aksi sensitif pada sesi masuk-otomatis
  * Sesi portal TERPISAH dari sesi admin (lihat includes/portal.php).
  */
 require_once __DIR__ . '/../includes/izin.php';
 require_once __DIR__ . '/_layout.php';
 
 $sub = trim(substr((string) ($pathPortal ?? 'portal'), strlen('portal')), '/');
+
+$GLOBALS['PORTAL_SUB'] = $sub;   // dipakai portal_wajib_login() (penegakan ganti password sementara)
 
 // Halaman masuk hanya SATU (/login.php untuk petugas dan siswa); alamat lama tetap hidup.
 if ($sub === 'masuk') { header('Location: ' . portal_login_url(), true, 301); exit; }
@@ -32,7 +37,9 @@ if (!portal_aktif()) {
 }
 
 $halaman = ['' => 'beranda', 'aktivasi' => 'aktivasi', 'password' => 'password', 'keluar' => 'keluar',
-            'izin' => 'izin', 'izin/baru' => 'izin_baru', 'notifikasi' => 'notifikasi'];
+            'izin' => 'izin', 'izin/baru' => 'izin_baru', 'notifikasi' => 'notifikasi', 'perangkat' => 'perangkat',
+            'riwayat' => 'riwayat', 'profil' => 'profil', 'gerbang' => 'gerbang', 'masuk-perangkat' => 'masuk_perangkat',
+            'verifikasi' => 'verifikasi'];
 $izinId = 0;
 if (preg_match('#^izin/(\d{1,10})(?:/(lampiran))?$#', $sub, $m)) {
     $izinId = (int) $m[1];

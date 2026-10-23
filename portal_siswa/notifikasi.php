@@ -5,9 +5,8 @@ $sid = (int) $akun['siswa_id'];
 $daftar = portal_notif_daftar($sid, 50);    // diambil SEBELUM ditandai dibaca, agar yang baru tetap tersorot
 portal_notif_tandai_dibaca($sid);
 
-portal_app_awal('Notifikasi', $akun, 'notifikasi');
+portal_app_awal('Notifikasi', $akun, 'beranda', ['kembali' => '']);
 ?>
-<div class="pt-judul-halaman"><h2>Notifikasi</h2></div>
 <?php if ($daftar): ?>
 <div class="pt-grid">
   <?php foreach ($daftar as $n):

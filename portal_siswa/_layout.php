@@ -76,42 +76,46 @@ function portal_halaman_pesan(int $kode, string $judul, string $pesan): void
     exit;
 }
 
-/** Halaman setelah masuk: bilah atas, navigasi, dan tombol keluar (POST + CSRF). $aktif: beranda|izin|notifikasi|akun */
-function portal_app_awal(string $judul, array $akun, string $aktif = 'beranda'): void
+/**
+ * Halaman setelah masuk: bilah judul + isi + menu bawah (Home, Riwayat, [Scan], Izin, Profil).
+ * $aktif: beranda|riwayat|izin|profil. $opsi: 'kembali' => sub-halaman portal untuk tombol panah kembali (tanpa = tidak ada),
+ * 'judul' => judul bilah (bawaan: $judul), 'aksi' => HTML tombol di kanan bilah (dari halaman sendiri, bukan input pengguna),
+ * 'tanpa_header' => true untuk Home (membuat sapaannya sendiri).
+ */
+function portal_app_awal(string $judul, array $akun, string $aktif = 'beranda', array $opsi = []): void
 {
-    $s = get_settings();
-    $logo = portal_logo_url();
-    $baru = portal_notif_belum_dibaca((int) $akun['siswa_id']);
-    $menu = ['beranda' => ['', 'Beranda'], 'izin' => ['izin', 'Izin / Sakit'], 'notifikasi' => ['notifikasi', 'Notifikasi'], 'akun' => ['password', 'Akun']];
+    $GLOBALS['PORTAL_AKTIF'] = $aktif;
+    $GLOBALS['PORTAL_NOTIF'] = portal_notif_belum_dibaca((int) $akun['siswa_id']);
     portal_head($judul);
     ?>
-<body class="pt-body pt-app">
-<header class="pt-top">
-  <div class="pt-top-in">
-    <div class="pt-mini"><?php if ($logo): ?><img src="<?= e($logo) ?>" alt=""><?php else: ?><i class="bi bi-person-badge"></i><?php endif; ?></div>
-    <div>
-      <div class="t1">Portal Siswa</div>
-      <div class="t2"><?= e($s['nama_sekolah'] ?? '') ?></div>
-    </div>
-    <form method="post" action="<?= e(portal_url('keluar')) ?>">
-      <?= csrf_field() ?>
-      <button class="pt-keluar" type="submit"><i class="bi bi-box-arrow-right"></i> Keluar</button>
-    </form>
-  </div>
-  <nav class="pt-nav" aria-label="Menu portal">
-    <?php foreach ($menu as $k => [$sub, $label]): ?>
-      <a href="<?= e(portal_url($sub)) ?>" class="<?= $aktif === $k ? 'on' : '' ?>"<?= $aktif === $k ? ' aria-current="page"' : '' ?>><?= e($label) ?><?php if ($k === 'notifikasi' && $baru > 0): ?><span class="pt-dot" aria-label="<?= $baru ?> belum dibaca"><?= $baru > 99 ? '99+' : $baru ?></span><?php endif; ?></a>
-    <?php endforeach; ?>
-  </nav>
+<body class="pt-body pt-app pt-v2">
+<?php if (empty($opsi['tanpa_header'])): ?>
+<header class="pt-bar">
+  <?php if (isset($opsi['kembali'])): ?>
+    <a class="pt-bar-btn" href="<?= e(portal_url((string) $opsi['kembali'])) ?>" aria-label="Kembali"><i class="bi bi-arrow-left"></i></a>
+  <?php else: ?><span class="pt-bar-btn kosong" aria-hidden="true"></span><?php endif; ?>
+  <h1><?= e((string) ($opsi['judul'] ?? $judul)) ?></h1>
+  <div class="pt-bar-aksi"><?= $opsi['aksi'] ?? '' ?></div>
 </header>
-<main class="pt-wrap">
+<?php endif; ?>
+<main class="pt-wrap pt-main">
 <?php
 }
 
 function portal_app_akhir(): void
 {
+    $aktif = (string) ($GLOBALS['PORTAL_AKTIF'] ?? '');
+    $baru = (int) ($GLOBALS['PORTAL_NOTIF'] ?? 0);
+    $on = fn(string $k): string => $aktif === $k ? ' class="on" aria-current="page"' : '';
     ?>
 </main>
+<nav class="pt-tab" aria-label="Menu utama">
+  <a href="<?= e(portal_url()) ?>"<?= $on('beranda') ?>><i class="bi bi-house-door-fill"></i><span>Home</span></a>
+  <a href="<?= e(portal_url('riwayat')) ?>"<?= $on('riwayat') ?>><i class="bi bi-journal-text"></i><span>Riwayat</span></a>
+  <a class="pt-scan" href="<?= e(BASE_URL) ?>/presensi/" aria-label="Scan QR untuk absen"><i class="bi bi-qr-code-scan"></i></a>
+  <a href="<?= e(portal_url('izin')) ?>"<?= $on('izin') ?>><i class="bi bi-file-earmark-text-fill"></i><span>Izin</span><?php if ($baru > 0): ?><b class="pt-dot-tab" aria-label="<?= $baru ?> notifikasi baru"><?= $baru > 9 ? '9+' : $baru ?></b><?php endif; ?></a>
+  <a href="<?= e(portal_url('profil')) ?>"<?= $on('profil') ?>><i class="bi bi-person-circle"></i><span>Profil</span></a>
+</nav>
 <script src="<?= BASE_URL ?>/assets/js/portal.js"></script>
 </body>
 </html>

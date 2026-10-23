@@ -27,7 +27,6 @@ $menuGroups = [
     'qr_kelas.php'       => ['qr_kelas.php'],
     'presensi.php'       => ['presensi.php', 'presensi_export.php'],
     'papan.php'          => ['papan.php'],
-    'kode_massal.php'    => ['kode_massal.php'],
     'rekap.php'          => ['rekap.php'],
     'device.php'         => ['device.php'],
     'security_log.php'   => ['security_log.php'],
@@ -97,11 +96,10 @@ function is_menu_active(string $menuKey, array $groups, string $current): bool
     </ul>
     <?php endif; ?>
 
-<?php if (can_any_modul(['device', 'kode_massal', 'security_log', 'log_aktivitas', 'pengguna', 'hak_akses', 'pengaturan'])): ?>
+<?php if (can_any_modul(['device', 'security_log', 'log_aktivitas', 'pengguna', 'hak_akses', 'pengaturan'])): ?>
     <div class="sidebar-section-title">Sistem &amp; Keamanan</div>
     <ul class="nav flex-column">
       <?php if (can_modul('device')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('device.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('device') ?>"><i class="bi bi-phone"></i> Manajemen Perangkat</a></li><?php endif; ?>
-      <?php if (can_modul('kode_massal')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('kode_massal.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('kode_massal') ?>"><i class="bi bi-key"></i> Kode Pasangan</a></li><?php endif; ?>
       <?php if (can_modul('security_log')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('security_log.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('security_log') ?>"><i class="bi bi-shield-exclamation"></i> Log Keamanan</a></li><?php endif; ?>
       <?php if (can_modul('log_aktivitas')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('log_aktivitas.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('log_aktivitas') ?>"><i class="bi bi-clock-history"></i> Log Aktivitas</a></li><?php endif; ?>
       <?php if (can_modul('pengguna')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('pengguna.php', $menuGroups, $current)?'active':'' ?>" href="<?= modul_url('pengguna') ?>"><i class="bi bi-person-badge"></i> Pengguna</a></li><?php endif; ?>
@@ -127,7 +125,7 @@ $labelCrumb = [
   'presensi' => 'Data Presensi', 'rekap' => 'Rekap Bulanan', 'device' => 'Manajemen Perangkat',
   'security_log' => 'Log Keamanan', 'log_aktivitas' => 'Log Aktivitas', 'pengaturan' => 'Pengaturan', 'profil' => 'Profil Akun',
   'pengguna' => 'Pengguna', 'hak_akses' => 'Hak Akses',
-  'papan' => 'Papan Kehadiran', 'kode_massal' => 'Kode Pasangan',
+  'papan' => 'Papan Kehadiran',
 ];
 $grupHalaman = [
   'dashboard' => 'Ringkasan',
@@ -138,7 +136,7 @@ $grupHalaman = [
   'device' => 'Sistem & Keamanan', 'security_log' => 'Sistem & Keamanan', 'log_aktivitas' => 'Sistem & Keamanan',
   'pengaturan' => 'Sistem & Keamanan', 'profil' => 'Akun',
   'pengguna' => 'Sistem & Keamanan', 'hak_akses' => 'Sistem & Keamanan',
-  'papan' => 'Presensi', 'kode_massal' => 'Sistem & Keamanan',
+  'papan' => 'Presensi',
 ];
 $modulAktif = defined('MODUL_FILE') ? basename(MODUL_FILE, '.php') : '';
 $namaAdminHdr = trim((string) ($admin['nama'] ?? ''));

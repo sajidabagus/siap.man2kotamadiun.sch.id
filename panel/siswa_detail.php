@@ -106,7 +106,7 @@ $ttl = trim(($siswa['tempat_lahir'] ?: '') . ($siswa['tanggal_lahir'] ? ($siswa[
             <dt class="col-sm-5 text-muted fw-normal">Terakhir dipakai</dt><dd class="col-sm-7"><?= e($binding['last_used_at'] ?: '-') ?></dd>
           </dl>
         <?php else: ?>
-          <p class="text-muted small mb-0">Belum ada perangkat terdaftar. Perangkat akan terdaftar saat siswa melakukan presensi pertama atau memakai Kode Pasangan.</p>
+          <p class="text-muted small mb-0">Belum ada perangkat terdaftar. Perangkat terdaftar saat siswa mengaktifkan akun di aplikasi SIAP dengan kode aktivasi, atau saat presensi pertama bila pendaftaran otomatis diizinkan.</p>
         <?php endif; ?>
       </div>
     </div>

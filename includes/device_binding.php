@@ -28,6 +28,10 @@ const DEVICE_HASH_VERSI = 'v2';
  * Self-healing: baris binding lama (skema v1 = UUID + User-Agent) otomatis
  * dimigrasikan ke hash v2 lewat kolom device_uuid, sekali per UUID per
  * request, sehingga perangkat yang sudah terdaftar tidak perlu daftar ulang.
+ *
+ * KEAMANAN: UUID itu kini juga kunci masuk otomatis portal. Karena itu kolom device_uuid tidak lagi diisi untuk
+ * pendaftaran baru dan dikosongkan untuk baris lama begitu UUID-nya dikenali (juga saat portal_bersihkan_uuid_lama()
+ * berjalan), supaya bocornya database tidak membocorkan kunci masuk siapa pun.
  */
 function build_device_hash(string $installUuid): string
 {
@@ -50,10 +54,10 @@ function sinkronkan_hash_perangkat(string $installUuid, string $hashBaru): void
         $stmt = getDB()->prepare(
             // Nama parameter TIDAK boleh dipakai dua kali: koneksi memakai prepared statement asli
             // (ATTR_EMULATE_PREPARES=false), sehingga :baru ganda menimbulkan SQLSTATE[HY093].
-            'UPDATE device_bindings SET device_hash = :baru
-             WHERE device_uuid = :uuid AND device_hash <> :baru_cek'
+            'UPDATE device_bindings SET device_hash = :baru, device_uuid = NULL
+             WHERE device_uuid = :uuid'
         );
-        $stmt->execute([':baru' => $hashBaru, ':uuid' => $installUuid, ':baru_cek' => $hashBaru]);
+        $stmt->execute([':baru' => $hashBaru, ':uuid' => $installUuid]);
     } catch (PDOException $e) {
         // Bentrok UNIQUE (sangat jarang) -> abaikan; jangan sampai memblokir presensi.
         error_log('sinkronkan_hash_perangkat: ' . $e->getMessage());
@@ -132,11 +136,12 @@ function check_or_register_device(int $siswaId, string $installUuid): array
             ];
         }
 
-        // Mode "Wajib Kode Pasangan": Perangkat baru TIDAK didaftarkan otomatis; harus lewat kode dari admin.
+        // Mode "Wajib Kode dari Petugas": perangkat baru TIDAK didaftarkan otomatis saat presensi;
+        // harus lewat aktivasi akun dengan kode dari menu Akun Siswa.
         if (!empty($settings['device_wajib_kode'])) {
             return [
                 'allowed' => false, 'code' => 'PAIRING_REQUIRED',
-                'message' => 'Perangkat ini belum didaftarkan. Minta Kode Pasangan 6 angka ke admin, lalu daftarkan perangkat ini.',
+                'message' => 'Perangkat ini belum didaftarkan. Minta kode perangkat ke petugas sekolah, lalu buka aplikasi SIAP, masuk ke portal, dan daftarkan perangkat ini dengan kode tersebut.',
             ];
         }
 
@@ -149,7 +154,7 @@ function check_or_register_device(int $siswaId, string $installUuid): array
             );
             $stmt->execute([
                 ':sid'     => $siswaId,
-                ':uuid'    => $installUuid,
+                ':uuid'    => null,          // UUID mentah tidak disimpan: yang tersimpan hanya hash (lihat catatan keamanan)
                 ':hash'    => $deviceHash,
                 ':name'    => $ua['os'] . ' - ' . $ua['browser'],
                 ':browser' => $ua['browser'],
@@ -174,6 +179,7 @@ function check_or_register_device(int $siswaId, string $installUuid): array
         }
 
         security_log($siswaId, 'DEVICE_REGISTERED', $deviceHash, 'Perangkat baru didaftarkan sebagai perangkat utama.');
+        device_cookie_pertahankan($installUuid);
         return ['allowed' => true, 'code' => 'REGISTERED_NEW', 'message' => 'Perangkat berhasil didaftarkan.'];
     }
 
@@ -190,6 +196,7 @@ function check_or_register_device(int $siswaId, string $installUuid): array
         );
         $upd->execute([':ip' => $ip, ':id' => $binding['id']]);
         security_log($siswaId, 'DEVICE_MATCH', $deviceHash);
+        device_cookie_pertahankan($installUuid);
         return ['allowed' => true, 'code' => 'MATCH', 'message' => 'Perangkat sesuai.'];
     }
 
@@ -216,7 +223,7 @@ function reset_device(int $siswaId, int $adminId, string $reason): array
     $count = $db->prepare(
         'SELECT COUNT(*) AS c FROM device_reset_logs
          WHERE siswa_id = :sid AND created_at >= :awal_bulan
-           AND (reason IS NULL OR reason NOT LIKE \'[MASSAL]%\')'
+           AND (reason IS NULL OR (reason NOT LIKE \'[MASSAL]%\' AND reason NOT LIKE \'[RESET AKUN]%\'))'
     );
     $count->execute([':sid' => $siswaId, ':awal_bulan' => date('Y-m-01 00:00:00')]);
     $used = (int) $count->fetch()['c'];
@@ -361,232 +368,200 @@ function set_device_status(int $siswaId, string $status): bool
     return $ok;
 }
 
-// =====================================================================
-// PASANGAN PERANGKAT: dua cara mendaftarkan perangkat, keduanya dari admin
-//   1. QR Pasangan  -> siswa scan QR dengan kamera perangkat (token panjang acak di dalam URL)
-//   2. Kode 6 angka -> siswa mengetik kode saat konfirmasi presensi
-// Satu pembuatan menghasilkan KEDUANYA; salah satu yang dipakai membuat yang lain hangus.
-// Berlaku KODE_PASANGAN_MENIT menit, sekali pakai. Kode terkunci setelah
-// KODE_PASANGAN_MAKS_SALAH kali salah. Yang disimpan hanya hash.
-// =====================================================================
-const KODE_PASANGAN_MENIT = 10;
-const KODE_PASANGAN_MAKS_SALAH = 5;
+// ---------------------------------------------------------------------
+// PENDAFTARAN PERANGKAT UNTUK SISWA YANG SUDAH TERBUKTI IDENTITASNYA
+// (kode aktivasi akun portal, atau login portal). Lihat portal_siswa/aktivasi.php & perangkat.php.
+// ---------------------------------------------------------------------
 
-function siapkan_tabel_kode_pasangan(): void
+/** True bila permintaan datang dari aplikasi SIAP (WebView), yang menandai dirinya "SIAPApp/x.y" di User-Agent. */
+function request_dari_aplikasi_siap(): bool
 {
-    static $sudah = false;
-    if ($sudah) return;
-    $sudah = true;
-    $db = getDB();
-    $db->exec("CREATE TABLE IF NOT EXISTS device_pairing_codes (
-        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        siswa_id INT UNSIGNED NOT NULL,
-        code_hash CHAR(64) NOT NULL,
-        token_hash CHAR(64) DEFAULT NULL,
-        expires_at DATETIME NOT NULL,
-        used_at DATETIME DEFAULT NULL,
-        percobaan TINYINT UNSIGNED NOT NULL DEFAULT 0,
-        created_by INT UNSIGNED DEFAULT NULL,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        INDEX idx_pair_siswa (siswa_id, used_at, expires_at),
-        INDEX idx_pair_token (token_hash)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-    // Tabel versi lama (hanya kode 6 angka) belum punya kolom token_hash
-    if (!$db->query("SHOW COLUMNS FROM device_pairing_codes LIKE 'token_hash'")->fetch()) {
-        $db->exec("ALTER TABLE device_pairing_codes ADD COLUMN token_hash CHAR(64) DEFAULT NULL AFTER code_hash, ADD INDEX idx_pair_token (token_hash)");
+    return stripos((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 'SIAPApp/') !== false;
+}
+
+/**
+ * Browser SUNGGUHAN di iPhone/iPad: Safari ("Version/x ... Safari/") atau Chrome/Firefox/Edge/Opera iOS
+ * (CriOS/FxiOS/EdgiOS/OPiOS). Semuanya memakai mesin WebKit milik Apple. WebView di dalam aplikasi lain
+ * (Instagram, Facebook, WhatsApp, TikTok, dsb.) TIDAK dihitung karena penyimpanannya terpisah dan hilang
+ * bersama aplikasinya.
+ * Catatan: iPad modern mengirim User-Agent "Macintosh" (mode situs desktop) sehingga tidak terbaca di sini.
+ * Ini pembeda kenyamanan (di mana identitas perangkat boleh dibuat), BUKAN batas keamanan: User-Agent bisa
+ * dipalsukan; keamanan tetap pada pengikatan perangkat di server.
+ */
+function request_dari_ios_browser(): bool
+{
+    $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
+    if (!preg_match('/\b(iPhone|iPad|iPod)\b/', $ua)) return false;
+    if (preg_match('/\b(FBAN|FBAV|FB_IAB|Instagram|Line\/|MicroMessenger|Snapchat|TikTok|musical_ly|BytedanceWebview|GSA\/|Twitter|LinkedInApp|Telegram|WhatsApp)/i', $ua)) return false;
+    return (bool) preg_match('/\bSafari\/\d/', $ua) || (bool) preg_match('/\b(CriOS|FxiOS|EdgiOS|OPiOS)\//', $ua);
+}
+
+/** Perangkat apple (iPhone/iPad) apa pun, termasuk WebView aplikasi lain. Hanya untuk memilih teks petunjuk. */
+function request_dari_perangkat_apple(): bool
+{
+    return (bool) preg_match('/\b(iPhone|iPad|iPod)\b/', (string) ($_SERVER['HTTP_USER_AGENT'] ?? ''));
+}
+
+/** Boleh mendaftarkan perangkat dari sini? Aplikasi SIAP (Android) ATAU browser iPhone/iPad. */
+function request_boleh_daftar_perangkat(): bool
+{
+    return request_dari_aplikasi_siap() || request_dari_ios_browser();
+}
+
+/** Nama browser untuk teks petunjuk (Safari/Chrome/Firefox/Edge/Opera). */
+function nama_browser_sekarang(): string
+{
+    $b = parse_user_agent((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''))['browser'] ?? '';
+    return ($b === '' || $b === 'Unknown') ? 'browser ini' : $b;
+}
+
+/**
+ * Safari di iPhone menghapus localStorage dan cookie buatan JavaScript setelah 7 hari pemakaian tanpa interaksi
+ * dengan situs (ITP, berlaku juga di Chrome/Firefox iOS karena sama-sama WebKit). Cookie yang dipasang SERVER lewat
+ * header HTTP mengikuti masa berlakunya sendiri, sehingga dipakai sebagai cadangan identitas perangkat: bila
+ * localStorage dihapus Safari, device.js memulihkan UUID dari cookie ini. Nama cookie sama dengan milik device.js.
+ * Hanya dipanggil untuk UUID perangkat yang sah (baru terdaftar / cocok dengan pengikatan di server).
+ */
+function device_cookie_pertahankan(string $uuid): void
+{
+    if (!request_dari_ios_browser() || !is_valid_install_uuid($uuid) || headers_sent()) return;
+    setcookie('presensi_device_uuid', $uuid, [
+        'expires'  => time() + 34560000,                 // 400 hari
+        'path'     => '/',
+        'secure'   => function_exists('https_aktif') ? https_aktif() : false,
+        'httponly' => false,                              // device.js perlu membacanya untuk memulihkan localStorage
+        'samesite' => 'Lax',
+    ]);
+}
+
+/**
+ * Daftarkan perangkat untuk siswa yang identitasnya SUDAH terbukti. TIDAK pernah menimpa perangkat
+ * yang sudah ada (ganti HP tetap lewat reset oleh petugas) dan menghormati aturan satu perangkat
+ * untuk satu siswa. Aman dipanggil di dalam transaksi pemanggil.
+ *
+ * @return array{status:string}  terdaftar | sudah_sama | sudah_ada_lain | dipakai_siswa_lain |
+ *                               diblokir | uuid_tidak_valid | binding_nonaktif
+ */
+function daftarkan_perangkat_terverifikasi(int $siswaId, string $installUuid, string $via): array
+{
+    if (empty(get_settings()['device_binding_aktif'])) return ['status' => 'binding_nonaktif'];
+    if (!is_valid_install_uuid($installUuid)) return ['status' => 'uuid_tidak_valid'];
+
+    $hash = build_device_hash($installUuid);
+    $cekAda = function () use ($siswaId, $hash): ?string {
+        $b = get_device_binding($siswaId);
+        if (!$b) return null;
+        if ($b['status'] === 'BLOCKED') return 'diblokir';
+        return hash_equals((string) $b['device_hash'], $hash) ? 'sudah_sama' : 'sudah_ada_lain';
+    };
+
+    if (($s = $cekAda()) !== null) {
+        if ($s === 'sudah_sama') device_cookie_pertahankan($installUuid);
+        return ['status' => $s];
     }
-}
 
-function hash_kode_pasangan(int $siswaId, string $kode): string
-{
-    return hash('sha256', $siswaId . '|' . $kode . '|pasangan');
-}
-
-function hash_token_pasangan(string $token): string
-{
-    return hash('sha256', 'token|' . $token);
-}
-
-/** Alamat yang dikodekan ke dalam QR Pasangan. */
-function url_pasangan(string $token): string
-{
-    return BASE_URL . '/presensi/daftar_hp.php?t=' . $token;
-}
-
-/** Admin membuat pasangan baru (kode + token QR); yang lama belum terpakai dibatalkan. */
-function buat_kode_pasangan(int $siswaId, int $adminId): array
-{
-    siapkan_tabel_kode_pasangan();
-    $db = getDB();
-    $db->prepare('UPDATE device_pairing_codes SET used_at = NOW() WHERE siswa_id = :s AND used_at IS NULL')->execute([':s' => $siswaId]);
-
-    $kode = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-    $token = bin2hex(random_bytes(16));
-    $db->prepare(
-        'INSERT INTO device_pairing_codes (siswa_id, code_hash, token_hash, expires_at, created_by)
-         VALUES (:s, :h, :t, DATE_ADD(NOW(), INTERVAL ' . (int) KODE_PASANGAN_MENIT . ' MINUTE), :a)'
-    )->execute([':s' => $siswaId, ':h' => hash_kode_pasangan($siswaId, $kode), ':t' => hash_token_pasangan($token), ':a' => $adminId ?: null]);
-
-    $st = $db->prepare('SELECT expires_at FROM device_pairing_codes WHERE id = :id');
-    $st->execute([':id' => $db->lastInsertId()]);
-    return ['kode' => $kode, 'token' => $token, 'url' => url_pasangan($token), 'berlaku_sampai' => (string) $st->fetchColumn()];
-}
-
-/** Inti pendaftaran: dipakai oleh jalur kode maupun jalur QR (kode/token sudah tervalidasi). */
-function _selesaikan_pendaftaran_pasangan(array $row, int $siswaId, string $installUuid, string $via): array
-{
-    $gagal = fn(string $code, string $msg) => ['success' => false, 'code' => $code, 'message' => $msg];
-    $db = getDB();
-    $deviceHash = build_device_hash($installUuid);
-
-    $lain = get_device_binding_by_hash($deviceHash);
+    $lain = get_device_binding_by_hash($hash);
     if ($lain && (int) $lain['siswa_id'] !== $siswaId) {
-        security_log($siswaId, 'DEVICE_MISMATCH', $deviceHash, 'Percobaan daftar (' . $via . ') di device milik siswa ID ' . $lain['siswa_id'] . '.');
-        return $gagal('DEVICE_ALREADY_BOUND', 'Perangkat ini sudah terdaftar untuk siswa lain. Satu perangkat hanya untuk satu siswa.');
+        security_log($siswaId, 'DEVICE_MISMATCH', $hash, 'Percobaan daftar (' . $via . ') di perangkat milik siswa ID ' . $lain['siswa_id'] . '.');
+        return ['status' => 'dipakai_siswa_lain'];
     }
-
-    // Pakai kode/token secara atomik (cegah dipakai dua kali bersamaan)
-    $pakai = $db->prepare('UPDATE device_pairing_codes SET used_at = NOW() WHERE id = :id AND used_at IS NULL');
-    $pakai->execute([':id' => $row['id']]);
-    if ($pakai->rowCount() !== 1) return $gagal('KODE_INVALID', 'Kode/QR sudah dipakai. Minta admin membuat yang baru.');
 
     $ua = parse_user_agent($_SERVER['HTTP_USER_AGENT'] ?? '');
     try {
-        $db->prepare(
-            'INSERT INTO device_bindings
-                (siswa_id, device_uuid, device_hash, device_name, browser, os, ip_address, status, registered_at, last_used_at)
+        getDB()->prepare(
+            'INSERT INTO device_bindings (siswa_id, device_uuid, device_hash, device_name, browser, os, ip_address, status, registered_at, last_used_at)
              VALUES (:sid, :uuid, :hash, :name, :browser, :os, :ip, "ACTIVE", NOW(), NOW())'
         )->execute([
-            ':sid' => $siswaId, ':uuid' => $installUuid, ':hash' => $deviceHash,
-            ':name' => $ua['os'] . ' - ' . $ua['browser'], ':browser' => $ua['browser'], ':os' => $ua['os'],
-            ':ip' => get_client_ip(),
+            ':sid' => $siswaId, ':uuid' => null, ':hash' => $hash, ':name' => $ua['os'] . ' - ' . $ua['browser'],
+            ':browser' => $ua['browser'], ':os' => $ua['os'], ':ip' => get_client_ip(),
         ]);
     } catch (PDOException $e) {
-        if ((int) $e->getCode() === 23000 || str_contains($e->getMessage(), 'Duplicate entry')) {
-            return $gagal('DEVICE_ALREADY_BOUND', 'Perangkat ini sudah terdaftar untuk siswa lain.');
-        }
-        throw $e;
+        if ((int) $e->getCode() !== 23000 && !str_contains($e->getMessage(), 'Duplicate entry')) throw $e;
+        // Balapan: ada yang keburu mendaftar. Tentukan lagi siapa pemenangnya.
+        if (($s = $cekAda()) !== null) return ['status' => $s];
+        security_log($siswaId, 'DEVICE_MISMATCH', $hash, 'Balapan pendaftaran (' . $via . '): perangkat sudah terikat siswa lain.');
+        return ['status' => 'dipakai_siswa_lain'];
     }
 
-    security_log($siswaId, 'DEVICE_REGISTERED', $deviceHash, 'Perangkat didaftarkan memakai ' . $via . '.');
-    return ['success' => true, 'code' => 'PAIRED', 'message' => 'Perangkat berhasil didaftarkan.'];
+    security_log($siswaId, 'DEVICE_REGISTERED', $hash, 'Perangkat didaftarkan memakai ' . $via . '.');
+    // Kode perangkat yang masih tertunda tidak berguna lagi (akun aktif saja; tabel bisa belum ada -> abaikan).
+    try {
+        getDB()->prepare("UPDATE siswa_akun SET kode_hash = NULL, kode_salt = NULL, kode_berlaku_hingga = NULL, kode_salah = 0, kode_terkunci_hingga = NULL
+                          WHERE siswa_id = :sid AND status = 'aktif'")->execute([':sid' => $siswaId]);
+    } catch (Throwable $e) {
+    }
+    device_cookie_pertahankan($installUuid);
+    return ['status' => 'terdaftar'];
 }
 
-/** Jalur 2 — kode 6 angka (siswa sudah teridentifikasi dari scan QR gerbang). */
-function daftarkan_dengan_kode(int $siswaId, string $kode, string $installUuid): array
-{
-    $gagal = fn(string $code, string $msg) => ['success' => false, 'code' => $code, 'message' => $msg];
-    $settings = get_settings();
-    if (empty($settings['device_binding_aktif'])) {
-        return $gagal('BINDING_DISABLED', 'Device binding tidak aktif, tidak perlu mendaftarkan perangkat.');
-    }
-    if (!is_valid_install_uuid($installUuid)) return $gagal('DEVICE_INVALID', 'Identitas perangkat tidak valid. Muat ulang halaman.');
-    if (!preg_match('/^\d{6}$/', $kode)) return $gagal('KODE_FORMAT', 'Kode Pasangan harus 6 angka.');
-    if (get_device_binding($siswaId)) {
-        return $gagal('ALREADY_BOUND', 'Anda sudah memiliki perangkat terdaftar. Minta admin mereset perangkat bila ingin mengganti perangkat.');
-    }
+/** Teks untuk siswa (aman ditampilkan) berdasarkan status pendaftaran perangkat. */
+const PESAN_PERANGKAT = [
+    'terdaftar'          => 'Perangkat ini sudah terdaftar untuk presensi.',
+    'sudah_sama'         => 'Perangkat ini sudah terdaftar sebelumnya.',
+    'sudah_ada_lain'     => 'Perangkat presensi Anda tetap HP yang sudah terdaftar sebelumnya. Untuk menggantinya, hubungi petugas sekolah.',
+    'dipakai_siswa_lain' => 'Perangkat ini tidak dapat didaftarkan. Hubungi petugas sekolah.',
+    'diblokir'           => 'Perangkat Anda sedang diblokir. Hubungi petugas sekolah.',
+    'uuid_tidak_valid'   => 'Perangkat belum terdaftar karena identitas perangkat tidak terbaca. Pastikan bukan mode Privat, lalu coba lagi dari aplikasi SIAP (Android) atau Safari (iPhone) dan pilih "Daftarkan perangkat ini".',
+    'bukan_aplikasi'     => 'Perangkat belum didaftarkan karena Anda membuka lewat browser. Buka aplikasi SIAP, masuk, lalu pilih "Daftarkan perangkat ini".',
+    'bukan_browser_ios'  => 'Perangkat belum didaftarkan karena halaman ini dibuka lewat aplikasi/peramban lain. Buka SIAP ABSEN langsung di Safari, masuk, lalu pilih "Daftarkan perangkat ini".',
+    'dilewati'           => 'Perangkat belum didaftarkan. Buka aplikasi SIAP, masuk, lalu pilih "Daftarkan perangkat ini" bila ingin presensi dari HP ini.',
+    'binding_nonaktif'   => '',
+];
 
-    siapkan_tabel_kode_pasangan();
-    $db = getDB();
-    $st = $db->prepare(
-        'SELECT * FROM device_pairing_codes
-         WHERE siswa_id = :s AND used_at IS NULL AND expires_at > NOW() ORDER BY id DESC LIMIT 1'
-    );
-    $st->execute([':s' => $siswaId]);
-    $row = $st->fetch();
-
-    if (!$row || (int) $row['percobaan'] >= KODE_PASANGAN_MAKS_SALAH) {
-        security_log($siswaId, 'DEVICE_PAIRING_FAILED', null, 'Kode pasangan tidak ada, kedaluwarsa, atau terkunci.');
-        return $gagal('KODE_INVALID', 'Kode tidak berlaku. Minta admin membuat Kode Pasangan baru.');
-    }
-    if (!hash_equals($row['code_hash'], hash_kode_pasangan($siswaId, $kode))) {
-        $db->prepare('UPDATE device_pairing_codes SET percobaan = percobaan + 1 WHERE id = :id')->execute([':id' => $row['id']]);
-        $sisa = max(0, KODE_PASANGAN_MAKS_SALAH - ((int) $row['percobaan'] + 1));
-        security_log($siswaId, 'DEVICE_PAIRING_FAILED', null, 'Kode pasangan salah (percobaan ke-' . ((int) $row['percobaan'] + 1) . ').');
-        return $gagal('KODE_SALAH', $sisa > 0 ? "Kode salah. Sisa percobaan: $sisa." : 'Kode salah dan sudah terkunci. Minta admin membuat kode baru.');
-    }
-    return _selesaikan_pendaftaran_pasangan($row, $siswaId, $installUuid, 'Kode Pasangan');
-}
-
-/** Jalur 1 — QR Pasangan (siswa scan QR dari admin; token di URL mengidentifikasi siswa). */
-function daftarkan_dengan_token(string $token, string $installUuid): array
-{
-    $gagal = fn(string $code, string $msg) => ['success' => false, 'code' => $code, 'message' => $msg];
-    $settings = get_settings();
-    if (empty($settings['device_binding_aktif'])) {
-        return $gagal('BINDING_DISABLED', 'Device binding tidak aktif, tidak perlu mendaftarkan perangkat.');
-    }
-    if (!is_valid_install_uuid($installUuid)) return $gagal('DEVICE_INVALID', 'Identitas perangkat tidak valid. Muat ulang halaman.');
-    if (!preg_match('/^[0-9a-f]{32}$/', $token)) return $gagal('TOKEN_INVALID', 'QR Pasangan tidak valid.');
-
-    siapkan_tabel_kode_pasangan();
-    $db = getDB();
-    $st = $db->prepare(
-        'SELECT * FROM device_pairing_codes
-         WHERE token_hash = :t AND used_at IS NULL AND expires_at > NOW() LIMIT 1'
-    );
-    $st->execute([':t' => hash_token_pasangan($token)]);
-    $row = $st->fetch();
-    if (!$row) {
-        security_log(null, 'DEVICE_PAIRING_FAILED', null, 'QR Pasangan tidak valid/kedaluwarsa/sudah dipakai.');
-        return $gagal('TOKEN_INVALID', 'QR Pasangan tidak berlaku atau sudah dipakai. Minta admin membuat yang baru.');
-    }
-
-    $siswaId = (int) $row['siswa_id'];
-    $ss = $db->prepare('SELECT nama, kelas, status FROM siswa WHERE id = :id');
-    $ss->execute([':id' => $siswaId]);
-    $siswa = $ss->fetch();
-    if (!$siswa || $siswa['status'] !== 'aktif') return $gagal('INACTIVE', 'Status siswa tidak aktif. Hubungi admin sekolah.');
-    if (get_device_binding($siswaId)) {
-        return $gagal('ALREADY_BOUND', 'Siswa ini sudah memiliki perangkat terdaftar. Minta admin mereset perangkat bila ingin mengganti perangkat.');
-    }
-
-    $hasil = _selesaikan_pendaftaran_pasangan($row, $siswaId, $installUuid, 'QR Pasangan');
-    if ($hasil['success']) $hasil['data'] = ['nama' => $siswa['nama'], 'kelas' => $siswa['kelas']];
-    return $hasil;
-}
-
-
-/** Penanda "tanpa batas waktu" untuk kolom expires_at (tanpa perlu mengubah skema tabel). */
-const KODE_TANPA_BATAS = '9999-12-31 23:59:59';
 
 /**
- * Buat Kode Pasangan untuk banyak siswa sekaligus. $menit = null berarti TANPA batas waktu.
- * Tetap sekali pakai & terkunci setelah KODE_PASANGAN_MAKS_SALAH kali salah.
- * Kode lama yang belum terpakai untuk siswa-siswa tersebut dibatalkan.
- * @param int[] $siswaIds
- * @return array<int,string> siswa_id => kode 6 angka (hanya tampil sekali; di DB hanya hash)
+ * Bolehkah siswa mendaftarkan perangkat dari portal TANPA kode dari petugas?
+ * - Mode wajib kode MATI : boleh (tombol "Daftarkan perangkat ini").
+ * - Mode wajib kode AKTIF: tidak; harus memakai KODE PERANGKAT yang diterbitkan petugas di Akun Siswa
+ *   (atau kode aktivasi untuk akun yang belum aktif).
  */
-function buat_kode_pasangan_massal(array $siswaIds, int $adminId, ?int $menit): array
+function perangkat_boleh_daftar_mandiri(int $siswaId): bool
 {
-    $siswaIds = array_values(array_unique(array_map('intval', $siswaIds)));
-    if (!$siswaIds) return [];
-    siapkan_tabel_kode_pasangan();
-    $db = getDB();
-    $hasil = [];
+    return empty(get_settings()['device_wajib_kode']);
+}
 
+/**
+ * Dipakai HANYA oleh "Reset akun" (reset semuanya): lepas perangkat terdaftar siswa dan catat di log reset.
+ * Tidak memakai kuota reset perangkat bulanan. Mengembalikan jumlah perangkat yang dilepas.
+ */
+function lepas_perangkat_reset_akun(int $siswaId, int $adminId): int
+{
+    $db = getDB();
+    $binding = get_device_binding($siswaId);
+    if (!$binding) {
+        return 0;
+    }
     $db->beginTransaction();
     try {
-        foreach (array_chunk($siswaIds, 500) as $chunk) {
-            $in = implode(',', array_fill(0, count($chunk), '?'));
-            $db->prepare("UPDATE device_pairing_codes SET used_at = NOW() WHERE used_at IS NULL AND siswa_id IN ($in)")->execute($chunk);
-        }
-        if ($menit === null) {
-            $ins = $db->prepare('INSERT INTO device_pairing_codes (siswa_id, code_hash, token_hash, expires_at, created_by) VALUES (:s, :h, NULL, :e, :a)');
-        } else {
-            $ins = $db->prepare('INSERT INTO device_pairing_codes (siswa_id, code_hash, token_hash, expires_at, created_by) VALUES (:s, :h, NULL, DATE_ADD(NOW(), INTERVAL ' . (int) $menit . ' MINUTE), :a)');
-        }
-        foreach ($siswaIds as $id) {
-            $kode = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-            $par = [':s' => $id, ':h' => hash_kode_pasangan($id, $kode), ':a' => $adminId ?: null];
-            if ($menit === null) $par[':e'] = KODE_TANPA_BATAS;
-            $ins->execute($par);
-            $hasil[$id] = $kode;
-        }
+        $db->prepare('INSERT INTO device_reset_logs (siswa_id, old_device_hash, admin_id, reason, created_at) VALUES (:sid, :h, :a, :r, NOW())')
+           ->execute([':sid' => $siswaId, ':h' => $binding['device_hash'] ?? null, ':a' => $adminId, ':r' => '[RESET AKUN] Reset akun portal siswa']);
+        $db->prepare('DELETE FROM device_bindings WHERE siswa_id = :sid')->execute([':sid' => $siswaId]);
         $db->commit();
+        return 1;
     } catch (Throwable $e) {
-        if ($db->inTransaction()) $db->rollBack();
-        throw $e;
+        $db->rollBack();
+        error_log('Lepas perangkat reset akun: ' . $e->getMessage());
+        return 0;
     }
-    return $hasil;
+}
+
+/**
+ * Kosongkan UUID mentah pada baris yang hash-nya SUDAH v2 (UUID itu tidak dibutuhkan lagi). Baris lama (v1) dibiarkan
+ * sampai perangkatnya dipakai sekali (lalu dimigrasikan dan dikosongkan oleh sinkronkan_hash_perangkat). Idempoten dan murah:
+ * bila tidak ada yang perlu dibersihkan, hanya satu SELECT. Dijalankan dari portal_siapkan_tabel().
+ * @return int jumlah baris yang dibersihkan
+ */
+function portal_bersihkan_uuid_lama(): int
+{
+    try {
+        $db = getDB();
+        if (!$db->query('SELECT 1 FROM device_bindings WHERE device_uuid IS NOT NULL LIMIT 1')->fetchColumn()) return 0;
+        $u = $db->prepare("UPDATE device_bindings SET device_uuid = NULL
+                           WHERE device_uuid IS NOT NULL AND device_hash = SHA2(CONCAT(:v, '|', device_uuid), 256)");
+        $u->execute([':v' => DEVICE_HASH_VERSI]);
+        return $u->rowCount();
+    } catch (Throwable $e) {
+        error_log('portal_bersihkan_uuid_lama: ' . $e->getMessage());
+        return 0;
+    }
 }

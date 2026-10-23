@@ -115,43 +115,10 @@ $gateValidInSession = !empty($_SESSION['gate_token']) && (time() - ($_SESSION['g
   <?php endif; ?>
 
   <div class="ps-alt d-none" id="altDaftar">
-    <button type="button" class="ps-btn polos" id="btnBukaDaftar"><i class="bi bi-phone"></i> Daftarkan Perangkat</button>
-    <div class="ket">Perangkat belum terdaftar? Masukkan Kode Pasangan dari admin, atau scan QR Pasangan dengan kamera perangkat.</div>
+    <a class="ps-btn polos" href="<?= BASE_URL ?>/portal/aktivasi"><i class="bi bi-phone"></i> Aktivasi Akun &amp; Daftarkan Perangkat</a>
+    <div class="ket">Perangkat belum terdaftar? Minta kode aktivasi ke petugas, lalu masukkan di halaman aktivasi pada aplikasi SIAP (Android) atau Safari (iPhone). Akun aktif dan perangkat terdaftar sekaligus.</div>
   </div>
   <div class="ps-foot">SIAP ABSEN &copy; <?= date('Y') ?></div>
-</div>
-
-<!-- Daftarkan perangkat dengan Kode Pasangan -->
-<div id="ovDaftar" class="ov-daftar d-none" role="dialog" aria-modal="true" aria-labelledby="ovJudul">
-  <div class="ov-kotak">
-    <div class="d-flex justify-content-between align-items-start mb-2">
-      <div>
-        <div class="text-muted small fw-bold" style="letter-spacing:.08em">PENDAFTARAN PERANGKAT</div>
-        <h5 class="mb-0" id="ovJudul">Daftarkan Perangkat</h5>
-      </div>
-      <button type="button" class="btn-close" id="btnTutupDaftar" aria-label="Tutup"></button>
-    </div>
-
-    <div id="ovForm">
-      <p class="small text-muted mb-3">Minta admin membuat <strong>Kode Pasangan 6 angka</strong> untuk Anda. Kode berlaku 10 menit dan hanya bisa dipakai sekali.</p>
-      <label class="form-label small fw-bold mb-1">NIS / NISN</label>
-      <input type="text" id="inNis" class="form-control mb-3" inputmode="numeric" autocomplete="off" placeholder="contoh: 1311357700022xxxxx">
-      <label class="form-label small fw-bold mb-1">KODE PASANGAN</label>
-      <input type="text" id="inKode" class="form-control form-control-lg text-center fw-bold" inputmode="numeric" maxlength="6" autocomplete="one-time-code"
-             style="letter-spacing:.45em; font-size:1.5rem" placeholder="••••••">
-      <div id="ovErr" class="text-danger small mt-2 d-none"></div>
-      <button type="button" id="btnKirimDaftar" class="btn btn-primary w-100 mt-3" disabled><i class="bi bi-phone"></i> DAFTARKAN PERANGKAT INI</button>
-    </div>
-
-    <div id="ovOk" class="text-center d-none">
-      <i class="bi bi-check-circle-fill display-4 text-success"></i>
-      <h5 class="mt-2 mb-1">Perangkat Berhasil Didaftarkan</h5>
-      <p class="fw-bold mb-0" id="ovNama"></p>
-      <p class="text-muted small" id="ovKelas"></p>
-      <div class="alert alert-info small text-start">Sekarang scan QR gerbang/kelas di sekolah untuk presensi. Gunakan <strong>browser yang sama</strong> dengan yang Anda pakai sekarang.</div>
-      <button type="button" class="btn btn-primary w-100" id="btnSelesaiDaftar">Selesai</button>
-    </div>
-  </div>
 </div>
 
 <style>
@@ -254,57 +221,6 @@ fetch('<?= BASE_URL ?>/api/scan.php', {
   .then(r => r.json())
   .then(d => { if (!d.success || d.status === 'BELUM') alt.classList.remove('d-none'); })
   .catch(() => alt.classList.remove('d-none'));   // gagal memeriksa: tetap beri jalan untuk mendaftar
-})();
-
-// --- Daftarkan perangkat dengan Kode Pasangan (NIS + kode 6 angka) ---
-(function () {
-  const ov = document.getElementById('ovDaftar');
-  const inNis = document.getElementById('inNis');
-  const inKode = document.getElementById('inKode');
-  const btnKirim = document.getElementById('btnKirimDaftar');
-  const err = document.getElementById('ovErr');
-  const labelAwal = btnKirim.innerHTML;
-
-  function cek() { btnKirim.disabled = !(inNis.value.trim().length >= 4 && inKode.value.length === 6); err.classList.add('d-none'); }
-  function buka() { ov.classList.remove('d-none'); setTimeout(function () { inNis.focus(); }, 100); }
-  function tutup() { ov.classList.add('d-none'); }
-
-  document.getElementById('btnBukaDaftar').addEventListener('click', buka);
-  document.getElementById('btnTutupDaftar').addEventListener('click', tutup);
-  document.getElementById('btnSelesaiDaftar').addEventListener('click', function () { window.location.reload(); });
-  ov.addEventListener('click', function (e) { if (e.target === ov) tutup(); });
-  inNis.addEventListener('input', cek);
-  inKode.addEventListener('input', function () { this.value = this.value.replace(/\D/g, '').slice(0, 6); cek(); });
-
-  btnKirim.addEventListener('click', function () {
-    btnKirim.disabled = true;
-    btnKirim.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Memeriksa...';
-    fetch('<?= BASE_URL ?>/api/pasangan.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nis: inNis.value.trim(), kode: inKode.value, device_uuid: getOrCreateDeviceUuid() })
-    })
-    .then(r => r.json())
-    .then(res => {
-      if (res.success) {
-        document.getElementById('ovNama').textContent = (res.data && res.data.nama) || '';
-        document.getElementById('ovKelas').textContent = (res.data && res.data.kelas) ? 'Kelas ' + res.data.kelas : '';
-        document.getElementById('ovForm').classList.add('d-none');
-        document.getElementById('ovOk').classList.remove('d-none');
-      } else {
-        err.textContent = res.message || 'Gagal mendaftarkan perangkat.';
-        err.classList.remove('d-none');
-        btnKirim.innerHTML = labelAwal;
-        btnKirim.disabled = !(inNis.value.trim().length >= 4 && inKode.value.length === 6);
-      }
-    })
-    .catch(() => {
-      err.textContent = 'Gagal terhubung ke server. Coba lagi.';
-      err.classList.remove('d-none');
-      btnKirim.innerHTML = labelAwal;
-      btnKirim.disabled = false;
-    });
-  });
 })();
 </script>
 </body>

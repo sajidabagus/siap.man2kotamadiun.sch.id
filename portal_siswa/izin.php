@@ -22,8 +22,7 @@ $menunggu = (int) $db->query('SELECT COUNT(*) FROM izin_pengajuan WHERE siswa_id
 portal_app_awal('Izin / Sakit', $akun, 'izin');
 if ($info !== '') portal_alert('ok', $info);
 ?>
-<div class="pt-judul-halaman">
-  <h2>Izin &amp; Sakit</h2>
+<div class="pt-judul-halaman" style="justify-content:flex-end">
   <a class="pt-btn kecil" href="<?= e(portal_url('izin/baru')) ?>"><i class="bi bi-plus-lg"></i> Ajukan baru</a>
 </div>
 <?php if ($menunggu > 0): ?>

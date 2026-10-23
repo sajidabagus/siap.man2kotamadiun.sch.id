@@ -49,3 +49,21 @@ function fallbackUuid() {
   const h = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
   return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20);
 }
+
+/**
+ * Baca UUID perangkat yang SUDAH ada tanpa membuat yang baru ('' bila belum ada). Dipakai gerbang masuk otomatis
+ * portal: browser yang belum pernah memakai SIAP ABSEN tidak boleh dibuatkan identitas hanya karena memeriksa.
+ */
+function getDeviceUuidIfExists() {
+  const KEY = 'presensi_device_uuid';
+  const UUID_RE = /^[0-9a-fA-F-]{20,64}$/;
+  let v = '';
+  try { v = localStorage.getItem(KEY) || ''; } catch (e) {}
+  if (!UUID_RE.test(v)) {
+    try {
+      const m = document.cookie.match(new RegExp('(?:^|; )' + KEY + '=([^;]*)'));
+      v = m ? decodeURIComponent(m[1]) : '';
+    } catch (e) { v = ''; }
+  }
+  return UUID_RE.test(v) ? v : '';
+}

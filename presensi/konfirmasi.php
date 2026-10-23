@@ -118,14 +118,9 @@ $autoKonfirmasi = $infoGate && !empty($infoGate['kelas_target']);
       <div id="pairBox" class="d-none">
         <div class="ps-note info">
           <i class="bi bi-key-fill"></i>
-          <div><strong>Daftarkan perangkat ini.</strong><br>Minta admin membuat <strong>Kode Pasangan 6 angka</strong> untuk Anda (berlaku 10 menit, sekali pakai), lalu masukkan di bawah.<br>Atau scan <strong>QR Pasangan</strong> dari admin memakai kamera perangkat.</div>
+          <div><strong>Perangkat ini belum terdaftar.</strong><br>Belum punya akun aktif? Minta <strong>kode aktivasi</strong> ke petugas, lalu masukkan di halaman aktivasi pada <strong>aplikasi SIAP</strong> (Android) atau <strong>Safari</strong> (iPhone); akun aktif dan perangkat terdaftar sekaligus. Sudah punya akun? Minta <strong>kode perangkat</strong> ke petugas, lalu masuk ke portal di aplikasi SIAP (Android) atau Safari (iPhone) dan pilih <strong>Daftarkan perangkat ini</strong>.</div>
         </div>
-        <input id="pairKode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*"
-               class="form-control form-control-lg text-center fw-bold mt-3" style="letter-spacing:.45em; font-size:1.6rem; border-radius:14px" placeholder="••••••">
-        <div id="pairErr" class="text-danger small mt-2 d-none"></div>
-        <button id="btnPair" class="ps-btn utama" style="margin-top:14px" disabled>
-          <i class="bi bi-phone"></i> <span>DAFTARKAN PERANGKAT &amp; PRESENSI</span>
-        </button>
+        <a href="<?= BASE_URL ?>/portal/aktivasi" class="ps-btn utama" style="margin-top:14px"><i class="bi bi-phone"></i> <span>AKTIVASI AKUN &amp; DAFTARKAN PERANGKAT</span></a>
       </div>
 
       <button id="btnConfirm" class="ps-btn hijau d-none" style="margin-top:16px">
@@ -199,46 +194,6 @@ fetch('<?= BASE_URL ?>/api/scan.php', {
   document.getElementById('errBox').textContent = 'Gagal terhubung ke server.';
   showBox('errBox');
 });
-
-// ---- Pendaftaran perangkat dengan Kode Pasangan ----
-const pairKode = document.getElementById('pairKode');
-const btnPair = document.getElementById('btnPair');
-const pairErr = document.getElementById('pairErr');
-if (pairKode) {
-  pairKode.addEventListener('input', function () {
-    this.value = this.value.replace(/\D/g, '').slice(0, 6);
-    btnPair.disabled = this.value.length !== 6;
-    pairErr.classList.add('d-none');
-  });
-  btnPair.addEventListener('click', function () {
-    btnPair.disabled = true;
-    btnPair.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Memeriksa kode...';
-    fetch('<?= BASE_URL ?>/api/pasangan.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ kode: pairKode.value, device_uuid: deviceUuid })
-    })
-    .then(r => r.json())
-    .then(res => {
-      if (res.success) {
-        document.getElementById('pairBox').classList.add('d-none');
-        showBox('btnConfirm');
-        document.getElementById('btnConfirm').click();   // lanjut langsung presensi
-      } else {
-        pairErr.textContent = res.message || 'Kode tidak valid.';
-        pairErr.classList.remove('d-none');
-        btnPair.innerHTML = '<i class="bi bi-phone"></i> <span>DAFTARKAN PERANGKAT &amp; PRESENSI</span>';
-        btnPair.disabled = pairKode.value.length !== 6;
-      }
-    })
-    .catch(() => {
-      pairErr.textContent = 'Gagal terhubung ke server.';
-      pairErr.classList.remove('d-none');
-      btnPair.innerHTML = '<i class="bi bi-phone"></i> <span>DAFTARKAN PERANGKAT &amp; PRESENSI</span>';
-      btnPair.disabled = false;
-    });
-  });
-}
 
 document.getElementById('btnConfirm').addEventListener('click', function () {
   this.disabled = true;

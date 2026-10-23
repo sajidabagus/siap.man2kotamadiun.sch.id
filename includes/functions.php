@@ -76,7 +76,7 @@ const DAFTAR_MODUL = [
     'dashboard', 'siswa', 'siswa_detail', 'akun_siswa', 'izin', 'izin_detail', 'izin_lampiran', 'siswa_tambah', 'siswa_edit', 'siswa_hapus', 'siswa_import',
     'master_kelas', 'kenaikan_kelas', 'qr_siswa', 'qr_print', 'qr_generate', 'qr_gerbang',
     'qr_kelas', 'qr_kelas_print', 'presensi', 'presensi_export', 'presensi_print', 'rekap', 'rekap_print', 'device',
-    'security_log', 'log_aktivitas', 'log_cetak', 'pengaturan', 'profil', 'pengguna', 'hak_akses', 'papan', 'kode_pasangan', 'kode_massal',
+    'security_log', 'log_aktivitas', 'log_cetak', 'pengaturan', 'profil', 'pengguna', 'hak_akses', 'papan',
 ];
 
 // ---------------------------------------------------------------------
@@ -135,7 +135,7 @@ const DAFTAR_IZIN = [
     ],
     'Perangkat' => [
         'device.lihat'  => 'Melihat manajemen perangkat',
-        'device.kelola' => 'Blokir, aktifkan, reset perangkat & buat Kode Pasangan',
+        'device.kelola' => 'Blokir, aktifkan, dan reset perangkat',
     ],
     'Log' => [
         'log_keamanan.lihat'  => 'Melihat Log Keamanan',
@@ -163,7 +163,7 @@ const MODUL_IZIN = [
     'qr_siswa' => 'qr_siswa.lihat', 'qr_generate' => 'qr_siswa.lihat', 'qr_print' => 'qr_siswa.cetak',
     'qr_gerbang' => 'qr_gerbang.lihat',
     'qr_kelas' => 'qr_kelas.lihat', 'qr_kelas_print' => 'qr_kelas.cetak',
-    'papan' => 'papan.lihat', 'kode_pasangan' => 'device.kelola', 'kode_massal' => 'device.kelola',
+    'papan' => 'papan.lihat',
     'presensi' => 'presensi.lihat', 'presensi_export' => 'presensi.ekspor', 'presensi_print' => 'presensi.cetak',
     'rekap' => 'rekap.lihat', 'rekap_print' => 'rekap.cetak',
     'device' => 'device.lihat',
@@ -231,8 +231,6 @@ const RUTE_MODUL = [
     'rekap_print'     => 'rekap/cetak',
     'papan'           => 'papan',
     'device'          => 'perangkat',
-    'kode_pasangan'   => 'perangkat/kode',
-    'kode_massal'     => 'perangkat/kode-massal',
     'security_log'    => 'log/keamanan',
     'log_aktivitas'   => 'log/aktivitas',
     'log_cetak'       => 'log/cetak',
@@ -910,8 +908,11 @@ function parse_user_agent(string $ua): array
     $browser = 'Unknown';
     $os = 'Unknown';
 
-    if (preg_match('/Edg\//i', $ua)) $browser = 'Edge';
-    elseif (preg_match('/OPR\//i', $ua)) $browser = 'Opera';
+    // Browser di iPhone/iPad memakai token sendiri (CriOS/FxiOS/EdgiOS/OPiOS) dan semuanya berisi "Safari/".
+    if (preg_match('/Edg(e|iOS|A)?\//i', $ua)) $browser = 'Edge';
+    elseif (preg_match('/OPR\/|OPiOS\//i', $ua)) $browser = 'Opera';
+    elseif (preg_match('/CriOS\//i', $ua)) $browser = 'Chrome';
+    elseif (preg_match('/FxiOS\//i', $ua)) $browser = 'Firefox';
     elseif (preg_match('/Chrome\//i', $ua) && !preg_match('/Chromium/i', $ua)) $browser = 'Chrome';
     elseif (preg_match('/Firefox\//i', $ua)) $browser = 'Firefox';
     elseif (preg_match('/Safari\//i', $ua)) $browser = 'Safari';

@@ -1,9 +1,11 @@
 <?php
-// /portal/aktivasi — NISN + kode dari petugas + password baru
+// /portal/aktivasi — NISN + kode dari petugas + password baru (+ mendaftarkan perangkat bila dari aplikasi SIAP)
 if (portal_siswa_sekarang()) { header('Location: ' . portal_url()); exit; }
 
 $galat = '';
 $nisn = portal_nisn((string) ($_GET['nisn'] ?? ''));
+$dalamApp = request_boleh_daftar_perangkat();   // aplikasi SIAP (Android) atau browser iPhone/iPad
+$diIos = request_dari_ios_browser();
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $nisn = portal_nisn((string) ($_POST['nisn'] ?? ''));
@@ -18,9 +20,24 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     } elseif ($pw1 !== $pw2) {
         $galat = 'Konfirmasi password belum sama.';
     } else {
-        $hasil = portal_aktivasi($nisn, $kode, $pw1);
+        // Di dalam aplikasi SIAP: perangkat didaftarkan bila kotak dicentang. Di browser biasa: akun saja
+        // (yang terdaftar harus penyimpanan APLIKASI, bukan Chrome), siswa diberi petunjuk lanjutan.
+        $mauDaftar = $dalamApp ? isset($_POST['daftar_perangkat']) : true;
+        $hasil = portal_aktivasi($nisn, $kode, $pw1, (string) ($_POST['device_uuid'] ?? ''), $mauDaftar);
         if ($hasil['ok']) {
-            header('Location: ' . portal_login_url(['aktif' => 1]));
+            // SATU TINDAKAN: kode terbukti benar -> akun aktif + perangkat presensi terdaftar (bila dari aplikasi SIAP)
+            // + langsung masuk ke portal. Perangkat terdaftar hanya untuk PRESENSI; akun boleh dipakai di perangkat lain.
+            $akunBaru = portal_cari_akun_id((int) $hasil['akun_id']);
+            if ($akunBaru) {
+                portal_masuk_sesi($akunBaru);
+                $p = (string) $hasil['perangkat'];
+                $pesan = trim('Akun berhasil diaktifkan. ' . (PESAN_PERANGKAT[$p] ?? ''));
+                $_SESSION[in_array($p, ['terdaftar', 'sudah_sama', 'binding_nonaktif'], true) ? 'portal_info' : 'portal_galat'] = $pesan;
+                header('Location: ' . portal_url());
+                exit;
+            }
+            // Cadangan: bila sesi gagal dibuat, akun tetap aktif; arahkan ke halaman masuk seperti semula.
+            header('Location: ' . portal_login_url(['aktif' => 1, 'p' => $hasil['perangkat']]));
             exit;
         }
         $galat = $hasil['pesan'];
@@ -51,7 +68,30 @@ if ($galat !== '') portal_alert('err', $galat);
           <input type="password" id="password2" name="password2" autocomplete="new-password" placeholder="Ketik ulang password" required>
         </div>
         <p class="pt-hint" id="cocok"></p>
+        <input type="hidden" name="device_uuid" id="device_uuid" value="">
+        <?php if ($dalamApp): ?>
+        <label class="pt-cek"><input type="checkbox" name="daftar_perangkat" value="1" checked>
+          <span><b>Jadikan HP ini perangkat presensi saya.</b> Hapus centang bila ini bukan HP milik Anda sendiri. Perangkat ini hanya untuk presensi; akun tetap bisa dipakai masuk di perangkat lain.</span></label>
+        <?php if ($diIos): ?>
+        <div class="pt-aturan"><b>Anda memakai <?= e(nama_browser_sekarang()) ?> di iPhone.</b> Perangkat presensi akan terdaftar di <b>browser ini</b>,
+          jadi untuk presensi selalu buka SIAP ABSEN dengan browser yang sama (disarankan <b>Safari</b>). Jangan memakai mode Privat,
+          dan jangan menghapus data situs/riwayat Safari.</div>
+        <?php endif; ?>
+        <?php else: ?>
+        <div class="pt-aturan"><b>Anda membuka lewat browser.</b> Akun akan diaktifkan, tetapi perangkat presensi hanya bisa didaftarkan
+          dari <b>dalam aplikasi SIAP</b>. Setelah ini, buka aplikasi SIAP, masuk, lalu pilih <b>Daftarkan perangkat ini</b>.</div>
+        <p class="pt-hint">Disarankan memakai <b>aplikasi SIAP</b> agar aktivasi akun dan pendaftaran perangkat presensi selesai sekaligus dalam satu langkah.</p>
+        <?php endif; ?>
         <button type="submit" class="pt-btn">Aktifkan Akun</button>
       </form>
+      <script src="<?= BASE_URL ?>/assets/js/device.js"></script>
+      <script>
+        (function () {
+          var f = document.getElementById('device_uuid');
+          function isi() { try { f.value = getOrCreateDeviceUuid(); } catch (e) {} }
+          isi();
+          f.form.addEventListener('submit', isi);
+        })();
+      </script>
       <p class="pt-kaki">Sudah punya password? <a href="<?= e(portal_login_url()) ?>">Masuk</a></p>
 <?php portal_auth_akhir();

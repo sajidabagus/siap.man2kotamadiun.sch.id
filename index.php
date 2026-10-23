@@ -63,16 +63,20 @@ if ($modulLama !== '') {
     $path = path_permintaan();
     if ($path !== '') {
         $cocok = cocokkan_rute($path);
-        if (!$cocok && is_logged_in()) tampil_404();
+        if (!$cocok) tampil_404();                   // alamat yang tidak ada -> halaman 404, login atau belum
         if ($cocok) {
             [$modul, $rp] = $cocok;
             define('ROUTE_BERSIH', true);
             $nisUrl = $rp['nis'] ?? null;
             if (isset($rp['id'])) { $_GET['id'] = $rp['id']; $_REQUEST['id'] = $rp['id']; }
-        } else {
-            $modul = '__tidak_ada__';            // belum login -> diarahkan ke login di bawah
         }
     }
+}
+
+// Modul yang tidak dikenal (mis. ?modul=ngawur) juga 404 untuk pengunjung yang belum login. Hanya halaman yang
+// BENAR-BENAR ada yang boleh dialihkan ke login; selain itu tidak membocorkan apa pun.
+if ($modul !== '' && (!in_array($modul, DAFTAR_MODUL, true) || !is_file(__DIR__ . '/panel/' . $modul . '.php'))) {
+    tampil_404();
 }
 
 if (!is_logged_in()) {
