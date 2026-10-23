@@ -60,7 +60,7 @@ function sudah_presensi_hari_ini(int $siswaId): ?array
 {
     // Baris izin/sakit yang DISETUJUI (metode PENGAJUAN) bukan presensi kehadiran: siswa yang tetap
     // datang boleh presensi, dan baris itu digantikan oleh presensi HADIR (lihat proses_simpan_presensi).
-    $stmt = getDB()->prepare("SELECT * FROM presensi WHERE siswa_id = :sid AND tanggal = :tgl AND metode <> 'PENGAJUAN' LIMIT 1");
+    $stmt = getDB()->prepare("SELECT * FROM presensi WHERE siswa_id = :sid AND tanggal = :tgl AND metode NOT IN ('PENGAJUAN','OTOMATIS') LIMIT 1");
     $stmt->execute([':sid' => $siswaId, ':tgl' => date('Y-m-d')]);
     return $stmt->fetch() ?: null;
 }
@@ -206,6 +206,15 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
         ];
     }
 
+    // 8c. Lewat batas absen masuk -> scan ditutup (siswa yang belum absen dicatat ALPA otomatis).
+    if (absen_sudah_ditutup($jam)) {
+        security_log($siswaId, 'PRESENCE_REJECTED', null, 'Presensi setelah batas absen (' . substr(batas_absen(), 0, 5) . ').');
+        return [
+            'success' => false, 'code' => 'CLOSED',
+            'message' => 'Absen masuk hari ini sudah ditutup pukul ' . substr(batas_absen(), 0, 5) . '. Siswa yang belum absen tercatat Alpa. Bila Anda hadir, hubungi wali kelas/petugas.',
+        ];
+    }
+
     $statusPresensi = tentukan_status_presensi($jam);
 
     // 9. Geolocation jika aktif
@@ -239,7 +248,7 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
     $ganti = $db->prepare(
         "UPDATE presensi SET kelas_saat_presensi = :kelas, jam_masuk = :jam, status = :status, metode = 'QR',
                 device_info = :device_info, ip_address = :ip, latitude = :lat, longitude = :lng, created_at = NOW()
-         WHERE siswa_id = :sid AND tanggal = :tgl AND metode = 'PENGAJUAN'"
+         WHERE siswa_id = :sid AND tanggal = :tgl AND metode IN ('PENGAJUAN','OTOMATIS')"
     );
     $ganti->execute($nilai);
     if ($ganti->rowCount() > 0) {

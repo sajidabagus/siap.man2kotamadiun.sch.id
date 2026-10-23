@@ -27,11 +27,11 @@ $kunciStatus = $p['status'] ?? 'BELUM';
 $ikonStatus = ['HADIR' => 'check-lg', 'TERLAMBAT' => 'clock-history', 'IZIN' => 'file-earmark-text-fill', 'SAKIT' => 'heart-pulse-fill', 'ALPA' => 'x-lg', 'BELUM' => 'hourglass-split'][$kunciStatus];
 $judulStatus = $p ? (PORTAL_LABEL_STATUS[$p['status']] ?? $p['status']) : 'Belum absen';
 if (!$p) {
-    $subStatus = 'Scan QR absen saat tiba di sekolah.';
+    $subStatus = absen_sudah_ditutup() && is_hari_efektif() ? 'Absen masuk sudah ditutup pukul ' . substr(batas_absen(), 0, 5) . '.' : 'Scan QR absen saat tiba di sekolah.';
 } elseif (in_array($p['status'], ['HADIR', 'TERLAMBAT'], true) && $p['metode'] !== 'PENGAJUAN' && substr((string) $p['jam_masuk'], 0, 5) !== '00:00') {
     $subStatus = 'Masuk: ' . substr((string) $p['jam_masuk'], 0, 5) . ' ' . $zona;
 } else {
-    $subStatus = $p['metode'] === 'PENGAJUAN' ? 'Pengajuan disetujui' : 'Dicatat petugas';
+    $subStatus = $p['metode'] === 'PENGAJUAN' ? 'Pengajuan disetujui' : ($p['metode'] === 'OTOMATIS' ? 'Tidak absen sampai batas ' . substr(batas_absen(), 0, 5) : 'Dicatat petugas');
 }
 $hadir = $rekap['HADIR'] + $rekap['TERLAMBAT'];
 $izin = $rekap['IZIN'] + $rekap['SAKIT'];

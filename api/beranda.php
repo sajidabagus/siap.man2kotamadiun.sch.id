@@ -13,6 +13,7 @@ header('Cache-Control: no-store');
 try {
     $db = getDB();
     $settings = get_settings();
+    jalankan_alpa_otomatis();
     $input = json_decode(file_get_contents('php://input'), true) ?? [];
     $uuid = clean($input['device_uuid'] ?? '');
 
@@ -69,6 +70,8 @@ try {
         'mode' => $saya ? 'kelas' : 'sekolah',
         'waktu' => date('H:i:s'),
         'efektif' => is_hari_efektif(),
+        'ditutup' => absen_sudah_ditutup(),
+        'batas_absen' => substr(batas_absen(), 0, 5),
         'jam_masuk' => substr((string) ($settings['jam_masuk'] ?? ''), 0, 5),
         'batas_terlambat' => substr((string) ($settings['batas_terlambat'] ?? ''), 0, 5),
         'binding_aktif' => !empty($settings['device_binding_aktif']),
@@ -88,7 +91,7 @@ try {
             // Baris izin/sakit disetujui bukan kehadiran: kirim sebagai 'izin', bukan 'status'.
             'status' => ($p && $p['metode'] !== 'PENGAJUAN') ? $p['status'] : null,
             'izin' => ($p && $p['metode'] === 'PENGAJUAN') ? $p['status'] : null,
-            'jam' => ($p && $p['metode'] !== 'PENGAJUAN') ? substr((string) $p['jam_masuk'], 0, 5) : null,
+            'jam' => ($p && !in_array($p['metode'], ['PENGAJUAN', 'OTOMATIS'], true)) ? substr((string) $p['jam_masuk'], 0, 5) : null,
         ];
 
         // Ringkasan bulan ini untuk tampilan siswa (perangkat terdaftar): Hadir (termasuk terlambat), Izin (izin+sakit), Alfa.

@@ -343,7 +343,7 @@ $warnaStatus = ['HADIR' => 'success', 'TERLAMBAT' => 'warning', 'IZIN' => 'info'
             <tbody>
               <?php foreach ($histori as $h): ?>
                 <tr>
-                  <td class="text-nowrap small"><?= e(date('d/m', strtotime($h['tanggal']))) ?> <span class="text-muted"><?= $h['metode'] === 'PENGAJUAN' ? '—' : e(substr((string) $h['jam_masuk'], 0, 5)) ?></span></td>
+                  <td class="text-nowrap small"><?= e(date('d/m', strtotime($h['tanggal']))) ?> <span class="text-muted"><?= in_array($h['metode'], ['PENGAJUAN', 'OTOMATIS'], true) ? '—' : e(substr((string) $h['jam_masuk'], 0, 5)) ?></span></td>
                   <td class="small"><?= e($h['nama']) ?></td>
                   <td class="small text-nowrap"><?= e($h['kelas']) ?></td>
                   <td><span class="badge bg-<?= $warnaStatus[$h['status']] ?? 'secondary' ?>"><?= e($h['status']) ?></span></td>

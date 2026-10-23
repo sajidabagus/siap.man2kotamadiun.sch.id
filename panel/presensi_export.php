@@ -22,7 +22,7 @@ $stmt = $db->prepare(
 );
 $stmt->execute($params);
 $rows = $stmt->fetchAll();
-foreach ($rows as &$rr) { if ($rr['metode'] === 'PENGAJUAN') $rr['jam_masuk'] = ''; }   // izin/sakit disetujui: tidak ada jam masuk
+foreach ($rows as &$rr) { if (in_array($rr['metode'], ['PENGAJUAN', 'OTOMATIS'], true)) $rr['jam_masuk'] = ''; }   // izin/sakit disetujui: tidak ada jam masuk
 unset($rr);
 catat_aktivitas('EKSPOR', 'presensi_export', "Ekspor rekap presensi tanggal $tanggal (" . strtoupper($type) . '), ' . count($rows) . ' baris');
 

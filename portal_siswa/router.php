@@ -16,6 +16,7 @@
  */
 require_once __DIR__ . '/../includes/izin.php';
 require_once __DIR__ . '/_layout.php';
+jalankan_alpa_otomatis();
 
 $sub = trim(substr((string) ($pathPortal ?? 'portal'), strlen('portal')), '/');
 

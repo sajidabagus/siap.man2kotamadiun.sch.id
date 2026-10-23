@@ -414,8 +414,9 @@ try { var _s = JSON.parse(localStorage.getItem('siapBerandaV1') || 'null');
     });
     gambarDonut(d); gambarFeed(d); renderSiswa(d);
     var cb = $('chipBuka');
-    cb.className = 'chip ' + (d.efektif ? 'ok' : 'tutup');
-    cb.textContent = d.efektif ? 'Presensi dibuka hari ini' : 'Hari ini libur — presensi ditutup';
+    var tutupJam = d.efektif && d.ditutup;
+    cb.className = 'chip ' + (d.efektif && !tutupJam ? 'ok' : 'tutup');
+    cb.textContent = !d.efektif ? 'Hari ini libur — presensi ditutup' : (tutupJam ? 'Absen masuk ditutup pukul ' + d.batas_absen : 'Presensi dibuka hari ini' + (d.batas_absen ? ' s.d. ' + d.batas_absen : ''));
     if (d.jam_masuk) { var cj = $('chipJam'); cj.style.display = ''; cj.textContent = 'Masuk ' + d.jam_masuk + (d.batas_terlambat ? ' · terlambat setelah ' + d.batas_terlambat : ''); }
     $('waktuUpdate').textContent = (modeKelas ? d.terbaru.length + ' siswa sudah presensi' + (d.terbaru.length > 5 ? ' · gulir untuk melihat semua' : '') + ' · ' : '') + 'Diperbarui ' + d.waktu;
     $('liveBadge').classList.remove('putus'); $('liveBadge').textContent = 'LIVE';

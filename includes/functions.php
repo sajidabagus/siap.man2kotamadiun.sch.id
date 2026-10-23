@@ -490,6 +490,8 @@ function get_settings(): array
                 'alamat_sekolah' => 'TEXT NULL',
                 'nama_kepala'    => 'VARCHAR(150) NULL',
                 'portal_siswa_aktif' => 'TINYINT(1) NOT NULL DEFAULT 1',
+                'batas_absen'    => "TIME NOT NULL DEFAULT '10:00:00'",   // scan masuk ditutup + Alpa otomatis setelah jam ini
+                'alpa_otomatis_terakhir' => 'DATE NULL',                 // penanda proses Alpa otomatis (maks 1x/hari)
             ];
             $berubah = false;
             foreach ($kolomBaru as $kolom => $definisi) {
@@ -784,6 +786,82 @@ function jalankan_pembersihan_log_otomatis(): void
     }
     $db->prepare('UPDATE settings SET log_terakhir_dibersihkan = NOW() WHERE id = :id')
        ->execute([':id' => $settings['id']]);
+}
+
+// ---------------------------------------------------------------------
+// BATAS ABSEN MASUK + ALPA OTOMATIS (tanpa cron)
+// ---------------------------------------------------------------------
+/** Jam batas absen masuk (HH:MM:SS). Setelah jam ini scan masuk ditutup dan siswa yang belum absen dicatat ALPA. */
+function batas_absen(): string
+{
+    $b = (string) (get_settings()['batas_absen'] ?? '');
+    return preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $b) ? substr($b . ':00', 0, 8) : '10:00:00';
+}
+
+/** Apakah absen masuk hari ini sudah ditutup (lewat batas absen)? */
+function absen_sudah_ditutup(?string $jam = null): bool
+{
+    return ($jam ?? date('H:i:s')) >= batas_absen();
+}
+
+/**
+ * Alpa otomatis: untuk setiap hari efektif yang batas absennya sudah lewat, siswa aktif yang belum punya baris
+ * presensi dicatat ALPA (metode 'OTOMATIS', jam 00:00:00). Siswa dengan izin/sakit DISETUJUI yang mencakup tanggal
+ * itu dilewati. Dipicu lazily oleh request panel/portal/beranda; kerja sungguhan maks 1x per hari (kolom
+ * settings.alpa_otomatis_terakhir diklaim secara atomik). Bila beberapa hari tidak ada yang membuka situs,
+ * hari-hari efektif yang terlewat (maks 7 hari) ikut dikejar. Aman dijalankan ulang (UNIQUE siswa_id+tanggal + NOT EXISTS).
+ * Tidak pernah melempar error ke halaman pemanggil.
+ */
+function jalankan_alpa_otomatis(): void
+{
+    static $sudah = false;
+    if ($sudah) return;
+    $sudah = true;
+    try {
+        $settings = get_settings();
+        if (!$settings || !array_key_exists('alpa_otomatis_terakhir', $settings)) return; // kolom belum bisa dibuat
+        $hariIni = date('Y-m-d');
+        $tutup = absen_sudah_ditutup();
+        $sampai = $tutup ? $hariIni : date('Y-m-d', strtotime('-1 day'));
+        $terakhir = (string) ($settings['alpa_otomatis_terakhir'] ?? '');
+        if ($terakhir !== '' && $terakhir >= $sampai) return;               // sudah diproses
+
+        $db = getDB();
+        // Klaim atomik: hanya satu request yang memproses (request lain bersamaan langsung keluar).
+        $klaim = $db->prepare('UPDATE settings SET alpa_otomatis_terakhir = :s WHERE id = :id
+                               AND (alpa_otomatis_terakhir IS NULL OR alpa_otomatis_terakhir < :s2)');
+        $klaim->execute([':s' => $sampai, ':s2' => $sampai, ':id' => $settings['id']]);
+        if ($klaim->rowCount() !== 1) return;
+
+        // Pertama kali fitur aktif: hanya proses hari ini (tidak menulis Alpa untuk masa lalu).
+        $mulai = $terakhir === '' ? $sampai : date('Y-m-d', strtotime($terakhir . ' +1 day'));
+        $batasMundur = date('Y-m-d', strtotime($sampai . ' -6 days'));
+        if ($mulai < $batasMundur) $mulai = $batasMundur;
+
+        $izinAda = false;
+        try { $izinAda = (bool) $db->query("SHOW TABLES LIKE 'izin_pengajuan'")->fetchColumn(); } catch (Throwable $e) {}
+        $sql = "INSERT IGNORE INTO presensi (siswa_id, kelas_saat_presensi, tanggal, jam_masuk, status, metode, created_at)
+                SELECT s.id, s.kelas, :t, '00:00:00', 'ALPA', 'OTOMATIS', NOW() FROM siswa s
+                WHERE s.status = 'aktif' AND DATE(s.created_at) <= :t2
+                  AND NOT EXISTS (SELECT 1 FROM presensi p WHERE p.siswa_id = s.id AND p.tanggal = :t3)
+                  -- Pengaman hari libur nasional/tanggal merah (belum ada tabel libur): hari tanpa satu pun scan
+                  -- kehadiran dianggap libur sehingga tidak ada yang dicatat Alpa.
+                  AND EXISTS (SELECT 1 FROM presensi x WHERE x.tanggal = :t6 AND x.metode NOT IN ('PENGAJUAN','OTOMATIS'))"
+             . ($izinAda ? " AND NOT EXISTS (SELECT 1 FROM izin_pengajuan i WHERE i.siswa_id = s.id AND i.status = 'disetujui'
+                              AND i.tanggal_mulai <= :t4 AND i.tanggal_selesai >= :t5)" : '');
+        $ins = $db->prepare($sql);
+        $total = 0;
+        for ($t = $mulai; $t <= $sampai; $t = date('Y-m-d', strtotime($t . ' +1 day'))) {
+            if (!is_hari_efektif($t)) continue;
+            $ins->execute([':t' => $t, ':t2' => $t, ':t3' => $t, ':t6' => $t] + ($izinAda ? [':t4' => $t, ':t5' => $t] : []));
+            $total += $ins->rowCount();
+        }
+        if ($total > 0 && function_exists('catat_aktivitas')) {
+            try { catat_aktivitas('SISTEM', 'presensi', "Alpa otomatis: $total siswa dicatat ALPA ($mulai s.d. $sampai)."); } catch (Throwable $e) {}
+        }
+    } catch (Throwable $e) {
+        error_log('jalankan_alpa_otomatis: ' . $e->getMessage());
+    }
 }
 
 // ---------------------------------------------------------------------

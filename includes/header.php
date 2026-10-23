@@ -9,6 +9,7 @@ $current = defined('MODUL_FILE') ? MODUL_FILE : basename($_SERVER['PHP_SELF']);
 // Auto-reset Log Keamanan (kalau diaktifkan di Pengaturan) -- aman dipanggil
 // di setiap request krn ada throttle internal (maks jalan 1x/hari).
 jalankan_pembersihan_log_otomatis();
+jalankan_alpa_otomatis();
 
 /**
  * Kelompok halaman per menu sidebar, supaya menu tetap ter-highlight aktif

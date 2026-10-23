@@ -142,7 +142,7 @@ $ttl = trim(($siswa['tempat_lahir'] ?: '') . ($siswa['tanggal_lahir'] ? ($siswa[
             <?php foreach ($riwayat as $r): ?>
               <tr>
                 <td><?= e(format_tanggal_indonesia($r['tanggal'])) ?></td>
-                <td><?= $r['metode'] === 'PENGAJUAN' ? '—' : e(substr((string) $r['jam_masuk'], 0, 5)) ?></td>
+                <td><?= in_array($r['metode'], ['PENGAJUAN', 'OTOMATIS'], true) ? '—' : e(substr((string) $r['jam_masuk'], 0, 5)) ?></td>
                 <td><span class="badge bg-<?= $warnaStatus[$r['status']] ?? 'secondary' ?>"><?= e($r['status']) ?></span></td>
                 <td><?= e($r['kelas_saat_presensi']) ?></td>
                 <td><?= e($r['metode']) ?></td>
