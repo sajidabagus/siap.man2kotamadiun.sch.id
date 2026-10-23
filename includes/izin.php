@@ -136,7 +136,7 @@ function izin_label_jenis(string $j): string
 function izin_dir(): string
 {
     $dir = __DIR__ . '/../uploads/izin';
-    if (!is_dir($dir)) @mkdir($dir, 0750, true);
+    if (!is_dir($dir)) @mkdir($dir, 0755, true);
     $ht = $dir . '/.htaccess';
     if (!is_file($ht)) @file_put_contents($ht, "Require all denied\n<IfModule !mod_authz_core.c>\n  Order allow,deny\n  Deny from all\n</IfModule>\n");
     return $dir;
@@ -153,8 +153,7 @@ function izin_periksa_lampiran(?array $f): array
     if ((int) $f['size'] > IZIN_LAMPIRAN_MAKS) return ['ok' => false, 'ada' => true, 'pesan' => 'Ukuran file maksimal 3 MB.'];
     if ((int) $f['size'] <= 0) return ['ok' => false, 'ada' => true, 'pesan' => 'File kosong.'];
 
-    $fi = new finfo(FILEINFO_MIME_TYPE);
-    $mime = (string) $fi->file($f['tmp_name']);
+    $mime = deteksi_mime_file((string) $f['tmp_name']);   // finfo -> mime_content_type -> magic bytes (lihat includes/compat.php)
     if (!isset(IZIN_LAMPIRAN_TIPE[$mime])) return ['ok' => false, 'ada' => true, 'pesan' => 'Jenis file tidak diizinkan. Gunakan foto (JPG/PNG/WEBP) atau PDF.'];
     if ($mime === 'application/pdf') {
         $h = (string) file_get_contents($f['tmp_name'], false, null, 0, 5);

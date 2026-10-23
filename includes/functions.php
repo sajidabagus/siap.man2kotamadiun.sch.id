@@ -3,6 +3,7 @@
  * Fungsi-fungsi bantu umum yang dipakai di seluruh aplikasi.
  */
 
+require_once __DIR__ . '/compat.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/keamanan.php';
 
@@ -876,16 +877,26 @@ function handle_upload_foto(array $file, ?string $oldFile = null): ?string
         throw new RuntimeException('Ukuran foto maksimal 2MB.');
     }
 
-    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    $mime = finfo_file($finfo, $file['tmp_name']);
-    finfo_close($finfo);
+    if (!is_uploaded_file((string) $file['tmp_name'])) {
+        throw new RuntimeException('File tidak valid.');
+    }
+    $mime = deteksi_mime_file((string) $file['tmp_name']);   // tanpa ketergantungan wajib pada ekstensi fileinfo
 
     $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
     if (!isset($allowed[$mime])) {
         throw new RuntimeException('Format foto harus JPG, PNG, atau WEBP.');
     }
 
+    $img = @getimagesize($file['tmp_name']);
+    if (!$img || $img[0] < 1 || $img[1] < 1) {
+        throw new RuntimeException('File gambar tidak valid.');
+    }
+
     $ext = $allowed[$mime];
+    $dir = __DIR__ . '/../uploads/siswa';
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
+        throw new RuntimeException('Folder uploads/siswa tidak bisa dibuat. Periksa izin tulis folder uploads.');
+    }
     $filename = 'siswa_' . bin2hex(random_bytes(8)) . '.' . $ext;
     $dest = __DIR__ . '/../uploads/siswa/' . $filename;
 
