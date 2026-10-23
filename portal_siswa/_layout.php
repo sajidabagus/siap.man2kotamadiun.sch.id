@@ -15,7 +15,7 @@ function portal_head(string $judul): void
 <?= favicon_tag() ?>
 <link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap-icons.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link href="<?= BASE_URL ?>/assets/css/portal.css" rel="stylesheet">
+<link href="<?= BASE_URL ?>/assets/css/portal.css?v=<?= @filemtime(__DIR__ . '/../assets/css/portal.css') ?: time() ?>" rel="stylesheet">
 </head>
 <?php
 }
