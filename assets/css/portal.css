@@ -437,7 +437,21 @@ body.pt-v2 { --hj: #2563eb; --hj2: #2563eb; --hj-muda: #eff4ff; --teks: #0f172a;
   .pt-v2 .pt-wrap { max-width: 760px; padding: 24px 32px; }
   .pt-v2 .pt-bar { padding-left: 24px; padding-right: 24px; }
   .pt-v2 .pt-hello { padding-top: 8px; }
-  .pt-v2 .pt-jam .waktu { font-size: 52px; }
   .pt-v2 .pt-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pt-v2 .pt-dl { grid-template-columns: 170px 1fr; }
 }
+
+/* Home /portal (dipakai di browser yang bukan perangkat terdaftar, mis. desktop) = tampilan beranda HP (beranda.php mode-siswa):
+   kartu jam biru, jam dengan detik, tombol absen hijau, ubin ringkasan sama. Sebelumnya masih gaya hijau lama. */
+.pt-v2 .pt-jam { border-radius: 20px; background: linear-gradient(135deg, #1f6feb, #2a5bd7); box-shadow: 0 14px 28px -16px rgba(31,111,235,.9); }
+.pt-v2 .pt-jam .lbl { font-size: 14.4px; font-weight: 600; }
+.pt-v2 .pt-jam .waktu { font-size: 46px; font-weight: 800; letter-spacing: 0; }
+.pt-v2 .pt-jam .waktu .dt { font-size: 21.6px; font-weight: 700; opacity: .75; margin-left: 2px; }
+.pt-v2 .pt-jam .waktu small { font-weight: 700; }
+.pt-v2 .pt-absen { border-radius: 16px; background: #2fb344; box-shadow: 0 12px 22px -14px rgba(47,179,68,.95); }
+.pt-v2 .pt-ringkas a { border: 1px solid transparent; border-radius: 16px; color: #0f172a; }
+.pt-v2 .pt-ringkas i { background: none !important; width: auto; height: auto; font-size: 21px; }
+.pt-v2 .pt-ringkas .h { background: #e9f7ee; border-color: #cdebd6; } .pt-v2 .pt-ringkas .h b, .pt-v2 .pt-ringkas .h i { color: #23913a; }
+.pt-v2 .pt-ringkas .i { background: #fff5e3; border-color: #f7e2b5; } .pt-v2 .pt-ringkas .i b, .pt-v2 .pt-ringkas .i i { color: #d98a00; }
+.pt-v2 .pt-ringkas .a { background: #fdeced; border-color: #f6cfd2; } .pt-v2 .pt-ringkas .a b, .pt-v2 .pt-ringkas .a i { color: #d63a46; }
+@media (min-width: 1024px) { .pt-v2 .pt-jam .waktu { font-size: 52px; } }
