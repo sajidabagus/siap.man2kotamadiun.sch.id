@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Fungsi-fungsi bantu umum yang dipakai di seluruh aplikasi.
  */
@@ -23,7 +24,7 @@ function clean(?string $value): string
 // ---------------------------------------------------------------------
 // PAGINATION
 // ---------------------------------------------------------------------
-define('DEFAULT_PAGE_SIZE', 20);
+define('DEFAULT_PAGE_SIZE', 10);
 
 /**
  * Ambil nomor halaman aktif dari query string, minimal 1.
@@ -39,13 +40,13 @@ function get_page_size(): int
 }
 
 /**
- * Pilihan "[20 v] data per halaman". Form GET sendiri yang membawa filter aktif ($hidden)
+ * Pilihan "[10 v] data per halaman". Form GET sendiri yang membawa filter aktif ($hidden)
  * dan halaman kembali ke 1 saat jumlahnya diubah.
  */
 function render_per_page_field(int $current, bool $submitOnChange = true): string
 {
     $html = '<label class="per-page"><select name="limit" class="form-select form-select-sm"'
-          . ($submitOnChange ? ' onchange="this.form.submit()"' : '') . ' aria-label="Jumlah data per halaman">';
+        . ($submitOnChange ? ' onchange="this.form.submit()"' : '') . ' aria-label="Jumlah data per halaman">';
     foreach (OPSI_PER_HALAMAN as $o) {
         $html .= '<option value="' . $o . '"' . ($o === $current ? ' selected' : '') . '>' . $o . '</option>';
     }
@@ -74,10 +75,39 @@ function get_current_page(string $paramName = 'page'): int
  * Daftar putih (whitelist) modul => file di folder panel/.
  */
 const DAFTAR_MODUL = [
-    'dashboard', 'siswa', 'siswa_detail', 'akun_siswa', 'izin', 'izin_detail', 'izin_lampiran', 'siswa_tambah', 'siswa_edit', 'siswa_hapus', 'siswa_import',
-    'master_kelas', 'kenaikan_kelas', 'qr_siswa', 'qr_print', 'qr_generate', 'qr_gerbang',
-    'qr_kelas', 'qr_kelas_print', 'presensi', 'presensi_export', 'presensi_print', 'rekap', 'rekap_print', 'device',
-    'security_log', 'log_aktivitas', 'log_cetak', 'pengaturan', 'profil', 'pengguna', 'hak_akses', 'papan',
+    'dashboard',
+    'siswa',
+    'siswa_detail',
+    'akun_siswa',
+    'izin',
+    'izin_detail',
+    'izin_lampiran',
+    'siswa_tambah',
+    'siswa_edit',
+    'siswa_hapus',
+    'siswa_import',
+    'master_kelas',
+    'kenaikan_kelas',
+    'qr_siswa',
+    'qr_print',
+    'qr_generate',
+    'qr_gerbang',
+    'qr_kelas',
+    'qr_kelas_print',
+    'presensi',
+    'presensi_export',
+    'presensi_print',
+    'rekap',
+    'rekap_print',
+    'device',
+    'security_log',
+    'log_aktivitas',
+    'log_cetak',
+    'pengaturan',
+    'profil',
+    'pengguna',
+    'hak_akses',
+    'papan',
 ];
 
 // ---------------------------------------------------------------------
@@ -150,28 +180,60 @@ const DAFTAR_IZIN = [
 
 /** Izin bawaan untuk role Operator saat tabel hak akses pertama kali dibuat. */
 const IZIN_DEFAULT_OPERATOR = [
-    'dashboard.lihat', 'siswa.lihat', 'siswa.tambah', 'siswa.ubah', 'kelas.lihat',
-    'qr_siswa.lihat', 'qr_siswa.cetak', 'qr_gerbang.lihat', 'qr_kelas.lihat', 'qr_kelas.cetak', 'presensi.lihat', 'presensi.ekspor', 'presensi.cetak',
-    'rekap.lihat', 'rekap.cetak', 'device.lihat', 'papan.lihat',
+    'dashboard.lihat',
+    'siswa.lihat',
+    'siswa.tambah',
+    'siswa.ubah',
+    'kelas.lihat',
+    'qr_siswa.lihat',
+    'qr_siswa.cetak',
+    'qr_gerbang.lihat',
+    'qr_kelas.lihat',
+    'qr_kelas.cetak',
+    'presensi.lihat',
+    'presensi.ekspor',
+    'presensi.cetak',
+    'rekap.lihat',
+    'rekap.cetak',
+    'device.lihat',
+    'papan.lihat',
 ];
 
 /** Izin yang dibutuhkan untuk membuka tiap modul (null = semua pengguna yang login). */
 const MODUL_IZIN = [
     'dashboard' => 'dashboard.lihat',
-    'siswa' => 'siswa.lihat', 'siswa_detail' => 'siswa.lihat', 'akun_siswa' => 'akun_siswa.lihat', 'izin' => 'izin.lihat', 'izin_detail' => 'izin.lihat', 'izin_lampiran' => 'izin.lihat', 'siswa_tambah' => 'siswa.tambah', 'siswa_edit' => 'siswa.ubah',
-    'siswa_hapus' => 'siswa.hapus', 'siswa_import' => 'siswa.impor',
-    'master_kelas' => 'kelas.lihat', 'kenaikan_kelas' => 'kenaikan.proses',
-    'qr_siswa' => 'qr_siswa.lihat', 'qr_generate' => 'qr_siswa.lihat', 'qr_print' => 'qr_siswa.cetak',
+    'siswa' => 'siswa.lihat',
+    'siswa_detail' => 'siswa.lihat',
+    'akun_siswa' => 'akun_siswa.lihat',
+    'izin' => 'izin.lihat',
+    'izin_detail' => 'izin.lihat',
+    'izin_lampiran' => 'izin.lihat',
+    'siswa_tambah' => 'siswa.tambah',
+    'siswa_edit' => 'siswa.ubah',
+    'siswa_hapus' => 'siswa.hapus',
+    'siswa_import' => 'siswa.impor',
+    'master_kelas' => 'kelas.lihat',
+    'kenaikan_kelas' => 'kenaikan.proses',
+    'qr_siswa' => 'qr_siswa.lihat',
+    'qr_generate' => 'qr_siswa.lihat',
+    'qr_print' => 'qr_siswa.cetak',
     'qr_gerbang' => 'qr_gerbang.lihat',
-    'qr_kelas' => 'qr_kelas.lihat', 'qr_kelas_print' => 'qr_kelas.cetak',
+    'qr_kelas' => 'qr_kelas.lihat',
+    'qr_kelas_print' => 'qr_kelas.cetak',
     'papan' => 'papan.lihat',
-    'presensi' => 'presensi.lihat', 'presensi_export' => 'presensi.ekspor', 'presensi_print' => 'presensi.cetak',
-    'rekap' => 'rekap.lihat', 'rekap_print' => 'rekap.cetak',
+    'presensi' => 'presensi.lihat',
+    'presensi_export' => 'presensi.ekspor',
+    'presensi_print' => 'presensi.cetak',
+    'rekap' => 'rekap.lihat',
+    'rekap_print' => 'rekap.cetak',
     'device' => 'device.lihat',
-    'security_log' => 'log_keamanan.lihat', 'log_aktivitas' => 'log_aktivitas.lihat',
+    'security_log' => 'log_keamanan.lihat',
+    'log_aktivitas' => 'log_aktivitas.lihat',
     'pengaturan' => 'pengaturan.kelola',
-    'pengguna' => 'pengguna.kelola', 'hak_akses' => 'pengguna.kelola',
-    'log_cetak' => null, 'profil' => null,
+    'pengguna' => 'pengguna.kelola',
+    'hak_akses' => 'pengguna.kelola',
+    'log_cetak' => null,
+    'profil' => null,
 ];
 
 /** "ABHISTA KURNIA AKBAR" -> "Abhista K. A." (untuk tampilan publik; nama lengkap tidak ditampilkan). */
@@ -551,10 +613,10 @@ function favicon_tag(): string
         $mime = ['png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'webp' => 'image/webp', 'gif' => 'image/gif'][$ext] ?? 'image/png';
         $href = BASE_URL . '/uploads/siswa/' . rawurlencode($logo) . '?v=' . filemtime($path);
         return '<link rel="icon" type="' . $mime . '" href="' . e($href) . '">' . "\n"
-             . '<link rel="apple-touch-icon" href="' . e($href) . '">';
+            . '<link rel="apple-touch-icon" href="' . e($href) . '">';
     }
     $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0d6efd"/>'
-         . '<path d="M18 33l10 10 19-22" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        . '<path d="M18 33l10 10 19-22" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     return '<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,' . rawurlencode($svg) . '">';
 }
 
@@ -645,7 +707,7 @@ function login_catat_gagal(string $username): void
     try {
         $db = getDB();
         $db->prepare('INSERT INTO login_attempts (username, ip_address, created_at) VALUES (:u, :ip, NOW())')
-           ->execute([':u' => login_normalisasi_username($username), ':ip' => substr(get_client_ip(), 0, 45)]);
+            ->execute([':u' => login_normalisasi_username($username), ':ip' => substr(get_client_ip(), 0, 45)]);
         if (random_int(1, 20) === 1) { // bersih-bersih data lama sesekali
             $db->exec('DELETE FROM login_attempts WHERE created_at < (NOW() - INTERVAL 1 DAY)');
         }
@@ -659,7 +721,7 @@ function login_bersihkan(string $username): void
     if (!login_siapkan_tabel()) return;
     try {
         getDB()->prepare('DELETE FROM login_attempts WHERE username = :u')
-               ->execute([':u' => login_normalisasi_username($username)]);
+            ->execute([':u' => login_normalisasi_username($username)]);
     } catch (Throwable $e) {
         error_log('login_bersihkan: ' . $e->getMessage());
     }
@@ -777,15 +839,15 @@ function jalankan_pembersihan_log_otomatis(): void
 
     $db = getDB();
     $db->prepare('DELETE FROM security_logs WHERE created_at < (NOW() - INTERVAL :hari DAY)')
-       ->execute([':hari' => $retensiHari]);
+        ->execute([':hari' => $retensiHari]);
     try {
         $db->prepare('DELETE FROM activity_logs WHERE created_at < (NOW() - INTERVAL :hari DAY)')
-           ->execute([':hari' => $retensiHari]);
+            ->execute([':hari' => $retensiHari]);
     } catch (Throwable $e) {
         // tabel log aktivitas belum dibuat: abaikan
     }
     $db->prepare('UPDATE settings SET log_terakhir_dibersihkan = NOW() WHERE id = :id')
-       ->execute([':id' => $settings['id']]);
+        ->execute([':id' => $settings['id']]);
 }
 
 // ---------------------------------------------------------------------
@@ -839,7 +901,10 @@ function jalankan_alpa_otomatis(): void
         if ($mulai < $batasMundur) $mulai = $batasMundur;
 
         $izinAda = false;
-        try { $izinAda = (bool) $db->query("SHOW TABLES LIKE 'izin_pengajuan'")->fetchColumn(); } catch (Throwable $e) {}
+        try {
+            $izinAda = (bool) $db->query("SHOW TABLES LIKE 'izin_pengajuan'")->fetchColumn();
+        } catch (Throwable $e) {
+        }
         $sql = "INSERT IGNORE INTO presensi (siswa_id, kelas_saat_presensi, tanggal, jam_masuk, status, metode, created_at)
                 SELECT s.id, s.kelas, :t, '00:00:00', 'ALPA', 'OTOMATIS', NOW() FROM siswa s
                 WHERE s.status = 'aktif' AND DATE(s.created_at) <= :t2
@@ -847,7 +912,7 @@ function jalankan_alpa_otomatis(): void
                   -- Pengaman hari libur nasional/tanggal merah (belum ada tabel libur): hari tanpa satu pun scan
                   -- kehadiran dianggap libur sehingga tidak ada yang dicatat Alpa.
                   AND EXISTS (SELECT 1 FROM presensi x WHERE x.tanggal = :t6 AND x.metode NOT IN ('PENGAJUAN','OTOMATIS'))"
-             . ($izinAda ? " AND NOT EXISTS (SELECT 1 FROM izin_pengajuan i WHERE i.siswa_id = s.id AND i.status = 'disetujui'
+            . ($izinAda ? " AND NOT EXISTS (SELECT 1 FROM izin_pengajuan i WHERE i.siswa_id = s.id AND i.status = 'disetujui'
                               AND i.tanggal_mulai <= :t4 AND i.tanggal_selesai >= :t5)" : '');
         $ins = $db->prepare($sql);
         $total = 0;
@@ -857,7 +922,10 @@ function jalankan_alpa_otomatis(): void
             $total += $ins->rowCount();
         }
         if ($total > 0 && function_exists('catat_aktivitas')) {
-            try { catat_aktivitas('SISTEM', 'presensi', "Alpa otomatis: $total siswa dicatat ALPA ($mulai s.d. $sampai)."); } catch (Throwable $e) {}
+            try {
+                catat_aktivitas('SISTEM', 'presensi', "Alpa otomatis: $total siswa dicatat ALPA ($mulai s.d. $sampai).");
+            } catch (Throwable $e) {
+            }
         }
     } catch (Throwable $e) {
         error_log('jalankan_alpa_otomatis: ' . $e->getMessage());
@@ -908,7 +976,7 @@ function get_flash(): ?array
 // ---------------------------------------------------------------------
 function format_tanggal_indonesia(string $ymd): string
 {
-    $namaBulan = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    $namaBulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     $ts = strtotime($ymd);
     if (!$ts) return $ymd;
     return (int) date('j', $ts) . ' ' . $namaBulan[(int) date('n', $ts)] . ' ' . date('Y', $ts);
