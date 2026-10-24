@@ -15,7 +15,10 @@ $stmt->execute([':id' => $id]);
 $siswa = $stmt->fetch();
 
 if (!$siswa) {
-  if ($modal) { echo '<div class="alert alert-danger mb-0">Siswa tidak ditemukan.</div>'; exit; }
+  if ($modal) {
+    echo '<div class="alert alert-danger mb-0">Siswa tidak ditemukan.</div>';
+    exit;
+  }
   set_flash('danger', 'Siswa tidak ditemukan.');
   header('Location: ' . modul_url('siswa'));
   exit;
@@ -93,12 +96,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $ketLog = "Mengubah data siswa {$data['nama']} (NISN " . ($data['nisn'] !== '' ? $data['nisn'] : '-') . ")";
     if ($kelasAsli !== $data['kelas']) {
-        $ketLog .= " — pindah kelas \"$kelasAsli\" -> \"{$data['kelas']}\"";
+      $ketLog .= " — pindah kelas \"$kelasAsli\" -> \"{$data['kelas']}\"";
     }
     catat_aktivitas('UBAH', 'siswa_edit', $ketLog);
 
     set_flash('success', 'Data siswa berhasil diperbarui.');
-    if ($modal) { header('Content-Type: application/json'); echo json_encode(['ok' => true]); exit; }
+    if ($modal) {
+      header('Content-Type: application/json');
+      echo json_encode(['ok' => true]);
+      exit;
+    }
     header('Location: ' . modul_url('siswa'));
     exit;
   }
@@ -108,10 +115,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $kelasList = $db->query('SELECT DISTINCT kelas FROM siswa ORDER BY kelas')->fetchAll(PDO::FETCH_COLUMN);
 ?>
 <?php if (!$modal): ?>
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Edit Siswa</h4>
-  <a href="<?= modul_url('siswa') ?>" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Kembali ke Data Siswa</a>
-</div>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Edit Siswa</h4>
+    <a href="<?= modul_url('siswa') ?>" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Kembali ke Data Siswa</a>
+  </div>
 <?php endif; ?>
 
 <?php if ($errors): ?>
@@ -121,7 +128,7 @@ $kelasList = $db->query('SELECT DISTINCT kelas FROM siswa ORDER BY kelas')->fetc
 <?php endif; ?>
 
 <?php if (!$modal): ?><div class="card">
-  <div class="card-body"><?php endif; ?>
+    <div class="card-body"><?php endif; ?>
     <form method="post" enctype="multipart/form-data" data-dirty-guard<?= $modal ? ' action="' . e(modul_url('siswa_edit', ['id' => (int) $id, 'modal' => 1])) . '" data-popup-form' : '' ?>>
       <?= csrf_field() ?>
       <div class="row g-3">
@@ -139,8 +146,8 @@ $kelasList = $db->query('SELECT DISTINCT kelas FROM siswa ORDER BY kelas')->fetc
               <input type="text" name="nis" class="form-control" value="<?= e($siswa['nis']) ?>" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label">NISN</label>
-              <input type="text" name="nisn" class="form-control" value="<?= e($siswa['nisn']) ?>">
+              <label class="form-label">NISN *</label>
+              <input type="text" name="nisn" class="form-control" value="<?= e($siswa['nisn']) ?>" required>
             </div>
           </div>
         </div>
@@ -166,7 +173,8 @@ $kelasList = $db->query('SELECT DISTINCT kelas FROM siswa ORDER BY kelas')->fetc
         <div class="col-md-4">
           <label class="form-label">Kelas *</label>
           <select name="kelas" id="selectKelas" class="form-select" required onchange="document.getElementById('wrapKelasBaru').classList.toggle('d-none', this.value !== '__baru__')">
-            <?php $kelasSekarang = $siswa['kelas']; $adaDiList = in_array($kelasSekarang, $kelasList, true); ?>
+            <?php $kelasSekarang = $siswa['kelas'];
+            $adaDiList = in_array($kelasSekarang, $kelasList, true); ?>
             <?php foreach ($kelasList as $k): ?>
               <option value="<?= e($k) ?>" <?= $kelasSekarang === $k ? 'selected' : '' ?>><?= e($k) ?></option>
             <?php endforeach; ?>
@@ -206,7 +214,8 @@ $kelasList = $db->query('SELECT DISTINCT kelas FROM siswa ORDER BY kelas')->fetc
         <?php endif; ?>
       </div>
     </form>
-<?php if (!$modal): ?>  </div>
-</div>
+    <?php if (!$modal): ?>
+    </div>
+  </div>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?><?php endif; ?>
+  <?php require_once __DIR__ . '/../includes/footer.php'; ?><?php endif; ?>
