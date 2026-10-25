@@ -3,7 +3,10 @@
 require_once __DIR__ . '/../includes/device_binding.php';
 $akun = portal_wajib_login();
 // Beranda lama (/portal, tampilan hijau) tidak dipakai bagi siswa berperangkat terdaftar: alihkan ke beranda utama.
-if (portal_pakai_beranda_utama()) { header('Location: ' . BASE_URL . '/', true, 302); exit; }
+if (portal_pakai_beranda_utama()) {
+  header('Location: ' . BASE_URL . '/', true, 302);
+  exit;
+}
 $sid = (int) $akun['siswa_id'];
 
 $info = (string) ($_SESSION['portal_info'] ?? '');
@@ -27,11 +30,11 @@ $kunciStatus = $p['status'] ?? 'BELUM';
 $ikonStatus = ['HADIR' => 'check-lg', 'TERLAMBAT' => 'clock-history', 'IZIN' => 'file-earmark-text-fill', 'SAKIT' => 'heart-pulse-fill', 'ALPA' => 'x-lg', 'BELUM' => 'hourglass-split'][$kunciStatus];
 $judulStatus = $p ? (PORTAL_LABEL_STATUS[$p['status']] ?? $p['status']) : 'Belum absen';
 if (!$p) {
-    $subStatus = absen_sudah_ditutup() && is_hari_efektif() ? 'Absen masuk sudah ditutup pukul ' . substr(batas_absen(), 0, 5) . '.' : 'Scan QR absen saat tiba di sekolah.';
+  $subStatus = absen_sudah_ditutup() && is_hari_efektif() ? 'Absen masuk sudah ditutup pukul ' . substr(batas_absen(), 0, 5) . '.' : 'Scan QR absen saat tiba di sekolah.';
 } elseif (in_array($p['status'], ['HADIR', 'TERLAMBAT'], true) && $p['metode'] !== 'PENGAJUAN' && substr((string) $p['jam_masuk'], 0, 5) !== '00:00') {
-    $subStatus = 'Masuk: ' . substr((string) $p['jam_masuk'], 0, 5) . ' ' . $zona;
+  $subStatus = 'Masuk: ' . substr((string) $p['jam_masuk'], 0, 5) . ' ' . $zona;
 } else {
-    $subStatus = $p['metode'] === 'PENGAJUAN' ? 'Pengajuan disetujui' : ($p['metode'] === 'OTOMATIS' ? 'Tidak absen sampai batas ' . substr(batas_absen(), 0, 5) : 'Dicatat petugas');
+  $subStatus = $p['metode'] === 'PENGAJUAN' ? 'Pengajuan disetujui' : ($p['metode'] === 'OTOMATIS' ? 'Tidak absen sampai batas ' . substr(batas_absen(), 0, 5) : 'Dicatat petugas');
 }
 $hadir = $rekap['HADIR'] + $rekap['TERLAMBAT'];
 $izin = $rekap['IZIN'] + $rekap['SAKIT'];
@@ -58,16 +61,24 @@ if ($galatFlash !== '') portal_alert('err', $galatFlash);
     <div class="ket"><i class="bi bi-calendar-check"></i> <?= e(portal_tanggal_panjang($hariIni)) ?></div>
   </div>
   <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">
-    <circle cx="60" cy="60" r="58" fill="rgba(255,255,255,.25)"/><circle cx="60" cy="60" r="51" fill="#fff"/>
-    <?php for ($i = 0; $i < 60; $i++): $b = $i % 5 === 0; ?><line x1="60" y1="<?= $b ? 13 : 13.5 ?>" x2="60" y2="<?= $b ? 21 : 16.5 ?>" stroke="<?= $b ? '#14213d' : '#c3cad6' ?>" stroke-width="<?= $b ? 2.8 : 1 ?>" stroke-linecap="round" transform="rotate(<?= $i * 6 ?> 60 60)"/><?php endfor; ?>
-    <line id="jmJam" x1="60" y1="60" x2="60" y2="35" stroke="#14213d" stroke-width="5" stroke-linecap="round"/>
-    <line id="jmMenit" x1="60" y1="60" x2="60" y2="20" stroke="#14213d" stroke-width="3.6" stroke-linecap="round"/>
-    <line id="jmDetik" x1="60" y1="68" x2="60" y2="18" stroke="#2f80ff" stroke-width="1.6" stroke-linecap="round"/>
-    <circle cx="60" cy="60" r="4.5" fill="#14213d"/><circle cx="60" cy="60" r="1.6" fill="#2f80ff"/>
+    <circle cx="60" cy="60" r="58" fill="rgba(255,255,255,.25)" />
+    <circle cx="60" cy="60" r="51" fill="#fff" />
+    <?php for ($i = 0; $i < 60; $i++): $b = $i % 5 === 0; ?>
+      <line x1="60" y1="<?= $b ? 13 : 13.5 ?>" x2="60" y2="<?= $b ? 21 : 16.5 ?>" stroke="<?= $b ? '#14213d' : '#c3cad6' ?>" stroke-width="<?= $b ? 2.8 : 1 ?>" stroke-linecap="round" transform="rotate(<?= $i * 6 ?> 60 60)" /><?php endfor; ?>
+    <line id="jmJam" x1="60" y1="60" x2="60" y2="35" stroke="#14213d" stroke-width="5" stroke-linecap="round" />
+    <line id="jmMenit" x1="60" y1="60" x2="60" y2="20" stroke="#14213d" stroke-width="3.6" stroke-linecap="round" />
+    <line id="jmDetik" x1="60" y1="68" x2="60" y2="18" stroke="#2f80ff" stroke-width="1.6" stroke-linecap="round" />
+    <circle cx="60" cy="60" r="4.5" fill="#14213d" />
+    <circle cx="60" cy="60" r="1.6" fill="#2f80ff" />
   </svg>
 </section>
 
-<a class="pt-absen" href="<?= e(BASE_URL) ?>/presensi/"><i class="bi bi-qr-code-scan"></i> Scan QR Absen</a>
+<?php $scan = $GLOBALS['PORTAL_SCAN'] ?? portal_scan_status($sid); ?>
+<?php if ($scan['aktif']): ?>
+  <a class="pt-absen" href="<?= e(BASE_URL) ?>/presensi/"><i class="bi bi-qr-code-scan"></i> Scan QR Absen</a>
+<?php else: ?>
+  <span class="pt-absen mati" role="button" aria-disabled="true"><i class="bi bi-qr-code-scan"></i> <?= e($scan['alasan']) ?></span>
+<?php endif; ?>
 
 <?php if ($bindingAktif && !$binding): ?>
   <a class="pt-peringatan kuning" href="<?= e(portal_url('profil')) ?>#kartuPerangkat"><i class="bi bi-phone"></i><span>Perangkat presensi belum terdaftar, jadi absen dari HP ini belum bisa. Daftarkan sekarang.</span><i class="bi bi-chevron-right p"></i></a>
@@ -75,7 +86,9 @@ if ($galatFlash !== '') portal_alert('err', $galatFlash);
   <div class="pt-peringatan merah"><i class="bi bi-slash-circle"></i><span>Perangkat presensi Anda diblokir. Hubungi petugas sekolah.</span></div>
 <?php endif; ?>
 
-<div class="pt-sec sd-hide"><h2>Status Hari Ini</h2></div>
+<div class="pt-sec sd-hide">
+  <h2>Status Hari Ini</h2>
+</div>
 <a class="pt-status pt-c-<?= e($kunciStatus) ?>" href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni])) ?>">
   <span class="lingkar" style="background:var(--c)"><i class="bi bi-<?= e($ikonStatus) ?>"></i></span>
   <span class="isi"><em class="sd-lbl">Status Hari Ini</em><b style="color:var(--c)"><?= e($judulStatus) ?></b><span><?= e($subStatus) ?></span></span>
@@ -83,7 +96,9 @@ if ($galatFlash !== '') portal_alert('err', $galatFlash);
   <i class="bi bi-chevron-right m-ch"></i>
 </a>
 
-<div class="pt-sec"><h2>Ringkasan Bulan Ini</h2><a href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni])) ?>">Lihat Semua <i class="bi bi-chevron-right sd-ik"></i></a></div>
+<div class="pt-sec">
+  <h2>Ringkasan Bulan Ini</h2><a href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni])) ?>">Lihat Semua <i class="bi bi-chevron-right sd-ik"></i></a>
+</div>
 <div class="pt-ringkas">
   <a class="h" href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni])) ?>"><em class="sd-bul"><i class="bi bi-check-lg"></i></em><b><?= $hadir ?></b><span>Hadir</span><?php if ($rekap['TERLAMBAT'] > 0): ?><small><?= $rekap['TERLAMBAT'] ?> terlambat</small><?php else: ?><small class="sd-only">Tepat waktu</small><?php endif; ?><i class="bi bi-calendar-check"></i><s class="sd-ch bi bi-chevron-right"></s></a>
   <a class="i" href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni])) ?>"><em class="sd-bul"><i class="bi bi-clock"></i></em><b><?= $izin ?></b><span>Izin / Sakit</span><small class="sd-only"><?= $rekap['IZIN'] ?> izin · <?= $rekap['SAKIT'] ?> sakit</small><i class="bi bi-file-earmark-text-fill"></i><s class="sd-ch bi bi-chevron-right"></s></a>
@@ -91,25 +106,54 @@ if ($galatFlash !== '') portal_alert('err', $galatFlash);
 </div>
 
 <script>
-(function () {
-  var teks = document.getElementById('jamTeks'), jam = document.getElementById('jmJam'), menit = document.getElementById('jmMenit'), detikT = document.getElementById('jamDetik'), detikJ = document.getElementById('jmDetik');
-  if (!teks || !jam || !menit) return;
-  var tz = <?= json_encode(date_default_timezone_get()) ?>, selisih = <?= (int) time() * 1000 ?> - Date.now(), fmt = null;
-  try { fmt = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }); } catch (e) {}
-  function waktu() {
-    var d = new Date(Date.now() + selisih), h = d.getHours(), m = d.getMinutes(), s = d.getSeconds();
-    if (fmt) { fmt.formatToParts(d).forEach(function (x) { if (x.type === 'hour') h = parseInt(x.value, 10) % 24; if (x.type === 'minute') m = parseInt(x.value, 10); if (x.type === 'second') s = parseInt(x.value, 10); }); }
-    return [h, m, s];
-  }
-  function gambar() {
-    var t = waktu(), h = t[0], m = t[1], s = t[2];
-    teks.textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
-    jam.setAttribute('transform', 'rotate(' + ((h % 12) * 30 + m * 0.5) + ' 60 60)');
-    menit.setAttribute('transform', 'rotate(' + (m * 6 + s * 0.1) + ' 60 60)');
-    if (detikT) detikT.textContent = ':' + (s < 10 ? '0' : '') + s;
-    if (detikJ) detikJ.setAttribute('transform', 'rotate(' + (s * 6) + ' 60 60)');
-  }
-  gambar(); setInterval(gambar, 1000);
-})();
+  (function() {
+    var teks = document.getElementById('jamTeks'),
+      jam = document.getElementById('jmJam'),
+      menit = document.getElementById('jmMenit'),
+      detikT = document.getElementById('jamDetik'),
+      detikJ = document.getElementById('jmDetik');
+    if (!teks || !jam || !menit) return;
+    var tz = <?= json_encode(date_default_timezone_get()) ?>,
+      selisih = <?= (int) time() * 1000 ?> - Date.now(),
+      fmt = null;
+    try {
+      fmt = new Intl.DateTimeFormat('en-GB', {
+        timeZone: tz,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+    } catch (e) {}
+
+    function waktu() {
+      var d = new Date(Date.now() + selisih),
+        h = d.getHours(),
+        m = d.getMinutes(),
+        s = d.getSeconds();
+      if (fmt) {
+        fmt.formatToParts(d).forEach(function(x) {
+          if (x.type === 'hour') h = parseInt(x.value, 10) % 24;
+          if (x.type === 'minute') m = parseInt(x.value, 10);
+          if (x.type === 'second') s = parseInt(x.value, 10);
+        });
+      }
+      return [h, m, s];
+    }
+
+    function gambar() {
+      var t = waktu(),
+        h = t[0],
+        m = t[1],
+        s = t[2];
+      teks.textContent = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+      jam.setAttribute('transform', 'rotate(' + ((h % 12) * 30 + m * 0.5) + ' 60 60)');
+      menit.setAttribute('transform', 'rotate(' + (m * 6 + s * 0.1) + ' 60 60)');
+      if (detikT) detikT.textContent = ':' + (s < 10 ? '0' : '') + s;
+      if (detikJ) detikJ.setAttribute('transform', 'rotate(' + (s * 6) + ' 60 60)');
+    }
+    gambar();
+    setInterval(gambar, 1000);
+  })();
 </script>
 <?php portal_app_akhir();

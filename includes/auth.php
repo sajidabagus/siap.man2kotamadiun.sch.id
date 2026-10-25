@@ -79,9 +79,7 @@ function tolak_akses(): void
         echo '<div class="alert alert-danger mb-0">Anda tidak memiliki izin untuk aksi ini.</div>';
         exit;
     }
-    $f = __DIR__ . '/../403.html';
-    if (is_file($f)) readfile($f);
-    else echo 'Akses ditolak.';
+    kirim_halaman_error('403.html');
     exit;
 }
 

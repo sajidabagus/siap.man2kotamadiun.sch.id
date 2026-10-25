@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ROUTER UTAMA (front controller) — URL bersih:
  *   /dashboard   /siswa   /siswa?q=sajida&kelas=X%20B   /siswa/2026001   /siswa/2026001/edit
@@ -39,14 +40,17 @@ function path_permintaan(): string
         $_GET = $_GET + $tambahan;
         $path = substr($path, 0, $pos);
     }
-    return $path === 'index.php' ? '' : $path;
+    return in_array($path, ['index.php', 'index'], true) ? '' : $path;
 }
 
 function tampil_404(): void
 {
     http_response_code(404);
-    if (!empty($_REQUEST['modal'])) { echo '<div class="alert alert-danger mb-0">Halaman tidak ditemukan.</div>'; exit; }
-    readfile(__DIR__ . '/404.html');
+    if (!empty($_REQUEST['modal'])) {
+        echo '<div class="alert alert-danger mb-0">Halaman tidak ditemukan.</div>';
+        exit;
+    }
+    kirim_halaman_error('404.html');
     exit;
 }
 
@@ -68,7 +72,10 @@ if ($modulLama !== '') {
             [$modul, $rp] = $cocok;
             define('ROUTE_BERSIH', true);
             $nisUrl = $rp['nis'] ?? null;
-            if (isset($rp['id'])) { $_GET['id'] = $rp['id']; $_REQUEST['id'] = $rp['id']; }
+            if (isset($rp['id'])) {
+                $_GET['id'] = $rp['id'];
+                $_REQUEST['id'] = $rp['id'];
+            }
         }
     }
 }
@@ -93,7 +100,10 @@ if (!is_logged_in()) {
 if ($modul === '') {
     // Arahkan ke halaman pertama yang boleh diakses pengguna ini
     foreach (['dashboard', 'siswa', 'presensi', 'rekap', 'qr_siswa', 'profil'] as $m) {
-        if (can_modul($m)) { header('Location: ' . modul_url($m)); exit; }
+        if (can_modul($m)) {
+            header('Location: ' . modul_url($m));
+            exit;
+        }
     }
     header('Location: ' . modul_url('profil'));
     exit;
@@ -138,7 +148,7 @@ if ($izinDiperlukan !== null && !can($izinDiperlukan)) {
         echo '<div class="alert alert-danger mb-0">Anda tidak memiliki izin untuk aksi ini.</div>';
         exit;
     }
-    readfile(__DIR__ . '/403.html');
+    kirim_halaman_error('403.html');
     exit;
 }
 

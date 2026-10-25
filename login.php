@@ -3,7 +3,7 @@ require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/portal.php';
 
 if (is_logged_in()) {
-  header('Location: index.php');
+  header('Location: ' . BASE_URL . '/');
   exit;
 }
 
@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($password === 'admin123') {
               set_flash('warning', 'Password Anda masih password bawaan (admin123). Segera ganti di menu Profil Akun.');
             }
-            header('Location: index.php?modul=dashboard');
+            header('Location: ' . modul_url('dashboard'));
             exit;
           } else {
             login_catat_gagal($username);

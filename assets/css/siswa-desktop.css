@@ -118,3 +118,6 @@
   /* ---------- Scan (presensi): kartu di tengah sisa layar ---------- */
   html body.presensi-page .ps, html body.presensi-page .presensi-wrap { max-width: 520px; margin-top: 24px; }
 }
+
+/* Menu Scan nonaktif di sidebar desktop */
+.sd-menu a.mati { opacity: .45; cursor: not-allowed; pointer-events: none; }

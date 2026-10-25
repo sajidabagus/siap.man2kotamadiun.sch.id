@@ -455,3 +455,6 @@ body.pt-v2 { --hj: #2563eb; --hj2: #2563eb; --hj-muda: #eff4ff; --teks: #0f172a;
 .pt-v2 .pt-ringkas .i { background: #fff5e3; border-color: #f7e2b5; } .pt-v2 .pt-ringkas .i b, .pt-v2 .pt-ringkas .i i { color: #d98a00; }
 .pt-v2 .pt-ringkas .a { background: #fdeced; border-color: #f6cfd2; } .pt-v2 .pt-ringkas .a b, .pt-v2 .pt-ringkas .a i { color: #d63a46; }
 @media (min-width: 1024px) { .pt-v2 .pt-jam .waktu { font-size: 52px; } }
+
+/* Tombol scan nonaktif di Home portal */
+.pt-absen.mati, .pt-v2 .pt-absen.mati { background: #b8c2d3; box-shadow: none; cursor: not-allowed; pointer-events: none; filter: none; font-size: 1rem; }

@@ -804,6 +804,22 @@ function portal_presensi_hari(int $siswaId, string $ymd): ?array
     return $st->fetch() ?: null;
 }
 
+/**
+ * Apakah tombol scan QR absen boleh aktif untuk siswa ini hari ini?
+ * Nonaktif bila hari ini bukan hari efektif, atau siswa sudah presensi / sudah punya izin-sakit disetujui hari ini.
+ * @return array{aktif:bool,alasan:string}
+ */
+function portal_scan_status(int $siswaId): array
+{
+    if (!is_hari_efektif()) return ['aktif' => false, 'alasan' => 'Presensi ditutup hari ini (bukan hari efektif)'];
+    $p = portal_presensi_hari($siswaId, date('Y-m-d'));
+    if ($p && $p['status'] !== 'ALPA') {
+        $izin = ($p['metode'] ?? '') === 'PENGAJUAN';
+        return ['aktif' => false, 'alasan' => $izin ? 'Pengajuan izin/sakit hari ini sudah disetujui' : 'Anda sudah presensi hari ini'];
+    }
+    return ['aktif' => true, 'alasan' => ''];
+}
+
 /** Jumlah per status dalam satu bulan. @return array<string,int> */
 function portal_rekap_bulan(int $siswaId, string $ym): array
 {

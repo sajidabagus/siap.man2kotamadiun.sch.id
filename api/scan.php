@@ -1,4 +1,5 @@
 <?php
+
 /**
  * API: Identifikasi siswa (READ-ONLY).
  * mode = "device"  -> identifikasi otomatis dari device_hash (dipakai presensi/index.php)
@@ -26,6 +27,9 @@ if ($gateToken === '' || !validate_qr_dinamis_sesi($gateToken)) {
 }
 
 if ($mode === 'device') {
+    if (!is_hari_efektif()) {
+        json_response(['success' => false, 'code' => 'CLOSED', 'message' => 'Presensi ditutup hari ini (bukan hari efektif).']);
+    }
     if (!is_valid_install_uuid($deviceUuid)) {
         json_response(['success' => false, 'code' => 'DEVICE_INVALID', 'message' => 'Identitas perangkat tidak valid.']);
     }
@@ -41,12 +45,23 @@ if ($mode === 'device') {
         json_response(['success' => true, 'code' => 'BLOCKED', 'message' => 'Perangkat diblokir.']);
     }
 
+    // Sudah presensi hari ini -> jangan lanjut ke konfirmasi
+    $sudahHariIni = sudah_presensi_hari_ini((int) $siswa['id']);
+    if ($sudahHariIni) {
+        json_response(['success' => true, 'code' => 'ALREADY_PRESENT', 'message' => 'Anda sudah presensi hari ini.', 'data' => [
+            'jam' => $sudahHariIni['jam_masuk'],
+            'status' => $sudahHariIni['status'],
+        ]]);
+    }
+
     // Simpan identifikasi di session agar konfirmasi.php bisa dipercaya.
     $_SESSION['identified_siswa_id'] = $siswa['id'];
     $_SESSION['identified_via'] = 'device';
 
     json_response(['success' => true, 'code' => 'MATCH', 'message' => 'Perangkat dikenali.', 'data' => [
-        'nama' => $siswa['nama'], 'nis' => $siswa['nis'], 'kelas' => $siswa['kelas'],
+        'nama' => $siswa['nama'],
+        'nis' => $siswa['nis'],
+        'kelas' => $siswa['kelas'],
     ]]);
 }
 
@@ -67,7 +82,9 @@ if ($mode === 'preview') {
     $sudah = sudah_presensi_hari_ini($siswaId);
     if ($sudah) {
         json_response(['success' => true, 'code' => 'ALREADY_PRESENT', 'data' => [
-            'nama' => $siswa['nama'], 'jam' => $sudah['jam_masuk'], 'status' => $sudah['status'],
+            'nama' => $siswa['nama'],
+            'jam' => $sudah['jam_masuk'],
+            'status' => $sudah['status'],
         ]]);
     }
 
@@ -95,11 +112,18 @@ if ($mode === 'preview') {
         $deviceState = 'MISMATCH';
     }
 
-    json_response(['success' => true, 'code' => 'OK', 'device_state' => $deviceState,
-        'binding_aktif' => !empty($settings['device_binding_aktif']), 'data' => [
-        'nama' => $siswa['nama'], 'nis' => $siswa['nis'], 'kelas' => $siswa['kelas'],
-        'foto' => $siswa['foto'],
-    ]]);
+    json_response([
+        'success' => true,
+        'code' => 'OK',
+        'device_state' => $deviceState,
+        'binding_aktif' => !empty($settings['device_binding_aktif']),
+        'data' => [
+            'nama' => $siswa['nama'],
+            'nis' => $siswa['nis'],
+            'kelas' => $siswa['kelas'],
+            'foto' => $siswa['foto'],
+        ]
+    ]);
 }
 
 json_response(['success' => false, 'code' => 'BAD_REQUEST', 'message' => 'Mode tidak dikenali.'], 400);

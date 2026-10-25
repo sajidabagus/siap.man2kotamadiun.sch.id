@@ -1,84 +1,291 @@
 <!doctype html>
 <html lang="id">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
-<title>403 — Akses Ditolak</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d6efd'/%3E%3Cpath d='M18 33l10 10 19-22' fill='none' stroke='%23fff' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-<style>
-  :root {
-    --bg1: #eef4ff; --bg2: #f8fbff; --card: #ffffffcc; --text: #1b2437; --muted: #64708a;
-    --primary: #0d6efd; --primary-d: #0a58ca; --ring: #0d6efd33; --line: #dbe5f6;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg1: #0b1220; --bg2: #111b30; --card: #172138cc; --text: #e8eefc; --muted: #93a1c0; --ring: #5b9bff33; --line: #26324f; --primary: #4d8dff; --primary-d: #3a78e8; }
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; }
-  body {
-    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
-    color: var(--text);
-    background: radial-gradient(1200px 600px at 15% -10%, var(--ring), transparent 60%),
-                radial-gradient(900px 500px at 100% 110%, var(--ring), transparent 60%),
-                linear-gradient(160deg, var(--bg1), var(--bg2));
-    display: grid; place-items: center; padding: 24px; overflow-x: hidden;
-  }
-  .card {
-    width: 100%; max-width: 560px; text-align: center; padding: 40px 32px 32px;
-    background: var(--card); border: 1px solid var(--line); border-radius: 24px;
-    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 20px 60px -20px rgba(13, 110, 253, .25);
-    animation: masuk .6s ease both;
-  }
-  .scene { position: relative; width: 220px; height: 150px; margin: 0 auto 8px; }
-  .angka {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 6px;
-    font-size: 104px; font-weight: 800; letter-spacing: -4px; line-height: 1;
-    background: linear-gradient(135deg, var(--primary), #7c5cff); -webkit-background-clip: text; background-clip: text; color: transparent;
-  }
-  .qr { width: 86px; height: 86px; animation: melayang 3.2s ease-in-out infinite; filter: drop-shadow(0 10px 14px rgba(13,110,253,.35)); }
-  .scan { position: absolute; left: 50%; top: 18px; width: 120px; height: 3px; margin-left: -60px; border-radius: 3px;
-    background: linear-gradient(90deg, transparent, #ff4d6d, transparent); animation: pindai 2.4s ease-in-out infinite; }
-  h1 { font-size: 24px; margin: 6px 0 8px; }
-  p.desc { color: var(--muted); line-height: 1.6; font-size: 15px; }
-  .alamat {
-    display: inline-block; max-width: 100%; margin-top: 16px; padding: 6px 12px; border-radius: 999px;
-    font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--muted);
-    background: var(--ring); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom;
-  }
-  .aksi { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 26px; }
-  .btn {
-    display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 12px; border: 1px solid transparent;
-    font: inherit; font-weight: 600; font-size: 14px; cursor: pointer; text-decoration: none; transition: transform .15s, box-shadow .15s, background .15s;
-  }
-  .btn:hover { transform: translateY(-2px); }
-  .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 8px 20px -8px var(--primary); }
-  .btn-primary:hover { background: var(--primary-d); }
-  .btn-ghost { background: transparent; color: var(--text); border-color: var(--line); }
-  .btn-ghost:hover { background: var(--ring); }
-  .btn svg { width: 16px; height: 16px; }
-  .foot { margin-top: 24px; font-size: 12px; color: var(--muted); }
-  @keyframes masuk { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
-  @keyframes melayang { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-9px) rotate(3deg); } }
-  @keyframes pindai { 0%, 100% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 50% { transform: translateY(96px); } }
-  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; } }
-  @media (max-width: 420px) { .card { padding: 32px 20px 24px; } .angka { font-size: 84px; } .scene { height: 124px; } h1 { font-size: 21px; } }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>403 — Akses Ditolak</title>
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d6efd'/%3E%3Cpath d='M18 33l10 10 19-22' fill='none' stroke='%23fff' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --bg1: #eef4ff;
+      --bg2: #f8fbff;
+      --card: #ffffffcc;
+      --text: #1b2437;
+      --muted: #64708a;
+      --primary: #0d6efd;
+      --primary-d: #0a58ca;
+      --ring: #0d6efd33;
+      --line: #dbe5f6;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg1: #0b1220;
+        --bg2: #111b30;
+        --card: #172138cc;
+        --text: #e8eefc;
+        --muted: #93a1c0;
+        --ring: #5b9bff33;
+        --line: #26324f;
+        --primary: #4d8dff;
+        --primary-d: #3a78e8;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(1200px 600px at 15% -10%, var(--ring), transparent 60%),
+        radial-gradient(900px 500px at 100% 110%, var(--ring), transparent 60%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      overflow-x: hidden;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 560px;
+      text-align: center;
+      padding: 40px 32px 32px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 20px 60px -20px rgba(13, 110, 253, .25);
+      animation: masuk .6s ease both;
+    }
+
+    .scene {
+      position: relative;
+      width: 220px;
+      height: 150px;
+      margin: 0 auto 8px;
+    }
+
+    .angka {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 104px;
+      font-weight: 800;
+      letter-spacing: -4px;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--primary), #7c5cff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .qr {
+      width: 86px;
+      height: 86px;
+      animation: melayang 3.2s ease-in-out infinite;
+      filter: drop-shadow(0 10px 14px rgba(13, 110, 253, .35));
+    }
+
+    .scan {
+      position: absolute;
+      left: 50%;
+      top: 18px;
+      width: 120px;
+      height: 3px;
+      margin-left: -60px;
+      border-radius: 3px;
+      background: linear-gradient(90deg, transparent, #ff4d6d, transparent);
+      animation: pindai 2.4s ease-in-out infinite;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin: 6px 0 8px;
+    }
+
+    p.desc {
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    .alamat {
+      display: inline-block;
+      max-width: 100%;
+      margin-top: 16px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: var(--muted);
+      background: var(--ring);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: bottom;
+    }
+
+    .aksi {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 26px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 20px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      font: inherit;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform .15s, box-shadow .15s, background .15s;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 8px 20px -8px var(--primary);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-d);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border-color: var(--line);
+    }
+
+    .btn-ghost:hover {
+      background: var(--ring);
+    }
+
+    .btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .foot {
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    @keyframes masuk {
+      from {
+        opacity: 0;
+        transform: translateY(14px) scale(.98);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    @keyframes melayang {
+
+      0%,
+      100% {
+        transform: translateY(0) rotate(-3deg);
+      }
+
+      50% {
+        transform: translateY(-9px) rotate(3deg);
+      }
+    }
+
+    @keyframes pindai {
+
+      0%,
+      100% {
+        transform: translateY(0);
+        opacity: 0;
+      }
+
+      15% {
+        opacity: 1;
+      }
+
+      85% {
+        opacity: 1;
+      }
+
+      50% {
+        transform: translateY(96px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .card {
+        padding: 32px 20px 24px;
+      }
+
+      .angka {
+        font-size: 84px;
+      }
+
+      .scene {
+        height: 124px;
+      }
+
+      h1 {
+        font-size: 21px;
+      }
+    }
+  </style>
 </head>
+
 <body>
   <main class="card" role="main">
     <div class="scene" aria-hidden="true">
       <div class="angka">
         <span>4</span>
         <svg class="qr" viewBox="0 0 64 64" fill="none">
-          <rect x="2" y="2" width="60" height="60" rx="14" fill="#fff" stroke="#0d6efd" stroke-width="4"/>
-          <rect x="12" y="12" width="14" height="14" rx="3" fill="#0d6efd"/>
-          <rect x="38" y="12" width="14" height="14" rx="3" fill="#0d6efd"/>
-          <rect x="12" y="38" width="14" height="14" rx="3" fill="#0d6efd"/>
-          <rect x="38" y="38" width="6" height="6" rx="1.5" fill="#7c5cff"/>
-          <rect x="46" y="46" width="6" height="6" rx="1.5" fill="#7c5cff"/>
-          <rect x="46" y="38" width="6" height="6" rx="1.5" fill="#0d6efd"/>
+          <rect x="2" y="2" width="60" height="60" rx="14" fill="#fff" stroke="#0d6efd" stroke-width="4" />
+          <rect x="12" y="12" width="14" height="14" rx="3" fill="#0d6efd" />
+          <rect x="38" y="12" width="14" height="14" rx="3" fill="#0d6efd" />
+          <rect x="12" y="38" width="14" height="14" rx="3" fill="#0d6efd" />
+          <rect x="38" y="38" width="6" height="6" rx="1.5" fill="#7c5cff" />
+          <rect x="46" y="46" width="6" height="6" rx="1.5" fill="#7c5cff" />
+          <rect x="46" y="38" width="6" height="6" rx="1.5" fill="#0d6efd" />
         </svg>
         <span>3</span>
       </div>
@@ -86,16 +293,23 @@
     </div>
 
     <h1>Akses ditolak</h1>
-    <p class="desc">Maaf, akun Anda tidak memiliki izin untuk membuka halaman atau menjalankan aksi ini. Hubungi administrator bila Anda merasa perlu akses.</p>
+    <p class="desc">Maaf, akun Anda tidak memiliki izin untuk membuka halaman atau menjalankan aksi ini. Hubungi
+      administrator bila Anda merasa perlu akses.</p>
     <div class="alamat" id="alamat" hidden></div>
 
     <div class="aksi">
-      <a class="btn btn-primary" href="/">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8.7 1.3a1 1 0 0 0-1.4 0l-6 6A1 1 0 0 0 2 9h1v5a1 1 0 0 0 1 1h2.5v-4h3v4H12a1 1 0 0 0 1-1V9h1a1 1 0 0 0 .7-1.7l-6-6z"/></svg>
+      <a class="btn btn-primary" id="btnBeranda" href="/" data-beranda>
+        <svg viewBox="0 0 16 16" fill="currentColor">
+          <path
+            d="M8.7 1.3a1 1 0 0 0-1.4 0l-6 6A1 1 0 0 0 2 9h1v5a1 1 0 0 0 1 1h2.5v-4h3v4H12a1 1 0 0 0 1-1V9h1a1 1 0 0 0 .7-1.7l-6-6z" />
+        </svg>
         Ke Beranda
       </a>
-      <button class="btn btn-ghost" type="button" onclick="if (history.length > 1) { history.back(); } else { location.href = '/'; }">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.7l4.1-4.1a.5.5 0 1 0-.7-.7l-5 5a.5.5 0 0 0 0 .7l5 5a.5.5 0 0 0 .7-.7L2.7 8.5h11.8A.5.5 0 0 0 15 8z"/></svg>
+      <button class="btn btn-ghost" type="button" id="btnKembali">
+        <svg viewBox="0 0 16 16" fill="currentColor">
+          <path fill-rule="evenodd"
+            d="M15 8a.5.5 0 0 0-.5-.5H2.7l4.1-4.1a.5.5 0 1 0-.7-.7l-5 5a.5.5 0 0 0 0 .7l5 5a.5.5 0 0 0 .7-.7L2.7 8.5h11.8A.5.5 0 0 0 15 8z" />
+        </svg>
         Kembali
       </button>
     </div>
@@ -111,5 +325,27 @@
       if (p && p !== '/') { el.textContent = p.length > 80 ? p.slice(0, 77) + '…' : p; el.hidden = false; }
     })();
   </script>
+  <script>
+    // Tombol "Kembali": ke halaman sebelumnya di situs ini. Bila tidak ada (alamat diketik langsung / dibuka dari luar),
+    // ke halaman utama sesuai area yang dibuka (portal siswa -> /portal, selain itu -> beranda).
+    (function () {
+      var btn = document.getElementById('btnKembali');
+      if (!btn) return;
+      var beranda = document.getElementById('btnBeranda');
+      var utama = beranda ? beranda.getAttribute('href') : '/';
+      var m = location.pathname.match(/^(.*?\/portal)(\/|$)/);
+      var cadangan = m ? m[1] + '/' : utama;
+      var sebelumnya = '';
+      try {
+        var u = new URL(document.referrer);
+        if (u.origin === location.origin && u.href !== location.href) sebelumnya = u.href;
+      } catch (e) { }
+      btn.addEventListener('click', function () {
+        if (sebelumnya && history.length > 1) history.back();
+        else location.href = sebelumnya || cadangan;
+      });
+    })();
+  </script>
 </body>
+
 </html>

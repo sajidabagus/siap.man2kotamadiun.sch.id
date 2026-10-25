@@ -46,3 +46,6 @@ body.mode-siswa .ap-nav, body.ap-app .ap-nav { display: flex; }
   .ap-nav a:focus-visible { outline: 2px solid var(--biru); outline-offset: 3px; border-radius: 12px; }
 }
 /* >= 1024px: menu bawah disembunyikan, diganti sidebar + topbar desktop (includes/siswa_desktop.php + assets/css/siswa-desktop.css). */
+
+/* Tombol scan nonaktif (hari non-efektif / sudah presensi) */
+.ap-nav a.scan.mati, .ap-nav a.scan[aria-disabled="true"] { background: #b8c2d3; box-shadow: none; cursor: not-allowed; pointer-events: none; filter: none; }

@@ -18,6 +18,22 @@ define('BASE_URL', 'http://localhost/siap.man2kotamadiun.sch.id');
 // Zona waktu server — WAJIB konsisten agar validasi jam presensi akurat.
 date_default_timezone_set('Asia/Jakarta');
 
+/**
+ * Kirim halaman error statis (404.html / 403.html). Tombol "Ke Beranda" diarahkan ke halaman utama
+ * aplikasi sesuai BASE_URL (bukan "/" mentah, yang salah bila aplikasi berada di subfolder).
+ */
+function kirim_halaman_error(string $nama): void
+{
+    $f = __DIR__ . '/../' . $nama;
+    $html = is_file($f) ? (string) file_get_contents($f) : '';
+    if ($html === '') {
+        echo 'Halaman tidak tersedia.';
+        return;
+    }
+    $beranda = htmlspecialchars(rtrim(BASE_URL, '/') . '/', ENT_QUOTES, 'UTF-8');
+    echo str_replace('href="/" data-beranda', 'href="' . $beranda . '" data-beranda', $html);
+}
+
 function getDB(): PDO
 {
     static $pdo = null;
@@ -105,6 +121,6 @@ function tampilkan_error_database(Throwable $e): void
             . '<title>503</title><body style="font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;padding:24px;text-align:center">'
             . '<main><h1>Layanan sedang tidak dapat diakses</h1><p>Silakan coba lagi beberapa saat lagi.</p><p><small>Kode kejadian: {{KODE}}</small></p></main>';
     }
-    echo str_replace('{{KODE}}', $kode, $html);
+    echo str_replace(['{{KODE}}', '{{BERANDA}}'], [$kode, rtrim(BASE_URL, '/') . '/'], $html);
     exit;
 }
