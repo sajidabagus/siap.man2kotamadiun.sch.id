@@ -73,7 +73,7 @@ function is_menu_active(string $menuKey, array $groups, string $current): bool
         <i class="bi bi-qr-code-scan"></i>
         <span><?= e($settings['nama_sekolah'] ?? 'Presensi Siswa') ?></span>
       </div>
-      <div class="sidebar-nav-scroll">
+      <div class="sidebar-nav-scroll" id="sidebarNavScroll">
         <ul class="nav flex-column">
           <?php if (can_modul('dashboard')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('dashboard.php', $menuGroups, $current) ? 'active' : '' ?>" href="<?= modul_url('dashboard') ?>"><i><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.15em" height="1.15em" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <rect width="7" height="9" x="3" y="3" rx="1.8" />
@@ -125,6 +125,40 @@ function is_menu_active(string $menuKey, array $groups, string $current): bool
           </ul>
         <?php endif; ?>
       </div>
+      <script>
+        // Pertahankan posisi scroll menu sidebar antar halaman (jalan sebelum halaman tampil, jadi tanpa lompatan)
+        (function() {
+          var el = document.getElementById('sidebarNavScroll');
+          if (!el) return;
+          var KEY = 'sidebar_scroll',
+            tersimpan = null;
+          try {
+            tersimpan = sessionStorage.getItem(KEY);
+          } catch (e) {}
+          if (tersimpan !== null && !isNaN(parseInt(tersimpan, 10))) {
+            el.scrollTop = parseInt(tersimpan, 10);
+          }
+          // Bila menu aktif masih di luar area tampak (mis. kunjungan pertama), geser seperlunya
+          var aktif = el.querySelector('.nav-link.active');
+          if (aktif) {
+            var a = aktif.getBoundingClientRect(),
+              c = el.getBoundingClientRect();
+            if (a.bottom > c.bottom) el.scrollTop += a.bottom - c.bottom + 12;
+            else if (a.top < c.top) el.scrollTop -= c.top - a.top + 12;
+          }
+
+          function simpan() {
+            try {
+              sessionStorage.setItem(KEY, String(el.scrollTop));
+            } catch (e) {}
+          }
+          el.addEventListener('scroll', simpan, {
+            passive: true
+          });
+          el.addEventListener('click', simpan);
+          window.addEventListener('pagehide', simpan);
+        })();
+      </script>
 
       <div class="sidebar-footer">
         <ul class="nav flex-column">

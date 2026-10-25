@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Session bootstrap + guard akses admin.
  * Wajib di-include paling atas pada setiap halaman admin.
@@ -25,8 +26,10 @@ function require_login(): void
         exit;
     }
     // Akses langsung ke /panel/xxx diarahkan ke URL bersih modul tsb (GET saja).
-    if (!defined('APP_ROUTER') && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET'
-        && strpos(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''), '/panel/') !== false) {
+    if (
+        !defined('APP_ROUTER') && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET'
+        && strpos(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''), '/panel/') !== false
+    ) {
         $modul = basename($_SERVER['SCRIPT_NAME'], '.php');
         if (in_array($modul, DAFTAR_MODUL, true)) {
             parse_str((string) ($_SERVER['QUERY_STRING'] ?? ''), $qp);
@@ -77,7 +80,8 @@ function tolak_akses(): void
         exit;
     }
     $f = __DIR__ . '/../403.html';
-    if (is_file($f)) readfile($f); else echo 'Akses ditolak.';
+    if (is_file($f)) readfile($f);
+    else echo 'Akses ditolak.';
     exit;
 }
 
