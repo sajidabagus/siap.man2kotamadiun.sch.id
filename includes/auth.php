@@ -131,6 +131,9 @@ function siapkan_hak_akses(): void
             }
             $db->exec("DELETE FROM role_permissions WHERE izin IN ('qr.lihat','qr.cetak','qr.generate')");
         }
+        // Migrasi: izin lama "log_keamanan.lihat" diganti nama menjadi "log_security.lihat" (sejajar dengan "log_aktivitas.lihat")
+        $db->exec("INSERT IGNORE INTO role_permissions (role, izin) SELECT role, 'log_security.lihat' FROM role_permissions WHERE izin = 'log_keamanan.lihat'");
+        $db->exec("DELETE FROM role_permissions WHERE izin = 'log_keamanan.lihat'");
         // Migrasi sekali: izin baru "papan.lihat" untuk role yang sudah boleh melihat presensi
         $sudahPapan = (bool) $db->query("SELECT 1 FROM role_permissions WHERE role = '_meta' AND izin = 'migrasi_papan' LIMIT 1")->fetchColumn();
         if (!$sudahPapan) {

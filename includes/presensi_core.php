@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Logika inti proses presensi. Dipakai oleh halaman /presensi dan /api
  * agar validasi TIDAK PERNAH hanya bergantung pada JavaScript di browser.
@@ -96,8 +97,12 @@ function get_ringkasan_bulanan_siswa(int $siswaId, string $tanggalAcuan): array
     $persentase = $totalHari > 0 ? round($hadir / $totalHari * 100, 1) : 0;
 
     return [
-        'hadir' => $hadir, 'tepat_waktu' => $tepatWaktu, 'terlambat' => $terlambat, 'tidak_hadir' => $tidakHadir,
-        'total_hari' => $totalHari, 'persentase' => $persentase,
+        'hadir' => $hadir,
+        'tepat_waktu' => $tepatWaktu,
+        'terlambat' => $terlambat,
+        'tidak_hadir' => $tidakHadir,
+        'total_hari' => $totalHari,
+        'persentase' => $persentase,
     ];
 }
 
@@ -136,11 +141,14 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
     // 3b. Kalau QR ini QR KELAS (kelas_target terisi), pastikan siswa memang dari kelas tsb.
     if (!empty($qrRow['kelas_target']) && $qrRow['kelas_target'] !== $siswa['kelas']) {
         security_log(
-            $siswaId, 'PRESENCE_REJECTED', null,
+            $siswaId,
+            'PRESENCE_REJECTED',
+            null,
             "QR khusus kelas {$qrRow['kelas_target']}, siswa dari kelas {$siswa['kelas']}."
         );
         return [
-            'success' => false, 'code' => 'KELAS_MISMATCH',
+            'success' => false,
+            'code' => 'KELAS_MISMATCH',
             'message' => "QR ini khusus untuk presensi kelas {$qrRow['kelas_target']}. Anda terdaftar di kelas {$siswa['kelas']} — gunakan QR kelas Anda sendiri atau QR gerbang.",
         ];
     }
@@ -160,7 +168,8 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
     if ($existing) {
         security_log($siswaId, 'PRESENCE_REJECTED', null, 'Sudah presensi hari ini.');
         return [
-            'success' => false, 'code' => 'ALREADY_PRESENT',
+            'success' => false,
+            'code' => 'ALREADY_PRESENT',
             'message' => 'Anda sudah melakukan presensi hari ini.',
             'data' => ['jam' => $existing['jam_masuk'], 'status' => $existing['status']],
         ];
@@ -172,12 +181,17 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
                             AND tanggal_mulai <= :t AND tanggal_selesai >= :t LIMIT 1");
         $iz->execute([':s' => $siswaId, ':t' => date('Y-m-d')]);
         $izRow = $iz->fetch();
-    } catch (Throwable $e) { $izRow = null; } // tabel izin belum ada
+    } catch (Throwable $e) {
+        $izRow = null;
+    } // tabel izin belum ada
     if ($izRow) {
         $lbl = $izRow['jenis'] === 'sakit' ? 'sakit' : 'izin';
         security_log($siswaId, 'PRESENCE_REJECTED', null, 'Sudah mengajukan ' . $lbl . ' hari ini.');
-        return ['success' => false, 'code' => 'HAS_LEAVE',
-            'message' => 'Anda sudah mengajukan ' . $lbl . ' untuk hari ini (' . ($izRow['status'] === 'disetujui' ? 'disetujui' : 'menunggu persetujuan') . '), jadi tidak bisa absen. Batalkan pengajuan dulu bila ternyata masuk sekolah.'];
+        return [
+            'success' => false,
+            'code' => 'HAS_LEAVE',
+            'message' => 'Anda sudah mengajukan ' . $lbl . ' untuk hari ini (' . ($izRow['status'] === 'disetujui' ? 'disetujui' : 'menunggu persetujuan') . '), jadi tidak bisa absen. Batalkan pengajuan dulu bila ternyata masuk sekolah.'
+        ];
     }
 
     // 7 & 8. Tanggal & jam server (SUMBER WAKTU SELALU DARI SERVER, bukan dari klien)
@@ -189,7 +203,8 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
     if (!is_hari_efektif($tanggal)) {
         security_log($siswaId, 'PRESENCE_REJECTED', null, 'Presensi di hari non-efektif (' . NAMA_HARI[(int) date('N')] . ').');
         return [
-            'success' => false, 'code' => 'HARI_LIBUR',
+            'success' => false,
+            'code' => 'HARI_LIBUR',
             'message' => 'Presensi ditutup hari ini (' . NAMA_HARI[(int) date('N')] . '). Hari efektif presensi: ' . label_hari_efektif() . '.',
         ];
     }
@@ -201,7 +216,8 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
     if ($jamBuka && $jam < $jamBuka) {
         security_log($siswaId, 'PRESENCE_REJECTED', null, "Presensi sebelum jam buka ($jamBuka).");
         return [
-            'success' => false, 'code' => 'BELUM_WAKTUNYA',
+            'success' => false,
+            'code' => 'BELUM_WAKTUNYA',
             'message' => 'Presensi belum dibuka. Presensi dimulai pukul ' . substr($jamBuka, 0, 5) . '.',
         ];
     }
@@ -210,7 +226,8 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
     if (absen_sudah_ditutup($jam)) {
         security_log($siswaId, 'PRESENCE_REJECTED', null, 'Presensi setelah batas absen (' . substr(batas_absen(), 0, 5) . ').');
         return [
-            'success' => false, 'code' => 'CLOSED',
+            'success' => false,
+            'code' => 'CLOSED',
             'message' => 'Absen masuk hari ini sudah ditutup pukul ' . substr(batas_absen(), 0, 5) . '. Siswa yang belum absen tercatat Alpa. Bila Anda hadir, hubungi wali kelas/petugas.',
         ];
     }
@@ -239,9 +256,15 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
     // yang benar, tidak ikut "pindah" ke kelas siswa yg baru di laporan).
     $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
     $nilai = [
-        ':sid' => $siswaId, ':kelas' => $siswa['kelas'], ':tgl' => $tanggal, ':jam' => $jam, ':status' => $statusPresensi,
-        ':device_info' => substr($ua, 0, 255), ':ip' => get_client_ip(),
-        ':lat' => $lat, ':lng' => $lng,
+        ':sid' => $siswaId,
+        ':kelas' => $siswa['kelas'],
+        ':tgl' => $tanggal,
+        ':jam' => $jam,
+        ':status' => $statusPresensi,
+        ':device_info' => substr($ua, 0, 255),
+        ':ip' => get_client_ip(),
+        ':lat' => $lat,
+        ':lng' => $lng,
     ];
     // Bila hari ini sudah ada baris izin/sakit yang disetujui tetapi siswa ternyata hadir, presensi HADIR
     // yang berlaku: baris itu diganti (bukan ditambah), dan izin hari itu ditandai "dipakai_hadir".
@@ -255,8 +278,9 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
         try {
             $db->prepare("UPDATE izin_hari h JOIN izin_pengajuan p ON p.id = h.pengajuan_id SET h.hasil = 'dipakai_hadir'
                           WHERE p.siswa_id = :sid AND h.tanggal = :tgl AND h.hasil = 'diterapkan'")
-               ->execute([':sid' => $siswaId, ':tgl' => $tanggal]);
-        } catch (PDOException $e) { /* tabel pengajuan belum ada: tidak masalah */ }
+                ->execute([':sid' => $siswaId, ':tgl' => $tanggal]);
+        } catch (PDOException $e) { /* tabel pengajuan belum ada: tidak masalah */
+        }
     } else {
         $stmt = $db->prepare(
             'INSERT INTO presensi (siswa_id, kelas_saat_presensi, tanggal, jam_masuk, status, metode, device_info, ip_address, latitude, longitude, created_at)
@@ -269,7 +293,8 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
             if ($e->getCode() !== '23000') throw $e;
             $existing = sudah_presensi_hari_ini($siswaId);
             return [
-                'success' => false, 'code' => 'ALREADY_PRESENT',
+                'success' => false,
+                'code' => 'ALREADY_PRESENT',
                 'message' => 'Anda sudah melakukan presensi hari ini.',
                 'data' => $existing ? ['jam' => $existing['jam_masuk'], 'status' => $existing['status']] : null,
             ];
@@ -284,9 +309,15 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
         'code' => 'OK',
         'message' => $settings['pesan_sukses'] ?? 'Presensi berhasil.',
         'data' => [
-            'siswa_id' => $siswaId, 'nama' => $siswa['nama'], 'nis' => $siswa['nis'],
-            'kelas' => $siswa['kelas'], 'foto' => $siswa['foto'], 'status_siswa' => $siswa['status'],
-            'tanggal' => $tanggal, 'jam' => $jam, 'status' => $statusPresensi,
+            'siswa_id' => $siswaId,
+            'nama' => $siswa['nama'],
+            'nis' => $siswa['nis'],
+            'kelas' => $siswa['kelas'],
+            'foto' => $siswa['foto'],
+            'status_siswa' => $siswa['status'],
+            'tanggal' => $tanggal,
+            'jam' => $jam,
+            'status' => $statusPresensi,
             'device_new' => ($deviceResult['code'] === 'REGISTERED_NEW'),
         ],
     ];

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * PORTAL SISWA — akun, aktivasi, dan sesi siswa.
  *
@@ -173,7 +174,7 @@ function portal_catat_gagal(string $kunci): void
     try {
         $db = getDB();
         $db->prepare('INSERT INTO portal_attempts (kunci, ip_address, created_at) VALUES (:k, :ip, NOW())')
-           ->execute([':k' => substr($kunci, 0, 60), ':ip' => substr(get_client_ip(), 0, 45)]);
+            ->execute([':k' => substr($kunci, 0, 60), ':ip' => substr(get_client_ip(), 0, 45)]);
         if (random_int(1, 20) === 1) $db->exec('DELETE FROM portal_attempts WHERE created_at < (NOW() - INTERVAL 1 DAY)');
     } catch (Throwable $e) {
         error_log('portal_catat_gagal: ' . $e->getMessage());
@@ -206,7 +207,9 @@ function portal_nisn(string $input): string
 /** Kode acak berbasis CSPRNG, mis. "K7M29QXA". */
 function portal_kode_acak(): string
 {
-    $a = PORTAL_KODE_ALFABET; $n = strlen($a); $k = '';
+    $a = PORTAL_KODE_ALFABET;
+    $n = strlen($a);
+    $k = '';
     for ($i = 0; $i < PORTAL_KODE_PANJANG; $i++) $k .= $a[random_int(0, $n - 1)];
     return $k;
 }
@@ -229,8 +232,26 @@ function portal_hash_kode(string $kode, string $salt): string
     return hash_pbkdf2('sha256', $kode, $salt, 10000, 64);
 }
 
-const PORTAL_PASSWORD_UMUM = ['12345678', '123456789', '1234567890', '11111111', '00000000', '87654321', 'password', 'password1',
-    'password123', 'qwerty123', 'qwertyui', 'abcd1234', 'abc12345', 'iloveyou', 'sekolah123', 'madrasah123', 'siswa123', 'admin123'];
+const PORTAL_PASSWORD_UMUM = [
+    '12345678',
+    '123456789',
+    '1234567890',
+    '11111111',
+    '00000000',
+    '87654321',
+    'password',
+    'password1',
+    'password123',
+    'qwerty123',
+    'qwertyui',
+    'abcd1234',
+    'abc12345',
+    'iloveyou',
+    'sekolah123',
+    'madrasah123',
+    'siswa123',
+    'admin123'
+];
 
 /** Pesan galat bila password tidak memenuhi syarat; null = lolos. */
 function portal_validasi_password(string $pw, array $akun): ?string
@@ -312,12 +333,17 @@ function portal_terbitkan_kode(int $siswaId, ?int $adminId): array
                   ON DUPLICATE KEY UPDATE status = 'menunggu', password_hash = NULL, kode_hash = VALUES(kode_hash),
                       kode_salt = VALUES(kode_salt), kode_berlaku_hingga = VALUES(kode_berlaku_hingga), kode_salah = 0,
                       kode_terkunci_hingga = NULL, dibuat_oleh = VALUES(dibuat_oleh), sesi_versi = sesi_versi + 1" . (portal_kolom_sementara() ? ', password_sementara = 0' : ''))
-       ->execute([':sid' => $siswaId, ':h' => portal_hash_kode($kode, $salt), ':s' => $salt, ':adm' => $adminId]);
+        ->execute([':sid' => $siswaId, ':h' => portal_hash_kode($kode, $salt), ':s' => $salt, ':adm' => $adminId]);
 
     $b = $db->prepare('SELECT kode_berlaku_hingga FROM siswa_akun WHERE siswa_id = :id');
     $b->execute([':id' => $siswaId]);
-    return ['ok' => true, 'kode' => $kode, 'kode_tampil' => portal_kode_tampil($kode),
-            'berlaku' => (string) $b->fetchColumn(), 'reset' => (bool) $ada];
+    return [
+        'ok' => true,
+        'kode' => $kode,
+        'kode_tampil' => portal_kode_tampil($kode),
+        'berlaku' => (string) $b->fetchColumn(),
+        'reset' => (bool) $ada
+    ];
 }
 
 /**
@@ -474,7 +500,10 @@ function portal_aktivasi(string $nisn, string $kodeInput, string $password, ?str
                 kode_berlaku_hingga = NULL, kode_salah = 0, kode_terkunci_hingga = NULL, password_diubah = NOW(), sesi_versi = sesi_versi + 1" . (portal_kolom_sementara() ? ', password_sementara = 0' : '') . "
             WHERE id = :id AND status = 'menunggu'");
         $u->execute([':p' => password_hash($password, PASSWORD_DEFAULT), ':id' => $akun['id']]);
-        if ($u->rowCount() !== 1) { $db->rollBack(); return ['ok' => false, 'pesan' => $umum]; }
+        if ($u->rowCount() !== 1) {
+            $db->rollBack();
+            return ['ok' => false, 'pesan' => $umum];
+        }
 
         if (!$mauDaftarPerangkat) $perangkat = 'dilewati';
         elseif (!request_boleh_daftar_perangkat()) $perangkat = request_dari_perangkat_apple() ? 'bukan_browser_ios' : 'bukan_aplikasi';
@@ -508,7 +537,7 @@ function portal_coba_login(string $nisn, string $password): array
         portal_bersihkan_gagal($kunci);
         if (password_needs_rehash((string) $akun['password_hash'], PASSWORD_DEFAULT)) {
             getDB()->prepare('UPDATE siswa_akun SET password_hash = :p WHERE id = :id')
-                   ->execute([':p' => password_hash($password, PASSWORD_DEFAULT), ':id' => $akun['id']]);
+                ->execute([':p' => password_hash($password, PASSWORD_DEFAULT), ':id' => $akun['id']]);
         }
         return ['ok' => true, 'akun' => $akun];
     }
@@ -553,7 +582,10 @@ function portal_siswa_sekarang(): ?array
 
     $s = $_SESSION['portal'] ?? null;
     if (!is_array($s) || empty($s['akun_id'])) return $cache = null;
-    if (time() - (int) ($s['aktif'] ?? 0) > PORTAL_IDLE_DETIK) { unset($_SESSION['portal']); return $cache = null; }
+    if (time() - (int) ($s['aktif'] ?? 0) > PORTAL_IDLE_DETIK) {
+        unset($_SESSION['portal']);
+        return $cache = null;
+    }
 
     $akun = portal_cari_akun_id((int) $s['akun_id']);
     if (!$akun || $akun['status'] !== 'aktif' || $akun['siswa_status'] !== 'aktif' || (int) $akun['sesi_versi'] !== (int) ($s['sesi_versi'] ?? 0)) {
@@ -575,7 +607,10 @@ function portal_wajib_login(bool $perluPassword = false): array
     $akun = portal_siswa_sekarang();
     if (!$akun) {
         // Gerbang sudah dilewati (parameter _g) tapi tetap tanpa sesi => cegah putaran tak berujung: langsung ke login.
-        if (isset($_GET['_g'])) { header('Location: ' . portal_login_url()); exit; }
+        if (isset($_GET['_g'])) {
+            header('Location: ' . portal_login_url());
+            exit;
+        }
         $lanjut = portal_lanjut_aman($sub);
         header('Location: ' . portal_url('gerbang', $lanjut !== '' ? ['lanjut' => $lanjut] : []));
         exit;
@@ -612,7 +647,10 @@ function portal_buat_password_sementara(array $akun): string
         $c = [];
         for ($j = 0; $j < 7; $j++) $c[] = $huruf[random_int(0, strlen($huruf) - 1)];
         for ($j = 0; $j < 3; $j++) $c[] = $angka[random_int(0, strlen($angka) - 1)];
-        for ($k = count($c) - 1; $k > 0; $k--) { $r = random_int(0, $k); [$c[$k], $c[$r]] = [$c[$r], $c[$k]]; }
+        for ($k = count($c) - 1; $k > 0; $k--) {
+            $r = random_int(0, $k);
+            [$c[$k], $c[$r]] = [$c[$r], $c[$k]];
+        }
         $pw = implode('', $c);
         if (portal_validasi_password($pw, $akun) === null) return $pw;
     }
@@ -642,8 +680,12 @@ function portal_admin_set_password(int $akunId, string $password, bool $sementar
 
     portal_bersihkan_gagal('masuk:' . $akun['nisn']);      // siswa tidak ikut terkunci karena salah ketik sebelumnya
     portal_bersihkan_gagal('ganti:' . $akunId);
-    security_log((int) $akun['siswa_id'], 'PORTAL_PASSWORD_ADMIN', null,
-        'Password ' . ($jenis === 'reset' ? 'direset' : 'diganti') . ' oleh admin' . ($sementara && portal_kolom_sementara() ? ' (wajib diganti siswa)' : '') . ($adminId ? ' #' . $adminId : ''));
+    security_log(
+        (int) $akun['siswa_id'],
+        'PORTAL_PASSWORD_ADMIN',
+        null,
+        'Password ' . ($jenis === 'reset' ? 'direset' : 'diganti') . ' oleh admin' . ($sementara && portal_kolom_sementara() ? ' (wajib diganti siswa)' : '') . ($adminId ? ' #' . $adminId : '')
+    );
     return ['ok' => true];
 }
 
@@ -781,7 +823,10 @@ function portal_riwayat_bulan(int $siswaId, string $ym, string $status = ''): ar
     $akhir = date('Y-m-d', strtotime($awal . ' +1 month'));
     $sql = 'SELECT tanggal, jam_masuk, status, metode FROM presensi WHERE siswa_id = :s AND tanggal >= :a AND tanggal < :b';
     $p = [':s' => $siswaId, ':a' => $awal, ':b' => $akhir];
-    if (isset(PORTAL_LABEL_STATUS[$status])) { $sql .= ' AND status = :st'; $p[':st'] = $status; }
+    if (isset(PORTAL_LABEL_STATUS[$status])) {
+        $sql .= ' AND status = :st';
+        $p[':st'] = $status;
+    }
     $st = getDB()->prepare($sql . ' ORDER BY tanggal DESC, id DESC');
     $st->execute($p);
     return $st->fetchAll();

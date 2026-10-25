@@ -30,7 +30,7 @@ $menuGroups = [
   'papan.php'          => ['papan.php'],
   'rekap.php'          => ['rekap.php'],
   'device.php'         => ['device.php'],
-  'security_log.php'   => ['security_log.php'],
+  'log_security.php'   => ['log_security.php'],
   'log_aktivitas.php'  => ['log_aktivitas.php'],
   'pengguna.php'       => ['pengguna.php'],
   'hak_akses.php'      => ['hak_akses.php'],
@@ -113,11 +113,11 @@ function is_menu_active(string $menuKey, array $groups, string $current): bool
           </ul>
         <?php endif; ?>
 
-        <?php if (can_any_modul(['device', 'security_log', 'log_aktivitas', 'pengguna', 'hak_akses', 'pengaturan'])): ?>
+        <?php if (can_any_modul(['device', 'log_security', 'log_aktivitas', 'pengguna', 'hak_akses', 'pengaturan'])): ?>
           <div class="sidebar-section-title">Sistem &amp; Keamanan</div>
           <ul class="nav flex-column">
             <?php if (can_modul('device')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('device.php', $menuGroups, $current) ? 'active' : '' ?>" href="<?= modul_url('device') ?>"><i class="bi bi-phone"></i> Manajemen Perangkat</a></li><?php endif; ?>
-            <?php if (can_modul('security_log')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('security_log.php', $menuGroups, $current) ? 'active' : '' ?>" href="<?= modul_url('security_log') ?>"><i class="bi bi-shield-exclamation"></i> Log Keamanan</a></li><?php endif; ?>
+            <?php if (can_modul('log_security')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('log_security.php', $menuGroups, $current) ? 'active' : '' ?>" href="<?= modul_url('log_security') ?>"><i class="bi bi-shield-exclamation"></i> Log Keamanan</a></li><?php endif; ?>
             <?php if (can_modul('log_aktivitas')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('log_aktivitas.php', $menuGroups, $current) ? 'active' : '' ?>" href="<?= modul_url('log_aktivitas') ?>"><i class="bi bi-clock-history"></i> Log Aktivitas</a></li><?php endif; ?>
             <?php if (can_modul('pengguna')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('pengguna.php', $menuGroups, $current) ? 'active' : '' ?>" href="<?= modul_url('pengguna') ?>"><i class="bi bi-person-badge"></i> Pengguna</a></li><?php endif; ?>
             <?php if (can_modul('hak_akses')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('hak_akses.php', $menuGroups, $current) ? 'active' : '' ?>" href="<?= modul_url('hak_akses') ?>"><i class="bi bi-shield-lock"></i> Hak Akses</a></li><?php endif; ?>
@@ -152,7 +152,7 @@ function is_menu_active(string $menuKey, array $groups, string $current): bool
       'rekap' => 'Rekap Bulanan',
       'izin' => 'Pengajuan Izin',
       'device' => 'Manajemen Perangkat',
-      'security_log' => 'Log Keamanan',
+      'log_security' => 'Log Keamanan',
       'log_aktivitas' => 'Log Aktivitas',
       'pengaturan' => 'Pengaturan',
       'profil' => 'Profil Akun',
@@ -177,7 +177,7 @@ function is_menu_active(string $menuKey, array $groups, string $current): bool
       'rekap' => 'Presensi',
       'izin' => 'Presensi',
       'device' => 'Sistem & Keamanan',
-      'security_log' => 'Sistem & Keamanan',
+      'log_security' => 'Sistem & Keamanan',
       'log_aktivitas' => 'Sistem & Keamanan',
       'pengaturan' => 'Sistem & Keamanan',
       'profil' => 'Akun',

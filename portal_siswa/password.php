@@ -5,35 +5,35 @@ $wajibGanti = !empty($akun['password_sementara']);   // password sementara dari 
 $galat = '';
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
-    $lama = (string) ($_POST['lama'] ?? '');
-    $baru = (string) ($_POST['password'] ?? '');
-    $ulang = (string) ($_POST['password2'] ?? '');
+  $lama = (string) ($_POST['lama'] ?? '');
+  $baru = (string) ($_POST['password'] ?? '');
+  $ulang = (string) ($_POST['password2'] ?? '');
 
-    if (!csrf_verify($_POST['csrf_token'] ?? '')) {
-        $galat = 'Sesi halaman kedaluwarsa. Muat ulang halaman lalu coba lagi.';
-    } elseif (portal_kunci_sisa('ganti:' . $akun['id']) > 0) {
-        $galat = 'Terlalu banyak percobaan. Coba lagi beberapa menit lagi.';
-    } elseif (!password_verify($lama, (string) $akun['password_hash'])) {
-        portal_catat_gagal('ganti:' . $akun['id']);
-        $galat = 'Password lama salah.';
-    } elseif ($baru !== $ulang) {
-        $galat = 'Konfirmasi password belum sama.';
-    } elseif ($baru === $lama) {
-        $galat = 'Password baru harus berbeda dari yang lama.';
-    } elseif (($g = portal_validasi_password($baru, $akun)) !== null) {
-        $galat = $g;
-    } else {
-        $u = getDB()->prepare('UPDATE siswa_akun SET password_hash = :p, password_diubah = NOW(), sesi_versi = sesi_versi + 1'
-            . (portal_kolom_sementara() ? ', password_sementara = 0' : '') . ' WHERE id = :id');
-        $u->execute([':p' => password_hash($baru, PASSWORD_DEFAULT), ':id' => $akun['id']]);
-        portal_bersihkan_gagal('ganti:' . $akun['id']);
+  if (!csrf_verify($_POST['csrf_token'] ?? '')) {
+    $galat = 'Sesi halaman kedaluwarsa. Muat ulang halaman lalu coba lagi.';
+  } elseif (portal_kunci_sisa('ganti:' . $akun['id']) > 0) {
+    $galat = 'Terlalu banyak percobaan. Coba lagi beberapa menit lagi.';
+  } elseif (!password_verify($lama, (string) $akun['password_hash'])) {
+    portal_catat_gagal('ganti:' . $akun['id']);
+    $galat = 'Password lama salah.';
+  } elseif ($baru !== $ulang) {
+    $galat = 'Konfirmasi password belum sama.';
+  } elseif ($baru === $lama) {
+    $galat = 'Password baru harus berbeda dari yang lama.';
+  } elseif (($g = portal_validasi_password($baru, $akun)) !== null) {
+    $galat = $g;
+  } else {
+    $u = getDB()->prepare('UPDATE siswa_akun SET password_hash = :p, password_diubah = NOW(), sesi_versi = sesi_versi + 1'
+      . (portal_kolom_sementara() ? ', password_sementara = 0' : '') . ' WHERE id = :id');
+    $u->execute([':p' => password_hash($baru, PASSWORD_DEFAULT), ':id' => $akun['id']]);
+    portal_bersihkan_gagal('ganti:' . $akun['id']);
         security_log((int) $akun['siswa_id'], 'PORTAL_PASSWORD_DIGANTI', null, 'Password diganti oleh siswa');
-        // Semua sesi lain (HP/komputer lain) otomatis keluar; sesi ini dipertahankan.
-        $_SESSION['portal']['sesi_versi'] = (int) $akun['sesi_versi'] + 1;
-        $_SESSION['portal_info'] = 'Password berhasil diganti.';
-        header('Location: ' . portal_url());
-        exit;
-    }
+    // Semua sesi lain (HP/komputer lain) otomatis keluar; sesi ini dipertahankan.
+    $_SESSION['portal']['sesi_versi'] = (int) $akun['sesi_versi'] + 1;
+    $_SESSION['portal_info'] = 'Password berhasil diganti.';
+    header('Location: ' . portal_url());
+    exit;
+  }
 }
 
 portal_app_awal('Ganti Password', $akun, 'profil', $wajibGanti ? [] : ['kembali' => 'profil']);
