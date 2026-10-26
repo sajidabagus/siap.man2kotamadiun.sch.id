@@ -1024,18 +1024,234 @@ function kelompokkan_per_jenjang(array $kelasList): array
     return $terurut;
 }
 
+// ---------------------------------------------------------------------
+// KOMPRESI GAMBAR UNGGAHAN (foto profil, logo, lampiran izin berupa foto)
+// Gambar apa pun ukurannya (hingga UNGGAH_MAKS_MENTAH) diperkecil otomatis dengan GD: sisi terpanjang dibatasi,
+// JPEG 85% (kualitas tetap baik untuk foto), orientasi EXIF dikoreksi, PNG bertransparansi tetap PNG.
+// Tanpa ekstensi GD: perilaku lama (batas ukuran apa adanya).
+// ---------------------------------------------------------------------
+const UNGGAH_MAKS_MENTAH = 15 * 1024 * 1024;   // gambar mentah terbesar yang masih diterima untuk dikompres
+const UNGGAH_MAKS_PIKSEL = 40000000;           // 40 megapiksel (mencegah kehabisan memori)
+const FOTO_MAKS_SISI     = 1024;               // px, sisi terpanjang foto profil/logo
+const FOTO_TARGET_BYTE   = 614400;             // 600 KB: bila lebih besar, kualitas diturunkan bertahap (min. 65%)
+
+function gd_kompres_tersedia(): bool
+{
+    return extension_loaded('gd') && function_exists('imagecreatefromjpeg') && function_exists('imagejpeg') && function_exists('imagecreatetruecolor');
+}
+
+/** Imagick (ekstensi "imagemagick" di aaPanel) sebagai cadangan bila GD tidak ada. */
+function imagick_kompres_tersedia(): bool
+{
+    static $ok = null;
+    if ($ok === null) {
+        try { $ok = class_exists('Imagick') && in_array('JPEG', Imagick::queryFormats('JPEG'), true) && in_array('PNG', Imagick::queryFormats('PNG'), true); }
+        catch (Throwable $e) { $ok = false; }
+    }
+    return $ok;
+}
+
+/** Apakah server bisa mengompres gambar (GD atau Imagick)? */
+function kompres_tersedia(): bool
+{
+    return gd_kompres_tersedia() || imagick_kompres_tersedia();
+}
+
+/** Nama mesin kompresi yang dipakai: 'gd', 'imagick', atau '' (tidak ada). */
+function kompres_mesin(): string
+{
+    return gd_kompres_tersedia() ? 'gd' : (imagick_kompres_tersedia() ? 'imagick' : '');
+}
+
+/** Pastikan memori cukup untuk memproses gambar $w x $h (GD ~ 5 byte/piksel + salinan). */
+function gd_siapkan_memori(int $w, int $h): bool
+{
+    $perlu = (int) ($w * $h * 5.5) + 48 * 1048576;
+    $ini = trim((string) ini_get('memory_limit'));
+    if ($ini === '-1') return true;
+    $angka = (float) $ini;
+    $unit = strtolower(substr($ini, -1));
+    $byte = (int) ($unit === 'g' ? $angka * 1073741824 : ($unit === 'm' ? $angka * 1048576 : ($unit === 'k' ? $angka * 1024 : $angka)));
+    if ($byte >= $perlu) return true;
+    return @ini_set('memory_limit', (string) ((int) ceil($perlu / 1048576) + 16) . 'M') !== false;
+}
+
+/**
+ * Perkecil + kompres gambar JPEG/PNG/WEBP. File sumber tidak diubah.
+ * @return array{path:string,mime:string,ext:string,size:int}|null  null = tidak perlu/tidak bisa dikompres (pakai file asli)
+ *         File hasil ada di folder sementara; pemanggil wajib memindahkan atau menghapusnya.
+ */
+function kompres_gambar_file(string $src, string $mime, int $maksSisi, int $kualitas = 85, int $targetByte = 0): ?array
+{
+    if (!kompres_tersedia()) return null;
+    $info = @getimagesize($src);
+    if (!$info || $info[0] < 1 || $info[1] < 1 || $info[0] * $info[1] > UNGGAH_MAKS_PIKSEL) return null;
+    if (!gd_kompres_tersedia()) return kompres_gambar_imagick($src, $mime, $maksSisi, $kualitas, $targetByte);   // GD tidak ada -> Imagick
+    if (!gd_siapkan_memori((int) $info[0], (int) $info[1])) return null;
+
+    switch ($mime) {
+        case 'image/jpeg': $im = @imagecreatefromjpeg($src); break;
+        case 'image/png':  $im = @imagecreatefrompng($src); break;
+        case 'image/webp': $im = function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($src) : false; break;
+        default: $im = false;
+    }
+    if (!$im) return null;
+    if (!imageistruecolor($im)) imagepalettetotruecolor($im);
+
+    // Koreksi orientasi foto dari kamera HP (EXIF) agar tidak tampil miring.
+    $diputar = false;
+    if ($mime === 'image/jpeg' && function_exists('exif_read_data')) {
+        $ex = @exif_read_data($src);
+        $sudut = [3 => 180, 6 => -90, 8 => 90][(int) ($ex['Orientation'] ?? 1)] ?? 0;
+        if ($sudut !== 0 && ($r = imagerotate($im, $sudut, 0))) { imagedestroy($im); $im = $r; $diputar = true; }
+    }
+
+    $w = imagesx($im);
+    $h = imagesy($im);
+    $skala = min(1.0, $maksSisi / max($w, $h));
+    if ($skala < 1.0) {
+        $nw = max(1, (int) round($w * $skala));
+        $nh = max(1, (int) round($h * $skala));
+        $baru = imagecreatetruecolor($nw, $nh);
+        imagealphablending($baru, false);
+        imagesavealpha($baru, true);
+        imagefilledrectangle($baru, 0, 0, $nw, $nh, imagecolorallocatealpha($baru, 255, 255, 255, 127));
+        imagecopyresampled($baru, $im, 0, 0, 0, 0, $nw, $nh, $w, $h);
+        imagedestroy($im);
+        $im = $baru; $w = $nw; $h = $nh;
+    }
+
+    // Transparansi (PNG/WEBP)? Bila ada, tetap PNG; bila tidak, JPEG (jauh lebih kecil untuk foto).
+    $transparan = false;
+    if ($mime !== 'image/jpeg') {
+        $langkah = max(1, (int) floor(max($w, $h) / 96));
+        for ($y = 0; $y < $h && !$transparan; $y += $langkah) {
+            for ($x = 0; $x < $w; $x += $langkah) {
+                if (((imagecolorat($im, $x, $y) >> 24) & 0x7F) > 8) { $transparan = true; break; }
+            }
+        }
+    }
+
+    $tmp = tempnam(sys_get_temp_dir(), 'kmp');
+    if ($tmp === false) { imagedestroy($im); return null; }
+    if ($transparan) {
+        imagesavealpha($im, true);
+        $ok = imagepng($im, $tmp, 9);
+        $mimeOut = 'image/png'; $ext = 'png';
+    } else {
+        $rata = imagecreatetruecolor($w, $h);                 // ratakan ke latar putih (menghindari latar hitam di JPEG)
+        imagefill($rata, 0, 0, imagecolorallocate($rata, 255, 255, 255));
+        imagecopy($rata, $im, 0, 0, 0, 0, $w, $h);
+        imagedestroy($im);
+        $im = $rata;
+        imageinterlace($im, true);
+        $q = max(40, min(95, $kualitas));
+        $ok = imagejpeg($im, $tmp, $q);
+        while ($ok && $targetByte > 0 && $q > 65 && filesize($tmp) > $targetByte) { $q -= 10; clearstatcache(true, $tmp); $ok = imagejpeg($im, $tmp, max(65, $q)); }
+        $mimeOut = 'image/jpeg'; $ext = 'jpg';
+    }
+    imagedestroy($im);
+    clearstatcache(true, $tmp);
+    $ukuran = (int) filesize($tmp);
+    if (!$ok || $ukuran <= 0) { @unlink($tmp); return null; }
+    // Tidak diperkecil/diputar dan hasilnya tidak lebih kecil: pakai file asli apa adanya.
+    if ($skala >= 1.0 && !$diputar && $mimeOut === $mime && $ukuran >= (int) filesize($src)) { @unlink($tmp); return null; }
+    return ['path' => $tmp, 'mime' => $mimeOut, 'ext' => $ext, 'size' => $ukuran];
+}
+
+/** Versi Imagick dari kompres_gambar_file() (hasil dan aturan sama). */
+function kompres_gambar_imagick(string $src, string $mime, int $maksSisi, int $kualitas, int $targetByte): ?array
+{
+    $tmp = tempnam(sys_get_temp_dir(), 'kmp');
+    if ($tmp === false) return null;
+    $im = null;
+    try {
+        $im = new Imagick();
+        $im->readImage($src . '[0]');                          // hanya frame pertama
+        if ($im->getImageColorspace() === Imagick::COLORSPACE_CMYK) $im->transformImageColorspace(Imagick::COLORSPACE_SRGB);
+
+        // Koreksi orientasi EXIF.
+        $diputar = false;
+        $sudut = [Imagick::ORIENTATION_BOTTOMRIGHT => 180, Imagick::ORIENTATION_RIGHTTOP => 90, Imagick::ORIENTATION_LEFTBOTTOM => -90][$im->getImageOrientation()] ?? 0;
+        if ($sudut !== 0) { $im->rotateImage(new ImagickPixel('none'), $sudut); $diputar = true; }
+        $im->setImageOrientation(Imagick::ORIENTATION_TOPLEFT);
+
+        $w = $im->getImageWidth();
+        $h = $im->getImageHeight();
+        $skala = min(1.0, $maksSisi / max($w, $h));
+        if ($skala < 1.0) {
+            $w = max(1, (int) round($w * $skala));
+            $h = max(1, (int) round($h * $skala));
+            $im->resizeImage($w, $h, Imagick::FILTER_LANCZOS, 1);
+        }
+
+        // Transparan (PNG/WEBP)? Tetap PNG; bila tidak, JPEG.
+        $transparan = false;
+        if ($mime !== 'image/jpeg' && $im->getImageAlphaChannel()) {
+            $t = clone $im;
+            $t->thumbnailImage(48, 48);
+            for ($y = 0; $y < $t->getImageHeight() && !$transparan; $y++) {
+                for ($x = 0; $x < $t->getImageWidth(); $x++) {
+                    if ($t->getImagePixelColor($x, $y)->getColorValue(Imagick::COLOR_ALPHA) < 0.97) { $transparan = true; break; }
+                }
+            }
+            $t->clear();
+        }
+
+        if ($transparan) {
+            $im->setImageFormat('png');
+            $im->setOption('png:compression-level', '9');
+            $im->stripImage();
+            $blob = $im->getImageBlob();
+            $mimeOut = 'image/png'; $ext = 'png';
+        } else {
+            $bg = new Imagick();                                // ratakan ke latar putih
+            $bg->newImage($w, $h, new ImagickPixel('white'));
+            $bg->compositeImage($im, Imagick::COMPOSITE_OVER, 0, 0);
+            $im->clear();
+            $im = $bg;
+            $im->setImageFormat('jpeg');
+            $im->setImageCompression(Imagick::COMPRESSION_JPEG);
+            $im->setInterlaceScheme(Imagick::INTERLACE_PLANE);
+            $im->stripImage();
+            $q = max(40, min(95, $kualitas));
+            while (true) {
+                $im->setImageCompressionQuality($q);
+                $blob = $im->getImageBlob();
+                if ($targetByte <= 0 || strlen($blob) <= $targetByte || $q <= 65) break;
+                $q = max(65, $q - 10);
+            }
+            $mimeOut = 'image/jpeg'; $ext = 'jpg';
+        }
+        $im->clear();
+        $ukuran = strlen($blob);
+        if ($ukuran <= 0 || file_put_contents($tmp, $blob) === false) { @unlink($tmp); return null; }
+        if ($skala >= 1.0 && !$diputar && $mimeOut === $mime && $ukuran >= (int) filesize($src)) { @unlink($tmp); return null; }
+        return ['path' => $tmp, 'mime' => $mimeOut, 'ext' => $ext, 'size' => $ukuran];
+    } catch (Throwable $e) {
+        if ($im instanceof Imagick) { try { $im->clear(); } catch (Throwable $x) { } }
+        @unlink($tmp);
+        error_log('kompres_gambar_imagick: ' . $e->getMessage());
+        return null;
+    }
+}
+
 function handle_upload_foto(array $file, ?string $oldFile = null): ?string
 {
     if (empty($file['name']) || $file['error'] === UPLOAD_ERR_NO_FILE) {
         return $oldFile; // tidak upload baru, pertahankan lama
     }
+    if ($file['error'] === UPLOAD_ERR_INI_SIZE || $file['error'] === UPLOAD_ERR_FORM_SIZE) {
+        throw new RuntimeException('Ukuran foto melebihi batas yang diterima server. Pilih foto yang lebih kecil.');
+    }
     if ($file['error'] !== UPLOAD_ERR_OK) {
         throw new RuntimeException('Upload gagal (kode error: ' . $file['error'] . ')');
     }
 
-    $maxSize = 2 * 1024 * 1024; // 2MB
-    if ($file['size'] > $maxSize) {
-        throw new RuntimeException('Ukuran foto maksimal 2MB.');
+    $gd = kompres_tersedia();
+    $batasAkhir = 2 * 1024 * 1024; // 2MB: batas file yang disimpan
+    if ($file['size'] > ($gd ? UNGGAH_MAKS_MENTAH : $batasAkhir)) {
+        throw new RuntimeException($gd ? 'Ukuran foto maksimal 15MB.' : 'Ukuran foto maksimal 2MB.');
     }
 
     if (!is_uploaded_file((string) $file['tmp_name'])) {
@@ -1058,10 +1274,27 @@ function handle_upload_foto(array $file, ?string $oldFile = null): ?string
     if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
         throw new RuntimeException('Folder uploads/siswa tidak bisa dibuat. Periksa izin tulis folder uploads.');
     }
+
+    // Kompres otomatis (perkecil + JPEG 85%); bila tidak bisa, pakai file asli selama <= 2MB.
+    $k = kompres_gambar_file((string) $file['tmp_name'], $mime, FOTO_MAKS_SISI, 85, FOTO_TARGET_BYTE);
+    if ($k) {
+        if ($k['size'] > $batasAkhir) {
+            @unlink($k['path']);
+            throw new RuntimeException('Foto masih terlalu besar setelah dikompres. Pilih foto lain.');
+        }
+        $ext = $k['ext'];
+    } elseif ($file['size'] > $batasAkhir) {
+        throw new RuntimeException('Ukuran foto maksimal 2MB.');
+    }
+
     $filename = 'siswa_' . bin2hex(random_bytes(8)) . '.' . $ext;
     $dest = __DIR__ . '/../uploads/siswa/' . $filename;
 
-    if (!move_uploaded_file($file['tmp_name'], $dest)) {
+    if ($k) {
+        $dipindah = @rename($k['path'], $dest) || (@copy($k['path'], $dest) && @unlink($k['path']));
+        if (!$dipindah) { @unlink($k['path']); throw new RuntimeException('Gagal menyimpan file foto.'); }
+        @chmod($dest, 0644);
+    } elseif (!move_uploaded_file($file['tmp_name'], $dest)) {
         throw new RuntimeException('Gagal menyimpan file foto.');
     }
 

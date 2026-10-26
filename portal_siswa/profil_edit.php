@@ -19,7 +19,7 @@ $kembali = portal_url('profil/edit');
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     if (empty($_POST) && (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
-        $galat['foto'] = 'Ukuran foto terlalu besar. Maksimal 2 MB.';
+        $galat['foto'] = 'Ukuran foto terlalu besar untuk diterima server. Pilih foto yang lebih kecil.';
     } elseif (!csrf_verify($_POST['csrf_token'] ?? '')) {
         $galat['umum'] = 'Sesi halaman kedaluwarsa. Muat ulang halaman lalu coba lagi.';
     } else {
@@ -73,8 +73,8 @@ if (isset($galat['umum'])) portal_alert('err', $galat['umum']);
       <?php endif; ?>
       <div class="pe-foto-aksi">
         <label class="pt-btn garis kecil" for="peFoto"><i class="bi bi-camera"></i> <?= $adaFoto ? 'Ganti foto' : 'Tambah foto' ?></label>
-        <input type="file" id="peFoto" name="foto" accept="image/jpeg,image/png,image/webp" hidden>
-        <small id="peNama" class="pt-hint">JPG, PNG, atau WEBP · maks. 2 MB</small>
+        <input type="file" id="peFoto" name="foto" accept="image/jpeg,image/png,image/webp" data-kompres="1024" data-kompres-target="614400" hidden>
+        <small id="peNama" class="pt-hint">JPG, PNG, atau WEBP · ukuran apa pun, dikompres otomatis</small>
       </div>
     </div>
     <?= $f('foto') ?>
@@ -141,7 +141,7 @@ if (isset($galat['umum'])) portal_alert('err', $galat['umum']);
     galat.hidden = true; simpan.disabled = true;
     if (!f) return;
     if (!/^image\/(jpeg|png|webp)$/.test(f.type)) { galat.textContent = 'Format foto harus JPG, PNG, atau WEBP.'; galat.hidden = false; inp.value = ''; return; }
-    if (f.size > 2 * 1024 * 1024) { galat.textContent = 'Ukuran foto maksimal 2 MB.'; galat.hidden = false; inp.value = ''; return; }
+    if (f.size > 15 * 1024 * 1024) { galat.textContent = 'Ukuran foto maksimal 15 MB.'; galat.hidden = false; inp.value = ''; return; }
     nama.textContent = f.name;
     simpan.disabled = false;
     var url = URL.createObjectURL(f);

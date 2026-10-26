@@ -21,6 +21,7 @@ const IZIN_ALASAN_MIN          = 10;
 const IZIN_ALASAN_MAKS         = 500;
 const IZIN_CATATAN_MAKS        = 300;
 const IZIN_LAMPIRAN_MAKS       = 3145728; // 3 MB
+const IZIN_GAMBAR_MAKS_SISI    = 1800;    // px, sisi terpanjang foto lampiran setelah dikompres
 const IZIN_RETENSI_LAMPIRAN    = 90;      // hari (usulan bawaan tombol pembersihan)
 const IZIN_LAMPIRAN_TIPE       = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'application/pdf' => 'pdf'];
 
@@ -142,30 +143,52 @@ function izin_dir(): string
     return $dir;
 }
 
-/** Periksa file unggahan (belum dipindah). @return array{ok:bool,ada:bool,pesan?:string,mime?:string,ext?:string,asli?:string} */
+/**
+ * Periksa file unggahan (belum dipindah). Foto (JPG/PNG/WEBP) hingga 15 MB diterima dan dikompres otomatis ke <= 3 MB
+ * (sisi terpanjang 1800 px, JPEG 85% agar tulisan surat tetap terbaca); PDF tetap maksimal 3 MB (tidak dikompres).
+ * @return array{ok:bool,ada:bool,pesan?:string,mime?:string,ext?:string,asli?:string,tmp_kompres?:?string}
+ */
 function izin_periksa_lampiran(?array $f): array
 {
     if (!$f || ($f['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) return ['ok' => true, 'ada' => false];
     $err = (int) $f['error'];
-    if ($err === UPLOAD_ERR_INI_SIZE || $err === UPLOAD_ERR_FORM_SIZE) return ['ok' => false, 'ada' => true, 'pesan' => 'Ukuran file melebihi batas server. Maksimal 3 MB.'];
+    if ($err === UPLOAD_ERR_INI_SIZE || $err === UPLOAD_ERR_FORM_SIZE) return ['ok' => false, 'ada' => true, 'pesan' => 'Ukuran file melebihi batas server. Pilih file yang lebih kecil.'];
     if ($err !== UPLOAD_ERR_OK) return ['ok' => false, 'ada' => true, 'pesan' => 'File gagal diunggah. Coba lagi.'];
     if (!is_uploaded_file((string) $f['tmp_name'])) return ['ok' => false, 'ada' => true, 'pesan' => 'File tidak valid.'];
-    if ((int) $f['size'] > IZIN_LAMPIRAN_MAKS) return ['ok' => false, 'ada' => true, 'pesan' => 'Ukuran file maksimal 3 MB.'];
     if ((int) $f['size'] <= 0) return ['ok' => false, 'ada' => true, 'pesan' => 'File kosong.'];
 
     $mime = deteksi_mime_file((string) $f['tmp_name']);   // finfo -> mime_content_type -> magic bytes (lihat includes/compat.php)
     if (!isset(IZIN_LAMPIRAN_TIPE[$mime])) return ['ok' => false, 'ada' => true, 'pesan' => 'Jenis file tidak diizinkan. Gunakan foto (JPG/PNG/WEBP) atau PDF.'];
+    $gambar = $mime !== 'application/pdf';
+    $bisaKompres = $gambar && kompres_tersedia();
+    if ((int) $f['size'] > ($bisaKompres ? UNGGAH_MAKS_MENTAH : IZIN_LAMPIRAN_MAKS)) {
+        return ['ok' => false, 'ada' => true, 'pesan' => $bisaKompres ? 'Ukuran foto maksimal 15 MB.' : 'Ukuran file maksimal 3 MB.'];
+    }
+
+    $ext = IZIN_LAMPIRAN_TIPE[$mime];
+    $tmpKompres = null;
     if ($mime === 'application/pdf') {
+        if ((int) $f['size'] > IZIN_LAMPIRAN_MAKS) return ['ok' => false, 'ada' => true, 'pesan' => 'Ukuran file PDF maksimal 3 MB.'];
         $h = (string) file_get_contents($f['tmp_name'], false, null, 0, 5);
         if ($h !== '%PDF-') return ['ok' => false, 'ada' => true, 'pesan' => 'File PDF tidak valid.'];
     } else {
         $info = @getimagesize($f['tmp_name']);
         if (!$info || $info[0] < 1 || $info[1] < 1 || $info[0] > 12000 || $info[1] > 12000) return ['ok' => false, 'ada' => true, 'pesan' => 'File gambar tidak valid.'];
+        $k = $bisaKompres ? kompres_gambar_file((string) $f['tmp_name'], $mime, IZIN_GAMBAR_MAKS_SISI, 85, IZIN_LAMPIRAN_MAKS - 262144) : null;
+        if ($k) {
+            if ($k['size'] > IZIN_LAMPIRAN_MAKS) { @unlink($k['path']); return ['ok' => false, 'ada' => true, 'pesan' => 'Foto masih terlalu besar setelah dikompres. Pilih foto lain.']; }
+            $tmpKompres = $k['path'];
+            register_shutdown_function(static function () use ($tmpKompres) { if (is_file($tmpKompres)) @unlink($tmpKompres); });   // bila pengajuan batal disimpan
+            $mime = $k['mime']; $ext = $k['ext'];
+        } elseif ((int) $f['size'] > IZIN_LAMPIRAN_MAKS) {
+            return ['ok' => false, 'ada' => true, 'pesan' => 'Ukuran file maksimal 3 MB.'];
+        }
     }
     $asli = preg_replace('/[^\w .\-()]/u', '', basename((string) $f['name']));
     $asli = mb_substr(trim((string) $asli), 0, 80);
-    if ($asli === '') $asli = 'lampiran.' . IZIN_LAMPIRAN_TIPE[$mime];
-    return ['ok' => true, 'ada' => true, 'mime' => $mime, 'ext' => IZIN_LAMPIRAN_TIPE[$mime], 'asli' => $asli];
+    if ($asli === '') $asli = 'lampiran.' . $ext;
+    elseif ($tmpKompres) $asli = preg_replace('/\.[^.]*$/', '', $asli) . '.' . $ext;   // ekstensi mengikuti hasil kompresi
+    return ['ok' => true, 'ada' => true, 'mime' => $mime, 'ext' => $ext, 'asli' => $asli, 'tmp_kompres' => $tmpKompres];
 }
 
 /** Pindahkan file yang sudah lolos izin_periksa_lampiran. @return string|null nama tersimpan */
@@ -173,7 +196,12 @@ function izin_pindah_lampiran(array $f, array $cek): ?string
 {
     $nama = bin2hex(random_bytes(16)) . '.' . $cek['ext'];
     $tujuan = izin_dir() . '/' . $nama;
-    if (!move_uploaded_file($f['tmp_name'], $tujuan)) return null;
+    if (!empty($cek['tmp_kompres'])) {
+        $ok = @rename($cek['tmp_kompres'], $tujuan) || (@copy($cek['tmp_kompres'], $tujuan) && @unlink($cek['tmp_kompres']));
+        if (!$ok) return null;
+    } elseif (!move_uploaded_file($f['tmp_name'], $tujuan)) {
+        return null;
+    }
     @chmod($tujuan, 0640);
     return $nama;
 }

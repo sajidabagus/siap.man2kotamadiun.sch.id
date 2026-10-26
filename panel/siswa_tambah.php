@@ -149,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <div class="col-md-6">
           <label class="form-label">Foto Siswa</label>
-          <input type="file" name="foto" class="form-control" accept=".jpg,.jpeg,.png,.webp">
+          <input type="file" name="foto" class="form-control" accept=".jpg,.jpeg,.png,.webp" data-kompres="1024" data-kompres-target="614400">
           <small class="text-muted">Maks 2MB, format JPG/PNG/WEBP.</small>
         </div>
         <div class="col-md-6">

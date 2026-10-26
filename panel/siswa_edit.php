@@ -194,7 +194,7 @@ $kelasList = $db->query('SELECT DISTINCT kelas FROM siswa ORDER BY kelas')->fetc
         </div>
         <div class="col-md-6">
           <label class="form-label">Ganti Foto</label>
-          <input type="file" name="foto" class="form-control" accept=".jpg,.jpeg,.png,.webp">
+          <input type="file" name="foto" class="form-control" accept=".jpg,.jpeg,.png,.webp" data-kompres="1024" data-kompres-target="614400">
         </div>
         <div class="col-md-6">
           <label class="form-label">Status</label>

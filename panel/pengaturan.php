@@ -198,8 +198,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <img id="previewLogo" src="" alt="" class="d-none mb-2" style="width:72px;height:72px;object-fit:contain;border:1px solid #dee2e6;border-radius:8px;background:#fff;padding:4px;">
           <p class="text-muted small mb-2">Belum ada logo tersimpan.</p>
         <?php endif; ?>
-        <input type="file" name="logo" id="inputLogo" class="form-control" accept="image/*" onchange="previewLogoBaru(this)">
-        <small class="text-muted">Maks 2MB, format JPG/PNG/WEBP. Biarkan kosong kalau tidak ingin mengganti logo.</small>
+        <input type="file" name="logo" id="inputLogo" class="form-control" accept="image/*" data-kompres="1024" data-kompres-target="614400" onchange="previewLogoBaru(this)">
+        <small class="text-muted d-block">Format JPG/PNG/WEBP; gambar besar dikompres otomatis. Biarkan kosong kalau tidak ingin mengganti logo.</small>
+        <?php $mesinKompres = kompres_mesin(); ?>
+        <small class="d-block <?= $mesinKompres ? 'text-success' : 'text-warning' ?>">
+          <i class="bi bi-<?= $mesinKompres ? 'check-circle' : 'exclamation-triangle' ?>"></i>
+          Kompresi gambar di server: <?= $mesinKompres === 'gd' ? 'aktif (GD)' : ($mesinKompres === 'imagick' ? 'aktif (Imagick)' : 'tidak tersedia &mdash; batas upload 2 MB berlaku jika browser tidak mengompres; pasang ekstensi GD atau imagemagick di PHP') ?>
+        </small>
       </div>
     </div>
   </div>

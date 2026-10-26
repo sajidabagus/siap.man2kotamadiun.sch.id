@@ -16,7 +16,7 @@ function portal_izin_form(array $in, array $galat): void
   <?php if (isset($galat['umum'])) portal_alert('err', $galat['umum']); ?>
   <div class="pt-aturan">
     <b>Aturan singkat:</b> bisa diajukan maksimal <b><?= IZIN_MUNDUR_HARI ?> hari ke belakang</b> dan <b><?= IZIN_MAJU_HARI ?> hari ke depan</b>;
-    satu pengajuan maksimal <b><?= IZIN_MAKS_DURASI ?> hari</b>. <b>Sakit lebih dari 1 hari sekolah wajib melampirkan surat</b> (foto/PDF, maks. 3 MB).
+    satu pengajuan maksimal <b><?= IZIN_MAKS_DURASI ?> hari</b>. <b>Sakit lebih dari 1 hari sekolah wajib melampirkan surat</b> (foto atau PDF; foto dikompres otomatis, PDF maks. 3 MB).
     Tetap berangkat? Presensi hadir tetap berlaku.
   </div>
   <form method="post" action="<?= e(portal_url('izin/baru')) ?>" enctype="multipart/form-data" data-sekali>
@@ -37,11 +37,11 @@ function portal_izin_form(array $in, array $galat): void
       <div class="pt-hitung"><span id="hitung">0</span>/<?= IZIN_ALASAN_MAKS ?></div><?= $f('alasan') ?></div>
     <div class="pt-field"><label for="lampiran">Lampiran surat <span id="wajibLamp" style="color:#b42318"></span></label>
       <div class="pt-unggah" id="unggah" data-maks="<?= (int) IZIN_LAMPIRAN_MAKS ?>">
-        <input type="file" id="lampiran" name="lampiran" class="pt-unggah-input" accept="image/*,.jpg,.jpeg,.png,.webp,.pdf,application/pdf" aria-describedby="lampiranInfo">
+        <input type="file" id="lampiran" name="lampiran" class="pt-unggah-input" data-kompres="1800" data-kompres-target="2621440" accept="image/*,.jpg,.jpeg,.png,.webp,.pdf,application/pdf" aria-describedby="lampiranInfo">
         <label for="lampiran" class="pt-unggah-zona" id="unggahZona">
           <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
           <span class="j">Pilih file / foto surat</span>
-          <span class="k" id="lampiranInfo">Foto (JPG/PNG/WEBP) atau PDF · maks. <?= (int) round(IZIN_LAMPIRAN_MAKS / 1048576) ?> MB</span>
+          <span class="k" id="lampiranInfo">Foto (JPG/PNG/WEBP, dikompres otomatis) atau PDF · PDF maks. <?= (int) round(IZIN_LAMPIRAN_MAKS / 1048576) ?> MB</span>
         </label>
         <div class="pt-unggah-pilih" id="unggahPilih" hidden>
           <div class="pv" id="unggahPv"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i></div>
@@ -82,7 +82,7 @@ function portal_izin_form(array $in, array $galat): void
     var f = fi.files && fi.files[0];
     if (!f) { kosong(); return; }
     if (!(tipeOk.test(f.type) || (!f.type && extOk.test(f.name)))) { kosong('Jenis file tidak diizinkan. Gunakan foto (JPG/PNG/WEBP) atau PDF.'); return; }
-    if (f.size > maks) { kosong('Ukuran file ' + ukuran(f.size) + ', maksimal ' + ukuran(maks) + '. Kecilkan foto lalu pilih lagi.'); return; }
+    if (f.size > maks) { kosong('Ukuran file ' + ukuran(f.size) + ', maksimal ' + ukuran(maks) + (/^application\/pdf$/i.test(f.type) ? ' untuk PDF. Kecilkan PDF lalu pilih lagi.' : '. Pilih foto lain.')); return; }
     gl.hidden = true; nm.textContent = (f.name.length > 32 ? f.name.slice(0, 18) + '…' + f.name.slice(-11) : f.name); nm.title = f.name; uk.textContent = ukuran(f.size);
     if (url) URL.revokeObjectURL(url);
     pv.innerHTML = '';
