@@ -164,6 +164,7 @@ const DAFTAR_IZIN = [
         'papan.lihat'     => 'Melihat Papan Kehadiran Langsung',
         'presensi.ekspor' => 'Ekspor presensi (CSV/Excel)',
         'presensi.cetak'  => 'Mencetak data presensi',
+        'presensi.ubah'   => 'Mengubah / menambah status presensi siswa secara manual (tercatat di log, siswa diberi notifikasi)',
     ],
     'Rekap' => [
         'rekap.lihat' => 'Melihat rekap kehadiran',
@@ -200,6 +201,7 @@ const IZIN_DEFAULT_OPERATOR = [
     'presensi.lihat',
     'presensi.ekspor',
     'presensi.cetak',
+    'presensi.ubah',
     'rekap.lihat',
     'rekap.cetak',
     'device.lihat',

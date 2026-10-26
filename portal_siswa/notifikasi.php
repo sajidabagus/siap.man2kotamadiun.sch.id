@@ -10,7 +10,7 @@ portal_app_awal('Notifikasi', $akun, 'beranda', ['kembali' => '']);
 <?php if ($daftar): ?>
 <div class="pt-grid">
   <?php foreach ($daftar as $n):
-    $url = $n['tautan'] && preg_match('#^(izin/\d+|profil/edit)$#', $n['tautan']) ? portal_url($n['tautan']) : null;
+    $url = $n['tautan'] && preg_match('#^(izin/\d+|profil/edit|riwayat)$#', $n['tautan']) ? portal_url($n['tautan']) : null;
     $tag = $url ? 'a' : 'div'; ?>
   <<?= $tag ?> class="pt-notif <?= $n['dibaca_at'] === null ? 'baru' : '' ?>"<?= $url ? ' href="' . e($url) . '"' : '' ?>>
     <div class="j"><?= $n['dibaca_at'] === null ? '<span class="titik" aria-label="Baru"></span>' : '' ?><?= e($n['judul']) ?></div>

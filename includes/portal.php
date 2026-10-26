@@ -815,7 +815,7 @@ function portal_scan_status(int $siswaId): array
     $p = portal_presensi_hari($siswaId, date('Y-m-d'));
     if ($p && $p['status'] === 'ALPA') return ['aktif' => false, 'alasan' => 'Anda tercatat Alfa hari ini; absen sudah ditutup'];
     if ($p) {
-        $izin = ($p['metode'] ?? '') === 'PENGAJUAN';
+        $izin = ($p['metode'] ?? '') === 'PENGAJUAN' || in_array($p['status'], ['IZIN', 'SAKIT'], true);
         return ['aktif' => false, 'alasan' => $izin ? 'Pengajuan izin/sakit hari ini sudah disetujui' : 'Anda sudah presensi hari ini'];
     }
     return ['aktif' => true, 'alasan' => ''];

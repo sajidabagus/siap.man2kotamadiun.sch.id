@@ -146,6 +146,12 @@ function siapkan_hak_akses(): void
             $db->exec("INSERT IGNORE INTO role_permissions (role, izin) SELECT role, 'pindah_kelas.proses' FROM role_permissions WHERE izin = 'siswa.ubah'");
             $db->exec("INSERT IGNORE INTO role_permissions (role, izin) VALUES ('_meta', 'migrasi_pindah_kelas')");
         }
+        // Migrasi sekali: izin baru "presensi.ubah" untuk role yang sudah boleh mengubah data siswa (admin selalu punya semua izin)
+        $sudahUbah = (bool) $db->query("SELECT 1 FROM role_permissions WHERE role = '_meta' AND izin = 'migrasi_presensi_ubah' LIMIT 1")->fetchColumn();
+        if (!$sudahUbah) {
+            $db->exec("INSERT IGNORE INTO role_permissions (role, izin) SELECT role, 'presensi.ubah' FROM role_permissions WHERE izin = 'siswa.ubah'");
+            $db->exec("INSERT IGNORE INTO role_permissions (role, izin) VALUES ('_meta', 'migrasi_presensi_ubah')");
+        }
         $_SESSION['hak_akses_siap'] = true;
     } catch (Throwable $e) {
         error_log('siapkan_hak_akses: ' . $e->getMessage());

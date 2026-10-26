@@ -89,9 +89,9 @@ try {
         $out['saya'] = [
             'nama' => $saya['nama'],
             // Baris izin/sakit disetujui bukan kehadiran: kirim sebagai 'izin', bukan 'status'.
-            'status' => ($p && $p['metode'] !== 'PENGAJUAN') ? $p['status'] : null,
-            'izin' => ($p && $p['metode'] === 'PENGAJUAN') ? $p['status'] : null,
-            'jam' => ($p && !in_array($p['metode'], ['PENGAJUAN', 'OTOMATIS'], true)) ? substr((string) $p['jam_masuk'], 0, 5) : null,
+            'status' => ($p && $p['metode'] !== 'PENGAJUAN' && !in_array($p['status'], ['IZIN', 'SAKIT'], true)) ? $p['status'] : null,
+            'izin' => ($p && ($p['metode'] === 'PENGAJUAN' || in_array($p['status'], ['IZIN', 'SAKIT'], true))) ? $p['status'] : null,
+            'jam' => ($p && !in_array($p['metode'], ['PENGAJUAN', 'OTOMATIS'], true) && !in_array($p['status'], ['IZIN', 'SAKIT', 'ALPA'], true)) ? substr((string) $p['jam_masuk'], 0, 5) : null,
         ];
 
         // Ringkasan bulan ini untuk tampilan siswa (perangkat terdaftar): Hadir (termasuk terlambat), Izin (izin+sakit), Alfa.
