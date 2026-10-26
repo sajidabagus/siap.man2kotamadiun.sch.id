@@ -23,6 +23,7 @@ $menuGroups = [
   'siswa.php'          => ['siswa.php', 'siswa_detail.php', 'siswa_tambah.php', 'siswa_edit.php', 'siswa_hapus.php', 'siswa_import.php'],
   'master_kelas.php'   => ['master_kelas.php'],
   'kenaikan_kelas.php' => ['kenaikan_kelas.php'],
+  'pindah_kelas.php'   => ['pindah_kelas.php'],
   'qr_siswa.php'       => ['qr_siswa.php', 'qr_print.php', 'qr_generate.php'],
   'qr_gerbang.php'     => ['qr_gerbang.php'],
   'qr_kelas.php'       => ['qr_kelas.php'],
@@ -83,13 +84,15 @@ function is_menu_active(string $menuKey, array $groups, string $current): bool
                   </svg></i> Dashboard</a></li><?php endif; ?>
         </ul>
 
-        <?php if (can_any_modul(['siswa', 'akun_siswa', 'master_kelas', 'kenaikan_kelas'])): ?>
+        <?php if (can_any_modul(['siswa', 'akun_siswa', 'master_kelas', 'kenaikan_kelas', 'pindah_kelas'])): ?>
           <div class="sidebar-section-title">Data &amp; Kelas</div>
           <ul class="nav flex-column">
             <?php if (can_modul('siswa')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('siswa.php', $menuGroups, $current) ? 'active' : '' ?>" href="<?= modul_url('siswa') ?>"><i class="bi bi-people"></i> Data Siswa</a></li><?php endif; ?>
             <?php if (can_modul('akun_siswa')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('akun_siswa.php', $menuGroups, $current) ? 'active' : '' ?>" href="<?= modul_url('akun_siswa') ?>"><i class="bi bi-person-lock"></i> Akun Siswa</a></li><?php endif; ?>
             <?php if (can_modul('master_kelas')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('master_kelas.php', $menuGroups, $current) ? 'active' : '' ?>" href="<?= modul_url('master_kelas') ?>"><i class="bi bi-tags"></i> Master Kelas</a></li><?php endif; ?>
             <?php if (can_modul('kenaikan_kelas')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('kenaikan_kelas.php', $menuGroups, $current) ? 'active' : '' ?>" href="<?= modul_url('kenaikan_kelas') ?>"><i class="bi bi-arrow-up-square"></i> Kenaikan Kelas</a></li><?php endif; ?>
+            <?php if (can_modul('pindah_kelas')): require_once __DIR__ . '/pindah_kelas.php';
+              $nPindah = pindah_menunggu_jumlah(); ?><li class="nav-item"><a class="nav-link <?= is_menu_active('pindah_kelas.php', $menuGroups, $current) ? 'active' : '' ?>" href="<?= modul_url('pindah_kelas') ?>"><i class="bi bi-arrow-left-right"></i> Pindah Kelas<?php if ($nPindah > 0): ?> <span class="badge rounded-pill bg-warning text-dark ms-1"><?= (int) $nPindah ?></span><?php endif; ?></a></li><?php endif; ?>
           </ul>
         <?php endif; ?>
 
@@ -127,34 +130,23 @@ function is_menu_active(string $menuKey, array $groups, string $current): bool
       </div>
       <script>
         // Pertahankan posisi scroll menu sidebar antar halaman (jalan sebelum halaman tampil, jadi tanpa lompatan)
-        (function() {
+        (function () {
           var el = document.getElementById('sidebarNavScroll');
           if (!el) return;
-          var KEY = 'sidebar_scroll',
-            tersimpan = null;
-          try {
-            tersimpan = sessionStorage.getItem(KEY);
-          } catch (e) {}
+          var KEY = 'sidebar_scroll', tersimpan = null;
+          try { tersimpan = sessionStorage.getItem(KEY); } catch (e) {}
           if (tersimpan !== null && !isNaN(parseInt(tersimpan, 10))) {
             el.scrollTop = parseInt(tersimpan, 10);
           }
           // Bila menu aktif masih di luar area tampak (mis. kunjungan pertama), geser seperlunya
           var aktif = el.querySelector('.nav-link.active');
           if (aktif) {
-            var a = aktif.getBoundingClientRect(),
-              c = el.getBoundingClientRect();
+            var a = aktif.getBoundingClientRect(), c = el.getBoundingClientRect();
             if (a.bottom > c.bottom) el.scrollTop += a.bottom - c.bottom + 12;
             else if (a.top < c.top) el.scrollTop -= c.top - a.top + 12;
           }
-
-          function simpan() {
-            try {
-              sessionStorage.setItem(KEY, String(el.scrollTop));
-            } catch (e) {}
-          }
-          el.addEventListener('scroll', simpan, {
-            passive: true
-          });
+          function simpan() { try { sessionStorage.setItem(KEY, String(el.scrollTop)); } catch (e) {} }
+          el.addEventListener('scroll', simpan, { passive: true });
           el.addEventListener('click', simpan);
           window.addEventListener('pagehide', simpan);
         })();
@@ -178,6 +170,7 @@ function is_menu_active(string $menuKey, array $groups, string $current): bool
       'akun_siswa' => 'Akun Siswa',
       'master_kelas' => 'Master Kelas',
       'kenaikan_kelas' => 'Kenaikan Kelas',
+      'pindah_kelas' => 'Pindah Kelas',
       'qr_siswa' => 'QR Siswa',
       'qr_generate' => 'QR Siswa',
       'qr_kelas' => 'QR Kelas',
@@ -203,6 +196,7 @@ function is_menu_active(string $menuKey, array $groups, string $current): bool
       'akun_siswa' => 'Data & Kelas',
       'master_kelas' => 'Data & Kelas',
       'kenaikan_kelas' => 'Data & Kelas',
+      'pindah_kelas' => 'Data & Kelas',
       'qr_siswa' => 'QR Code',
       'qr_generate' => 'QR Code',
       'qr_kelas' => 'QR Code',

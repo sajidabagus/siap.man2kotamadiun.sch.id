@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Session bootstrap + guard akses admin.
  * Wajib di-include paling atas pada setiap halaman admin.
@@ -26,10 +25,8 @@ function require_login(): void
         exit;
     }
     // Akses langsung ke /panel/xxx diarahkan ke URL bersih modul tsb (GET saja).
-    if (
-        !defined('APP_ROUTER') && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET'
-        && strpos(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''), '/panel/') !== false
-    ) {
+    if (!defined('APP_ROUTER') && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET'
+        && strpos(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''), '/panel/') !== false) {
         $modul = basename($_SERVER['SCRIPT_NAME'], '.php');
         if (in_array($modul, DAFTAR_MODUL, true)) {
             parse_str((string) ($_SERVER['QUERY_STRING'] ?? ''), $qp);
@@ -141,6 +138,13 @@ function siapkan_hak_akses(): void
         if (!$sudahPapan) {
             $db->exec("INSERT IGNORE INTO role_permissions (role, izin) SELECT role, 'papan.lihat' FROM role_permissions WHERE izin = 'presensi.lihat'");
             $db->exec("INSERT IGNORE INTO role_permissions (role, izin) VALUES ('_meta', 'migrasi_papan')");
+        }
+        // Migrasi sekali: izin baru "pindah_kelas.lihat/proses" untuk role yang sudah boleh mengubah data siswa
+        $sudahPindah = (bool) $db->query("SELECT 1 FROM role_permissions WHERE role = '_meta' AND izin = 'migrasi_pindah_kelas' LIMIT 1")->fetchColumn();
+        if (!$sudahPindah) {
+            $db->exec("INSERT IGNORE INTO role_permissions (role, izin) SELECT role, 'pindah_kelas.lihat' FROM role_permissions WHERE izin = 'siswa.ubah'");
+            $db->exec("INSERT IGNORE INTO role_permissions (role, izin) SELECT role, 'pindah_kelas.proses' FROM role_permissions WHERE izin = 'siswa.ubah'");
+            $db->exec("INSERT IGNORE INTO role_permissions (role, izin) VALUES ('_meta', 'migrasi_pindah_kelas')");
         }
         $_SESSION['hak_akses_siap'] = true;
     } catch (Throwable $e) {

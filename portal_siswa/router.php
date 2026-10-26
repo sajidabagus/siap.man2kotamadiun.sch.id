@@ -10,6 +10,7 @@
  *   /portal/password   ganti password
  *   /portal/keluar     keluar (POST)
  *   /portal/riwayat    riwayat absensi per bulan  ·  /portal/profil  profil, perangkat, akun
+ *   /portal/profil/edit  ganti foto profil & ajukan pindah kelas (perlu persetujuan petugas)
  *   /portal/gerbang    (tanpa sesi) mencoba masuk otomatis lewat perangkat terdaftar  ·  /portal/masuk-perangkat  (POST)
  *   /portal/verifikasi minta password sebelum aksi sensitif pada sesi masuk-otomatis
  * Sesi portal TERPISAH dari sesi admin (lihat includes/portal.php).
@@ -39,7 +40,7 @@ if (!portal_aktif()) {
 
 $halaman = ['' => 'beranda', 'aktivasi' => 'aktivasi', 'password' => 'password', 'keluar' => 'keluar',
             'izin' => 'izin', 'izin/baru' => 'izin_baru', 'notifikasi' => 'notifikasi', 'perangkat' => 'perangkat',
-            'riwayat' => 'riwayat', 'profil' => 'profil', 'gerbang' => 'gerbang', 'masuk-perangkat' => 'masuk_perangkat',
+            'riwayat' => 'riwayat', 'profil' => 'profil', 'profil/edit' => 'profil_edit', 'gerbang' => 'gerbang', 'masuk-perangkat' => 'masuk_perangkat',
             'verifikasi' => 'verifikasi'];
 $izinId = 0;
 if (preg_match('#^izin/(\d{1,10})(?:/(lampiran))?$#', $sub, $m)) {

@@ -458,3 +458,14 @@ body.pt-v2 { --hj: #2563eb; --hj2: #2563eb; --hj-muda: #eff4ff; --teks: #0f172a;
 
 /* Tombol scan nonaktif di Home portal */
 .pt-absen.mati, .pt-v2 .pt-absen.mati { background: #b8c2d3; box-shadow: none; cursor: not-allowed; pointer-events: none; filter: none; font-size: 1rem; }
+
+/* Edit profil: foto + pilihan kelas */
+.pe-foto-baris { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
+.pe-avatar { flex: 0 0 84px; width: 84px; height: 84px; border-radius: 50%; object-fit: cover; border: 3px solid var(--garis, #dfe4ec); background: #eef2ff; color: #1e3a8a; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; }
+.pe-foto-aksi { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; min-width: 0; }
+.pe-foto-aksi label.pt-btn { cursor: pointer; }
+.pe-foto-aksi small { word-break: break-all; }
+.pt-field select { width: 100%; height: 54px; padding: 0 44px 0 22px; border: 2px solid transparent; border-radius: 999px; background-color: var(--hj-muda); color: var(--hj); font: inherit; font-size: 15px; font-weight: 600; outline: none; appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 16 16' fill='%23167a4a'%3E%3Cpath d='M1.6 5.2a.9.9 0 0 1 1.3 0L8 10.3l5.1-5.1a.9.9 0 1 1 1.3 1.3l-5.7 5.7a1 1 0 0 1-1.4 0L1.6 6.5a.9.9 0 0 1 0-1.3z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 20px center; }
+.pt-field select:focus { border-color: var(--hj2); background-color: #fff; box-shadow: 0 0 0 4px rgba(22,122,74,.1); }

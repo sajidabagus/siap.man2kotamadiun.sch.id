@@ -1,6 +1,7 @@
 <?php
 // /portal/profil — data diri, perangkat presensi, dan akun (notifikasi, ganti password, keluar)
 require_once __DIR__ . '/../includes/device_binding.php';
+require_once __DIR__ . '/../includes/pindah_kelas.php';
 $akun = portal_wajib_login();
 $db = getDB();
 $sid = (int) $akun['siswa_id'];
@@ -9,6 +10,7 @@ $info = (string) ($_SESSION['portal_info'] ?? '');
 $galatFlash = (string) ($_SESSION['portal_galat'] ?? '');
 unset($_SESSION['portal_info'], $_SESSION['portal_galat']);
 
+$pindahMenunggu = pindah_siapkan_tabel() ? pindah_menunggu_siswa($sid) : null;
 $binding = get_device_binding($sid);
 $setelan = get_settings();
 $bindingAktif = !empty($setelan['device_binding_aktif']);
@@ -41,7 +43,11 @@ if ($galatFlash !== '') portal_alert('err', $galatFlash);
 <section class="pf-data">
   <div class="pf-baris"><i class="bi bi-mortarboard"></i><span class="lbl">Kelas</span><span class="val"><?= e($akun['kelas']) ?></span></div>
   <div class="pf-baris"><i class="bi bi-person-vcard"></i><span class="lbl">NISN</span><span class="val"><?= e($akun['nisn']) ?></span></div>
+  <?php if ($pindahMenunggu): ?>
+  <div class="pf-baris"><i class="bi bi-hourglass-split"></i><span class="lbl">Pindah kelas</span><span class="val"><?= e($pindahMenunggu['kelas_tujuan']) ?> <span class="pt-st menunggu">Menunggu</span></span></div>
+  <?php endif; ?>
 </section>
+<a class="pt-btn garis" href="<?= e(portal_url('profil/edit')) ?>" style="margin-bottom:14px"><i class="bi bi-pencil-square"></i> Edit profil (foto &amp; pindah kelas)</a>
 
 <?php if ($bindingAktif): ?>
 <section class="pt-card" id="kartuPerangkat">

@@ -88,6 +88,7 @@ const DAFTAR_MODUL = [
     'siswa_import',
     'master_kelas',
     'kenaikan_kelas',
+    'pindah_kelas',
     'qr_siswa',
     'qr_print',
     'qr_generate',
@@ -131,6 +132,10 @@ const DAFTAR_IZIN = [
     'Pengajuan Izin' => [
         'izin.lihat'  => 'Melihat pengajuan izin/sakit siswa & lampiran surat (data kesehatan)',
         'izin.proses' => 'Menyetujui, menolak, mencabut pengajuan & menghapus lampiran lama',
+    ],
+    'Pindah Kelas' => [
+        'pindah_kelas.lihat'  => 'Melihat pengajuan pindah kelas dari siswa',
+        'pindah_kelas.proses' => 'Menyetujui atau menolak pengajuan pindah kelas',
     ],
     'Akun Siswa' => [
         'akun_siswa.lihat'  => 'Melihat daftar akun portal siswa',
@@ -184,6 +189,8 @@ const IZIN_DEFAULT_OPERATOR = [
     'siswa.lihat',
     'siswa.tambah',
     'siswa.ubah',
+    'pindah_kelas.lihat',
+    'pindah_kelas.proses',
     'kelas.lihat',
     'qr_siswa.lihat',
     'qr_siswa.cetak',
@@ -214,6 +221,7 @@ const MODUL_IZIN = [
     'siswa_import' => 'siswa.impor',
     'master_kelas' => 'kelas.lihat',
     'kenaikan_kelas' => 'kenaikan.proses',
+    'pindah_kelas' => 'pindah_kelas.lihat',
     'qr_siswa' => 'qr_siswa.lihat',
     'qr_generate' => 'qr_siswa.lihat',
     'qr_print' => 'qr_siswa.cetak',
@@ -282,6 +290,7 @@ const RUTE_MODUL = [
     'qr_generate'     => 'siswa/{nis}/qr',
     'master_kelas'    => 'kelas',
     'kenaikan_kelas'  => 'kelas/kenaikan',
+    'pindah_kelas'    => 'kelas/pindah',
     'qr_siswa'        => 'qr/siswa',
     'qr_print'        => 'qr/siswa/cetak',
     'qr_kelas'        => 'qr/kelas',

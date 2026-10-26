@@ -38,7 +38,7 @@ $badge = [
 ];
 $labelModul = [
     'siswa_tambah' => 'Tambah Siswa', 'siswa_edit' => 'Edit Siswa', 'siswa_hapus' => 'Hapus Siswa', 'siswa_import' => 'Import Siswa',
-    'master_kelas' => 'Master Kelas', 'kenaikan_kelas' => 'Kenaikan Kelas', 'qr_siswa' => 'QR Siswa', 'qr_print' => 'Cetak QR',
+    'master_kelas' => 'Master Kelas', 'kenaikan_kelas' => 'Kenaikan Kelas', 'pindah_kelas' => 'Pindah Kelas', 'qr_siswa' => 'QR Siswa', 'qr_print' => 'Cetak QR',
     'qr_generate' => 'QR Siswa', 'qr_kelas' => 'QR Kelas', 'qr_kelas_print' => 'Cetak QR Kelas', 'presensi_export' => 'Ekspor Presensi', 'presensi_print' => 'Cetak Data Presensi',
     'rekap' => 'Rekap', 'rekap_print' => 'Cetak Rekap Bulanan', 'device' => 'Perangkat', 'pengaturan' => 'Pengaturan', 'profil' => 'Profil', 'login' => 'Akun Admin', 'pengguna' => 'Pengguna', 'hak_akses' => 'Hak Akses',
 ];
