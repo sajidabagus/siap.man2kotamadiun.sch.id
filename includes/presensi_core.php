@@ -175,6 +175,18 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
         ];
     }
 
+    // 6a. Sudah tercatat ALFA hari ini (absen ditutup)? Tidak boleh absen lagi; koreksi hanya lewat wali kelas/petugas.
+    $alpaCek = $db->prepare("SELECT 1 FROM presensi WHERE siswa_id = :s AND tanggal = :t AND status = 'ALPA' LIMIT 1");
+    $alpaCek->execute([':s' => $siswaId, ':t' => date('Y-m-d')]);
+    if ($alpaCek->fetchColumn()) {
+        security_log($siswaId, 'PRESENCE_REJECTED', null, 'Sudah tercatat Alfa hari ini.');
+        return [
+            'success' => false,
+            'code' => 'ALPA',
+            'message' => 'Anda tercatat Alfa hari ini; absen sudah ditutup. Bila Anda hadir, hubungi wali kelas/petugas.',
+        ];
+    }
+
     // 6b. Sudah mengajukan izin/sakit (menunggu atau disetujui) untuk hari ini? Tidak boleh absen.
     try {
         $iz = $db->prepare("SELECT jenis, status FROM izin_pengajuan WHERE siswa_id = :s AND status IN ('menunggu','disetujui')

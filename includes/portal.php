@@ -806,14 +806,15 @@ function portal_presensi_hari(int $siswaId, string $ymd): ?array
 
 /**
  * Apakah tombol scan QR absen boleh aktif untuk siswa ini hari ini?
- * Nonaktif bila hari ini bukan hari efektif, atau siswa sudah presensi / sudah punya izin-sakit disetujui hari ini.
+ * Nonaktif bila hari ini bukan hari efektif, atau siswa sudah presensi / izin-sakit disetujui / tercatat Alfa hari ini.
  * @return array{aktif:bool,alasan:string}
  */
 function portal_scan_status(int $siswaId): array
 {
     if (!is_hari_efektif()) return ['aktif' => false, 'alasan' => 'Presensi ditutup hari ini (bukan hari efektif)'];
     $p = portal_presensi_hari($siswaId, date('Y-m-d'));
-    if ($p && $p['status'] !== 'ALPA') {
+    if ($p && $p['status'] === 'ALPA') return ['aktif' => false, 'alasan' => 'Anda tercatat Alfa hari ini; absen sudah ditutup'];
+    if ($p) {
         $izin = ($p['metode'] ?? '') === 'PENGAJUAN';
         return ['aktif' => false, 'alasan' => $izin ? 'Pengajuan izin/sakit hari ini sudah disetujui' : 'Anda sudah presensi hari ini'];
     }
