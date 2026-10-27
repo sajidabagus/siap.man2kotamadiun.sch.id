@@ -98,7 +98,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=overlays-content">
-  <meta name="theme-color" content="#0b3a27">
+  <meta name="theme-color" content="#0b2f73">
   <title>Masuk — <?= e($namaSekolah) ?></title>
   <?= favicon_tag() ?>
   <link href="<?= BASE_URL ?>/assets/css/vendor/bootstrap.min.css" rel="stylesheet">
@@ -109,15 +109,27 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   <link href="<?= BASE_URL ?>/assets/css/style.css" rel="stylesheet">
   <style>
     :root {
-      --hj-tua: #0f5c3c;
+      --hj-tua: #111111;
       /* tombol & judul */
-      --hj-judul: #1d5a3f;
-      --hj-teks: #3f8a69;
+      --hj-judul: #111111;
+      --hj-teks: #6b7280;
       /* teks isian & tautan */
-      --hj-redup: #7a9487;
+      --hj-redup: #6b7280;
       /* keterangan */
-      --hj-isian: #e8efeb;
+      --hj-isian: #eceef1;
       /* latar kolom isian */
+
+      /* Biru hanya untuk tombol Masuk; elemen lain hitam/abu-abu netral */
+      --btn-biru: #123f9e;
+      --btn-biru-hover: #0d3380;
+      --fokus-biru: #2f6fd6;
+      /* garis tepi saat kolom diklik/disorot */
+      --fokus-cahaya: rgba(47, 111, 214, .24);
+      /* cahaya biru di sekeliling kolom yang aktif */
+
+      /* Pola geometris Islam (bintang segi-8 / khatam), SVG inline: gelap = garis terang di atas biru tua; terang = garis biru tipis di atas latar muda */
+      --pola-gelap: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='64'%20height='64'%20viewBox='0%200%2064%2064'%3E%3Cpolygon%20points='32.00,0.00%2041.37,9.37%2054.63,9.37%2054.63,22.63%2064.00,32.00%2054.63,41.37%2054.63,54.63%2041.37,54.63%2032.00,64.00%2022.63,54.63%209.37,54.63%209.37,41.37%200.00,32.00%209.37,22.63%209.37,9.37%2022.63,9.37'%20fill='%23ffffff'%20fill-opacity='0.05'%20stroke='%23ffffff'%20stroke-opacity='0.3'%20stroke-width='1.2'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='39.35,14.26%2049.74,24.65%2049.74,39.35%2039.35,49.74%2024.65,49.74%2014.26,39.35%2014.26,24.65%2024.65,14.26'%20fill='none'%20stroke='%23ffffff'%20stroke-opacity='0.18'%20stroke-width='1'/%3E%3Cpolygon%20points='32.00,17.28%2036.31,21.59%2042.41,21.59%2042.41,27.69%2046.72,32.00%2042.41,36.31%2042.41,42.41%2036.31,42.41%2032.00,46.72%2027.69,42.41%2021.59,42.41%2021.59,36.31%2017.28,32.00%2021.59,27.69%2021.59,21.59%2027.69,21.59'%20fill='none'%20stroke='%23ffffff'%20stroke-opacity='0.18'%20stroke-width='1'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='32.0'%20cy='32.0'%20r='2.88'%20fill='%23ffffff'%20fill-opacity='0.3'/%3E%3Cpolygon%20points='0,-10.88%2010.88,0%200,10.88%20-10.88,0'%20fill='%23ffffff'%20fill-opacity='0.05'%20stroke='%23ffffff'%20stroke-opacity='0.18'%20stroke-width='1'/%3E%3Cpolygon%20points='0,-4.8%204.8,0%200,4.8%20-4.8,0'%20fill='%23ffffff'%20fill-opacity='0.1'/%3E%3Cpolygon%20points='64,-10.88%2074.88,0%2064,10.88%2053.12,0'%20fill='%23ffffff'%20fill-opacity='0.05'%20stroke='%23ffffff'%20stroke-opacity='0.18'%20stroke-width='1'/%3E%3Cpolygon%20points='64,-4.8%2068.8,0%2064,4.8%2059.2,0'%20fill='%23ffffff'%20fill-opacity='0.1'/%3E%3Cpolygon%20points='0,53.12%2010.88,64%200,74.88%20-10.88,64'%20fill='%23ffffff'%20fill-opacity='0.05'%20stroke='%23ffffff'%20stroke-opacity='0.18'%20stroke-width='1'/%3E%3Cpolygon%20points='0,59.2%204.8,64%200,68.8%20-4.8,64'%20fill='%23ffffff'%20fill-opacity='0.1'/%3E%3Cpolygon%20points='64,53.12%2074.88,64%2064,74.88%2053.12,64'%20fill='%23ffffff'%20fill-opacity='0.05'%20stroke='%23ffffff'%20stroke-opacity='0.18'%20stroke-width='1'/%3E%3Cpolygon%20points='64,59.2%2068.8,64%2064,68.8%2059.2,64'%20fill='%23ffffff'%20fill-opacity='0.1'/%3E%3C/svg%3E");
+      --pola-terang: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='64'%20height='64'%20viewBox='0%200%2064%2064'%3E%3Cpolygon%20points='32.00,0.00%2041.37,9.37%2054.63,9.37%2054.63,22.63%2064.00,32.00%2054.63,41.37%2054.63,54.63%2041.37,54.63%2032.00,64.00%2022.63,54.63%209.37,54.63%209.37,41.37%200.00,32.00%209.37,22.63%209.37,9.37%2022.63,9.37'%20fill='%231c4fa8'%20fill-opacity='0.035'%20stroke='%231c4fa8'%20stroke-opacity='0.16'%20stroke-width='1.2'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='39.35,14.26%2049.74,24.65%2049.74,39.35%2039.35,49.74%2024.65,49.74%2014.26,39.35%2014.26,24.65%2024.65,14.26'%20fill='none'%20stroke='%231c4fa8'%20stroke-opacity='0.1'%20stroke-width='1'/%3E%3Cpolygon%20points='32.00,17.28%2036.31,21.59%2042.41,21.59%2042.41,27.69%2046.72,32.00%2042.41,36.31%2042.41,42.41%2036.31,42.41%2032.00,46.72%2027.69,42.41%2021.59,42.41%2021.59,36.31%2017.28,32.00%2021.59,27.69%2021.59,21.59%2027.69,21.59'%20fill='none'%20stroke='%231c4fa8'%20stroke-opacity='0.1'%20stroke-width='1'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='32.0'%20cy='32.0'%20r='2.88'%20fill='%231c4fa8'%20fill-opacity='0.16'/%3E%3Cpolygon%20points='0,-10.88%2010.88,0%200,10.88%20-10.88,0'%20fill='%231c4fa8'%20fill-opacity='0.035'%20stroke='%231c4fa8'%20stroke-opacity='0.1'%20stroke-width='1'/%3E%3Cpolygon%20points='0,-4.8%204.8,0%200,4.8%20-4.8,0'%20fill='%231c4fa8'%20fill-opacity='0.08'/%3E%3Cpolygon%20points='64,-10.88%2074.88,0%2064,10.88%2053.12,0'%20fill='%231c4fa8'%20fill-opacity='0.035'%20stroke='%231c4fa8'%20stroke-opacity='0.1'%20stroke-width='1'/%3E%3Cpolygon%20points='64,-4.8%2068.8,0%2064,4.8%2059.2,0'%20fill='%231c4fa8'%20fill-opacity='0.08'/%3E%3Cpolygon%20points='0,53.12%2010.88,64%200,74.88%20-10.88,64'%20fill='%231c4fa8'%20fill-opacity='0.035'%20stroke='%231c4fa8'%20stroke-opacity='0.1'%20stroke-width='1'/%3E%3Cpolygon%20points='0,59.2%204.8,64%200,68.8%20-4.8,64'%20fill='%231c4fa8'%20fill-opacity='0.08'/%3E%3Cpolygon%20points='64,53.12%2074.88,64%2064,74.88%2053.12,64'%20fill='%231c4fa8'%20fill-opacity='0.035'%20stroke='%231c4fa8'%20stroke-opacity='0.1'%20stroke-width='1'/%3E%3Cpolygon%20points='64,59.2%2068.8,64%2064,68.8%2059.2,64'%20fill='%231c4fa8'%20fill-opacity='0.08'/%3E%3C/svg%3E");
     }
 
     /* Halaman dikunci: tidak bisa digeser/ditarik ke samping maupun bounce, seperti halaman 404.
@@ -143,9 +155,10 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
       justify-content: center;
       font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
       background:
-        radial-gradient(60% 45% at 12% 8%, rgba(120, 190, 150, .38), transparent 70%),
-        radial-gradient(55% 45% at 92% 92%, rgba(100, 170, 135, .34), transparent 70%),
-        #eaf2ed;
+        radial-gradient(60% 45% at 12% 8%, rgba(96, 150, 235, .34), transparent 70%),
+        radial-gradient(55% 45% at 92% 92%, rgba(60, 115, 215, .28), transparent 70%),
+        var(--pola-terang) 0 0 / 64px 64px,
+        #e6eefb;
     }
 
     .lg-card,
@@ -167,24 +180,20 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
       background: #fff;
       border-radius: 30px;
       overflow: hidden;
-      box-shadow: 0 30px 60px -28px rgba(14, 60, 40, .55), 0 2px 8px rgba(14, 60, 40, .08);
+      box-shadow: 0 30px 60px -28px rgba(10, 45, 110, .55), 0 2px 8px rgba(10, 45, 110, .08);
     }
 
-    /* ---- bagian atas bergambar daun ---- */
+    /* ---- bagian atas bergambar pola geometris Islam biru ---- */
     .lg-hero {
       position: relative;
       height: 250px;
       flex: none;
-      background: #0b3a27;
+      background:
+        radial-gradient(60% 70% at 50% 40%, rgba(5, 22, 66, .55), transparent 75%),
+        var(--pola-gelap) 0 0 / 56px 56px,
+        linear-gradient(135deg, #061a45, #0b3a8f 55%, #1f6fe0);
     }
 
-    .lg-hero>svg {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
 
     .lg-back {
       position: absolute;
@@ -241,7 +250,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
       pointer-events: none;
     }
 
-    /* Logo transparan: tanpa lingkaran/latar putih; bayangan mengikuti bentuk logo agar tetap terbaca di atas gambar daun */
+    /* Logo transparan: tanpa lingkaran/latar putih; bayangan mengikuti bentuk logo agar tetap terbaca di atas pola biru */
     .lg-logo img {
       width: 88px;
       height: 88px;
@@ -368,8 +377,8 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
 
     .lg-field input:focus {
       background: #fff;
-      border-color: var(--hj-teks);
-      box-shadow: 0 0 0 4px rgba(63, 138, 105, .16);
+      border-color: var(--fokus-biru);
+      box-shadow: 0 0 0 4px var(--fokus-cahaya), 0 8px 22px -10px rgba(47, 111, 214, .55);
     }
 
     .lg-field.pw input {
@@ -409,11 +418,11 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
     }
 
     .lg-eye:hover {
-      background: rgba(15, 92, 60, .09);
+      background: rgba(17, 24, 39, .07);
     }
 
     .lg-eye:focus-visible {
-      outline: 2px solid var(--hj-teks);
+      outline: 2px solid var(--fokus-biru);
       outline-offset: 1px;
     }
 
@@ -431,16 +440,16 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
       height: 50px;
       border: 0;
       border-radius: 999px;
-      background: var(--hj-tua);
+      background: var(--btn-biru);
       color: #fff;
       font: 700 15px/1 'Montserrat', system-ui, sans-serif;
       cursor: pointer;
-      box-shadow: 0 12px 22px -12px rgba(15, 92, 60, .9);
+      box-shadow: 0 12px 22px -12px rgba(18, 63, 158, .9);
       transition: background .15s, transform .15s;
     }
 
     .lg-btn:hover {
-      background: #0b4a31;
+      background: #0d3380;
     }
 
     .lg-btn:active {
@@ -448,7 +457,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
     }
 
     .lg-btn:focus-visible {
-      outline: 3px solid rgba(63, 138, 105, .5);
+      outline: 3px solid rgba(47, 111, 214, .5);
       outline-offset: 2px;
     }
 
@@ -552,7 +561,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
 
     /* =====================================================================
      DESKTOP (>= 900px): tata letak dua kolom (split-screen)
-     Kiri  : panel bermerek (logo, judul, deskripsi) di atas gambar daun
+     Kiri  : panel bermerek (logo, judul, deskripsi) di atas pola geometris Islam biru
      Kanan : panel putih berlengkung berisi formulir masuk
      Di bawah 900px semua aturan ini tidak berlaku (tampilan HP tetap seperti semula).
      ===================================================================== */
@@ -584,18 +593,18 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
 
     @media (min-width: 900px) {
       :root {
-        --hj-tua: #114e2e;
-        --hj-judul: #114e2e;
-        --hj-teks: #167a4a;
+        --hj-tua: #111111;
+        --hj-judul: #111111;
+        --hj-teks: #6b7280;
         --hj-redup: #6b7280;
-        --hj-isian: #e6eee9;
-        --hj-hover: #167a4a;
+        --hj-isian: #eceef1;
+        --hj-hover: #0d3380;
       }
 
       body.login-page {
         font-family: 'Poppins', 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
         padding: 0;
-        background: #114e2e;
+        background: #0a2a63;
         align-items: stretch;
       }
 
@@ -608,7 +617,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
         min-height: 100vh;
         border-radius: 0;
         box-shadow: none;
-        background: #114e2e;
+        background: #0a2a63;
         overflow: hidden;
       }
 
@@ -623,7 +632,10 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
         justify-content: center;
         padding: 40px max(40%, 440px) 40px 40px;
         color: #fff;
-        background: #0b3a27;
+        background:
+          radial-gradient(45% 55% at 38% 50%, rgba(5, 22, 66, .5), transparent 75%),
+          var(--pola-gelap) 0 0 / 96px 96px,
+          linear-gradient(135deg, #061a45, #0b3a8f 55%, #1f6fe0);
       }
 
       .lg-hero::before {
@@ -644,7 +656,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
         position: absolute;
         z-index: 1;
         inset: 0;
-        background: linear-gradient(135deg, rgba(17, 78, 46, .58), rgba(13, 56, 33, .8));
+        background: linear-gradient(135deg, rgba(11, 58, 143, .12), rgba(6, 26, 69, .45));
         pointer-events: none;
       }
 
@@ -655,13 +667,13 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
         width: 45px;
         height: 45px;
         font-size: 18px;
-        color: #114e2e;
+        color: #111111;
         box-shadow: 0 4px 15px rgba(0, 0, 0, .2);
         transition: transform .3s, background-color .3s;
       }
 
       .lg-back:hover {
-        color: #114e2e;
+        color: #111111;
         background: #f3f4f6;
         transform: translateX(-5px);
       }
@@ -779,7 +791,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
       }
 
       .lg-field input::placeholder {
-        color: #55876c;
+        color: #6b7280;
       }
 
       .lg-field.pw input {
@@ -787,7 +799,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
       }
 
       .lg-field input:focus {
-        box-shadow: 0 0 0 4px rgba(22, 122, 74, .1);
+        box-shadow: 0 0 0 4px var(--fokus-cahaya), 0 8px 22px -10px rgba(47, 111, 214, .55);
       }
 
       .lg-eye {
@@ -808,14 +820,14 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
         font-family: inherit;
         font-size: 16px;
         font-weight: 700;
-        box-shadow: 0 10px 20px rgba(17, 78, 46, .2);
+        box-shadow: 0 10px 20px rgba(15, 63, 158, .25);
         transition: all .3s ease;
       }
 
       .lg-btn:hover {
-        background: var(--hj-hover);
+        background: var(--btn-biru-hover);
         transform: translateY(-2px);
-        box-shadow: 0 12px 25px rgba(17, 78, 46, .3);
+        box-shadow: 0 12px 25px rgba(15, 63, 158, .35);
       }
 
       .lg-kaki {
@@ -825,13 +837,13 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
       }
 
       .lg-kaki a {
-        color: #114e2e;
+        color: #111111;
         font-weight: 700;
         transition: color .2s;
       }
 
       .lg-kaki a:hover {
-        color: var(--hj-hover);
+        color: #000;
         text-decoration: none;
       }
 
@@ -901,46 +913,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   <main class="lg-card">
 
     <div class="lg-hero">
-      <!-- Latar daun hijau (SVG, tanpa file gambar tambahan) -->
-      <svg viewBox="0 0 380 232" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
-        <defs>
-          <linearGradient id="lgBg" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#072a1c" />
-            <stop offset=".55" stop-color="#0d4a31" />
-            <stop offset="1" stop-color="#14663f" />
-          </linearGradient>
-          <linearGradient id="lgDaunA" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#0a3a27" />
-            <stop offset="1" stop-color="#1f8454" />
-          </linearGradient>
-          <linearGradient id="lgDaunB" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#0c4a30" />
-            <stop offset="1" stop-color="#2a9a63" />
-          </linearGradient>
-          <linearGradient id="lgDaunC" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#061f15" />
-            <stop offset="1" stop-color="#0f5b3a" />
-          </linearGradient>
-          <radialGradient id="lgSorot" cx=".5" cy=".38" r=".55">
-            <stop offset="0" stop-color="#0b3a27" stop-opacity=".55" />
-            <stop offset="1" stop-color="#0b3a27" stop-opacity="0" />
-          </radialGradient>
-          <!-- bentuk daun + tulang daun; warna isi diberikan lewat <use> -->
-          <g id="lgDaun">
-            <path d="M0 0 C 46 -74 168 -86 262 -24 C 178 38 66 52 0 0 Z" />
-            <path d="M6 -2 Q 120 -34 252 -24" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="2.2" stroke-linecap="round" />
-          </g>
-        </defs>
-        <rect width="380" height="232" fill="url(#lgBg)" />
-        <use href="#lgDaun" fill="url(#lgDaunC)" transform="translate(-70 70) rotate(-24) scale(1.35)" />
-        <use href="#lgDaun" fill="url(#lgDaunA)" transform="translate(-30 215) rotate(-38) scale(1.25)" />
-        <use href="#lgDaun" fill="url(#lgDaunB)" transform="translate(110 -20) rotate(52) scale(1.15)" />
-        <use href="#lgDaun" fill="url(#lgDaunC)" transform="translate(420 20) rotate(150) scale(1.3)" />
-        <use href="#lgDaun" fill="url(#lgDaunA)" transform="translate(440 190) rotate(205) scale(1.2)" />
-        <use href="#lgDaun" fill="url(#lgDaunB)" transform="translate(230 235) rotate(-62) scale(.9)" opacity=".85" />
-        <use href="#lgDaun" fill="url(#lgDaunC)" transform="translate(-10 -10) rotate(30) scale(.8)" opacity=".9" />
-        <rect width="380" height="232" fill="url(#lgSorot)" />
-      </svg>
+      <!-- Latar: pola geometris Islam biru (CSS: --pola-gelap), tanpa file gambar tambahan -->
       <a href="<?= BASE_URL ?>/" class="lg-back" id="btnKembali" title="Kembali" aria-label="Kembali"><i class="bi bi-chevron-left"></i></a>
       <div class="lg-logo"><?php if ($logoUrl): ?><img src="<?= e($logoUrl) ?>" alt="Logo <?= e($namaSekolah) ?>"><?php else: ?><i class="bi bi-qr-code-scan" aria-hidden="true"></i><?php endif; ?></div>
 
