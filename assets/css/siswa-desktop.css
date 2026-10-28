@@ -81,8 +81,9 @@
   body.mode-siswa .ap-jam .sd-tgl { display: flex !important; align-items: center; gap: 8px; font-size: 1rem; margin-bottom: 8px; }
   :is(.pt-v2 .pt-jam, body.mode-siswa .ap-jam) svg { width: 150px !important; height: 150px !important; margin-right: 60px; filter: drop-shadow(0 10px 18px rgba(15,23,42,.25)); }
 
-  /* tombol Scan/Absen tetap ada (fungsi asli), tampil lebih ringkas */
-  .pt-v2 .pt-absen, body.mode-siswa .ap-absen { width: auto; max-width: 320px; margin: 20px 0 0; padding: 14px 26px; font-size: 1.05rem; border-radius: 12px; }
+  /* Tombol Scan/Absen di dalam halaman disembunyikan di desktop: scan tetap bisa lewat menu "Scan QR Absen" di sidebar.
+     (Di HP/tablet sempit di bawah 1024 px tombolnya tetap tampil seperti biasa.) */
+  .pt-v2 .pt-absen, body.mode-siswa .ap-absen { display: none !important; }
 
   /* ---------- Home: Status Hari Ini ---------- */
   .pg-beranda .pt-status, body.mode-siswa .ap-card { margin-top: 24px; }
