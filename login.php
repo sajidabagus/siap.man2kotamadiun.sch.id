@@ -385,6 +385,20 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
       padding-right: 52px;
     }
 
+    /* Sembunyikan tombol "tampilkan password" bawaan browser (Edge/IE) & ikon isi-otomatis Safari: cukup satu ikon mata (.lg-eye) */
+    .lg-field input[type="password"]::-ms-reveal,
+    .lg-field input[type="password"]::-ms-clear {
+      display: none !important;
+    }
+
+    .lg-field input[type="password"]::-webkit-credentials-auto-fill-button,
+    .lg-field input[type="password"]::-webkit-contacts-auto-fill-button {
+      visibility: hidden;
+      pointer-events: none;
+      position: absolute;
+      right: 0;
+    }
+
     .lg-field input:-webkit-autofill {
       -webkit-box-shadow: 0 0 0 40px var(--hj-isian) inset;
       -webkit-text-fill-color: var(--hj-judul);
@@ -920,7 +934,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
       <!-- Hanya tampil di desktop (>= 900px) -->
       <div class="lg-info">
         <h2>Portal Absensi Digital</h2>
-        <p>Sistem Informasi Terpadu <?= e($namaSekolah) ?>. Tingkatkan kedisiplinan dan semangat belajar melalui pemantauan kehadiran yang akurat secara real&#8209;time.</p>
+        <p>Sistem Informasi Terpadu <?= e($namaSekolah) ?>. Tingkatkan kedisiplinan dan kinerja melalui pemantauan kehadiran yang akurat secara real&#8209;time.</p>
         <div class="lg-garis"></div>
       </div>
     </div>
