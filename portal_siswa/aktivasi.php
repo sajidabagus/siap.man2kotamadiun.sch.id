@@ -72,7 +72,7 @@ elseif (($_GET['dari'] ?? '') === 'perangkat') portal_alert('info', 'HP ini suda
       <p class="pt-catat"><i class="bi bi-info-circle"></i><span>Di iPhone, buka SIAP ABSEN selalu dengan browser yang sama (disarankan <b>Safari</b>, bukan mode Privat).</span></p>
     <?php endif; ?>
   <?php else: ?>
-    <p class="pt-catat"><i class="bi bi-info-circle"></i><span>Lewat browser, hanya akun yang aktif. Daftarkan perangkat presensi dari <b>aplikasi SIAP</b> setelah masuk.</span></p>
+    <p class="pt-catat"><i class="bi bi-info-circle"></i><span>Daftarkan perangkat presensi dari <b>aplikasi SIAP</b>.</span></p>
   <?php endif; ?>
   <button type="submit" class="pt-btn">Aktifkan Akun</button>
 </form>

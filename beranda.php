@@ -254,7 +254,7 @@ window.aturScanAwal = function () {
         <circle cx="60" cy="60" r="4.5" fill="#14213d"/><circle cx="60" cy="60" r="1.6" fill="#2f80ff"/>
       </svg>
     </div>
-    <button type="button" class="btn ap-absen" id="apAbsen"<?= $hariTutup ? ' disabled' : '' ?>><i class="bi bi-fingerprint"></i> <span><?= $hariTutup ? 'Presensi ditutup hari ini' : 'Absen Masuk' ?></span></button>
+    <button type="button" class="btn ap-absen" id="apAbsen"<?= $hariTutup ? ' disabled' : '' ?>><i class="bi bi-qr-code-scan"></i> <span><?= $hariTutup ? 'Presensi ditutup hari ini' : 'Absen Masuk' ?></span></button>
     <script>window.aturScanAwal && window.aturScanAwal();</script>
     <div class="ap-card">
       <h2>Status Hari Ini</h2>
