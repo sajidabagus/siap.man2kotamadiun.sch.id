@@ -122,3 +122,56 @@
 
 /* Menu Scan nonaktif di sidebar desktop */
 .sd-menu a.mati { opacity: .45; cursor: not-allowed; pointer-events: none; }
+
+/* =====================================================================
+   HOME DESKTOP MUAT SATU LAYAR (tanpa scroll): ukuran vertikal mengikuti tinggi layar (vh).
+   Di bawah tinggi 640 px kembali ke tampilan biasa (boleh scroll). Tidak memakai overflow:hidden,
+   jadi bila ada isi tambahan (mis. pemberitahuan) tidak ada yang terpotong.
+   ===================================================================== */
+@media (min-width: 1024px) and (min-height: 640px) {
+  html body.ap-app.pg-beranda, html body.mode-siswa { padding-bottom: 8px !important; }
+  html body.ap-app.pg-beranda .sd-top, html body.mode-siswa .sd-top { padding-top: clamp(8px, 1.8vh, 22px); }
+  html body.ap-app.pg-beranda .pt-wrap, html body.mode-siswa .wrap { padding-top: 0; padding-bottom: 8px; }
+  /* ajakan mendaftarkan perangkat HP tidak relevan di desktop (scan hanya dari HP); peringatan lain tetap tampil */
+  html body.ap-app.pg-beranda .pt-peringatan[href*="kartuPerangkat"] { display: none; }
+  /* sapaan: tanggal tidak diulang (sudah ada di kartu jam) */
+  html body.ap-app.pg-beranda .pt-hello, html body.mode-siswa .ap-hello { margin: 0 0 clamp(8px, 2.2vh, 26px) !important; }
+  html body.ap-app.pg-beranda .pt-hello h1, html body.mode-siswa .ap-hello h1 { font-size: clamp(1.45rem, 3.3vh, 2rem) !important; }
+  html body.ap-app.pg-beranda .pt-hello .tgl, html body.mode-siswa .ap-hello .tgl { display: none !important; }
+  html body.ap-app.pg-beranda .sd-sub, html body.mode-siswa .sd-sub { margin-top: 2px !important; font-size: clamp(.9rem, 1.75vh, 1.05rem) !important; }
+  /* kartu jam */
+  html body.ap-app.pg-beranda .pt-v2 .pt-jam, html body.ap-app.pg-beranda .pt-jam, html body.mode-siswa .ap-jam { padding: clamp(14px, 3.4vh, 44px) 56px; }
+  html body.ap-app.pg-beranda .pt-jam .waktu, html body.mode-siswa .ap-jam .w { font-size: clamp(44px, 8.2vh, 84px) !important; margin: clamp(4px, 1.1vh, 14px) 0 clamp(6px, 1.5vh, 18px); }
+  html body.ap-app.pg-beranda .pt-jam .waktu .dt, html body.ap-app.pg-beranda .pt-jam .waktu small, html body.mode-siswa .ap-jam .w .dt, html body.mode-siswa .ap-jam .w small { font-size: clamp(18px, 2.8vh, 28px) !important; }
+  html body.ap-app.pg-beranda .pt-jam svg, html body.mode-siswa .ap-jam svg { width: clamp(88px, 16vh, 168px) !important; height: clamp(88px, 16vh, 168px) !important; }
+  /* status hari ini */
+  html body.ap-app.pg-beranda .pt-status, html body.mode-siswa .ap-card { margin-top: clamp(10px, 2.2vh, 28px); }
+  html body.ap-app.pg-beranda .pt-status, html body.mode-siswa .ap-status { padding: clamp(8px, 1.6vh, 18px) 26px clamp(8px, 1.6vh, 18px) 18px; }
+  html body.ap-app.pg-beranda .pt-status .lingkar, html body.mode-siswa .ap-status .lg { width: clamp(56px, 8.6vh, 92px); height: clamp(56px, 8.6vh, 92px); margin: clamp(6px, 1.2vh, 12px); font-size: clamp(1.5rem, 2.2vh + .6rem, 2.2rem); }
+  /* ringkasan bulan ini */
+  html body.ap-app.pg-beranda .pt-sec, html body.mode-siswa .ap-sec { margin: clamp(12px, 2.8vh, 36px) 0 clamp(6px, 1.5vh, 18px); }
+  html body.ap-app.pg-beranda .pt-ringkas a, html body.mode-siswa .ap-tiles a { min-height: clamp(84px, 12vh, 132px); padding-top: clamp(12px, 2.2vh, 24px); padding-bottom: clamp(12px, 2.2vh, 24px); }
+  html body.ap-app.pg-beranda .pt-ringkas small, html body.mode-siswa .ap-tiles small { margin-top: clamp(2px, .8vh, 8px); }
+
+  /* Beranda perangkat terdaftar (mode-siswa): kartu "Absensi Kelas" mengisi sisa tinggi layar; baris yang tidak muat
+     otomatis pindah ke kolom tersembunyi (tanpa scroll halaman). */
+  html body.mode-siswa { height: 100vh; height: 100dvh; display: flex; flex-direction: column; }
+  html body.mode-siswa .wrap { flex: 1 1 0; min-height: 0; width: 100%; display: flex; flex-direction: column; }
+  html body.mode-siswa .sd-top { width: 100%; flex: none; }
+  html body.mode-siswa .app { flex: none; }
+  html body.mode-siswa .grid { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+  html body.mode-siswa .grid > .card.panel:not(#panelDonut) { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; margin-top: clamp(10px, 2vh, 18px); padding: clamp(8px, 1.6vh, 16px) 22px 0; }
+  html body.mode-siswa .grid > .card.panel .ket { margin-bottom: 6px; }
+  html body.mode-siswa #feed { flex: 1 1 0; min-height: 0; max-height: none; overflow: hidden; display: flex; flex-flow: column wrap; align-content: flex-start; }
+  html body.mode-siswa #feed > * { flex: none; width: 100%; }
+  html body.mode-siswa .foot { flex: none; margin: 4px 0 0; font-size: .7rem; }
+}
+
+/* Tombol Keluar di sidebar desktop (form POST + CSRF) */
+@media (min-width: 1024px) {
+  .sd-menu form.sd-keluar { margin: 10px 0 0; padding-top: 10px; border-top: 1px solid #eef1f6; }
+  .sd-menu form.sd-keluar button { display: flex; align-items: center; gap: 16px; width: 100%; padding: 13px 20px; border: 0; border-radius: 10px; background: transparent; color: #dc2626; font: inherit; font-size: 1rem; font-weight: 600; text-align: left; cursor: pointer; transition: background .15s, color .15s; }
+  .sd-menu form.sd-keluar button i { font-size: 1.25rem; width: 24px; text-align: center; color: #dc2626; }
+  .sd-menu form.sd-keluar button:hover { background: #fef2f2; }
+  .sd-menu form.sd-keluar button:focus-visible { outline: 2px solid #dc2626; outline-offset: 2px; }
+}

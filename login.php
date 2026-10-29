@@ -934,7 +934,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
       <!-- Hanya tampil di desktop (>= 900px) -->
       <div class="lg-info">
         <h2>Portal Absensi Digital</h2>
-        <p>Sistem Informasi Terpadu <?= e($namaSekolah) ?>. Tingkatkan kedisiplinan dan kinerja melalui pemantauan kehadiran yang akurat secara real&#8209;time.</p>
+        <p>Sistem Informasi Terpadu <?= e($namaSekolah) ?>. Tingkatkan kedisiplinan dan semangat belajar melalui pemantauan kehadiran yang akurat secara real&#8209;time.</p>
         <div class="lg-garis"></div>
       </div>
     </div>

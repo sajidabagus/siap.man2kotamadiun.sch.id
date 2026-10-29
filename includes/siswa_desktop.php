@@ -12,8 +12,9 @@ function siswa_desktop_logo(): ?string
   return ($logo !== '' && is_file(__DIR__ . '/../uploads/siswa/' . $logo)) ? BASE_URL . '/uploads/siswa/' . rawurlencode($logo) : null;
 }
 
-/** $aktif: beranda|riwayat|izin|profil|scan. $homeUrl: alamat Home (beda untuk perangkat terdaftar). */
-function siswa_desktop_sidebar(string $aktif, string $homeUrl, int $notif = 0): void
+/** $aktif: beranda|riwayat|izin|profil. $homeUrl: alamat Home (beda untuk perangkat terdaftar). Menu "Scan QR Absen" sengaja tidak ada di desktop (scan hanya dari HP).
+ *  $keluar: tampilkan tombol Keluar (hanya untuk halaman portal yang memakai sesi login; keluar = POST + CSRF ke /portal/keluar). */
+function siswa_desktop_sidebar(string $aktif, string $homeUrl, int $notif = 0, bool $keluar = false): void
 {
   $s = get_settings();
   $logo = siswa_desktop_logo();
@@ -22,7 +23,6 @@ function siswa_desktop_sidebar(string $aktif, string $homeUrl, int $notif = 0): 
     'riwayat' => [BASE_URL . '/portal/riwayat', 'journal-text', 'Riwayat'],
     'izin'    => [BASE_URL . '/portal/izin', 'file-earmark-text', 'Izin'],
     'profil'  => [BASE_URL . '/portal/profil', 'person', 'Profile'],
-    'scan'    => [BASE_URL . '/presensi/', 'qr-code-scan', 'Scan QR Absen'],
   ];
 ?>
   <aside class="sd-side" aria-label="Menu siswa (desktop)">
@@ -31,14 +31,15 @@ function siswa_desktop_sidebar(string $aktif, string $homeUrl, int $notif = 0): 
       <span><b><?= e((string) ($s['nama_sekolah'] ?? 'Sekolah')) ?></b><small>Sistem Informasi Siswa</small></span>
     </div>
     <nav class="sd-menu">
-      <?php $scan = $GLOBALS['PORTAL_SCAN'] ?? ['aktif' => true, 'alasan' => '']; ?>
       <?php foreach ($menu as $k => [$url, $ikon, $label]): ?>
-        <?php if ($k === 'scan' && !$scan['aktif'] && $aktif !== 'scan'): ?>
-          <a class="mati" role="button" aria-disabled="true" tabindex="-1" title="<?= e($scan['alasan']) ?>"><i class="bi bi-<?= $ikon ?>"></i><span><?= $label ?></span></a>
-        <?php continue;
-        endif; ?>
         <a href="<?= e($url) ?>" <?= $aktif === $k ? ' class="on" aria-current="page"' : '' ?>><i class="bi bi-<?= $ikon ?>"></i><span><?= $label ?></span><?php if ($k === 'izin' && $notif > 0): ?><b class="sd-badge"><?= $notif > 9 ? '9+' : $notif ?></b><?php endif; ?></a>
       <?php endforeach; ?>
+      <?php if ($keluar): ?>
+        <form method="post" action="<?= e(portal_url('keluar')) ?>" class="sd-keluar">
+          <?= csrf_field() ?>
+          <button type="submit"><i class="bi bi-box-arrow-right"></i><span>Keluar</span></button>
+        </form>
+      <?php endif; ?>
     </nav>
     <div class="sd-motto"><i class="bi bi-mortarboard"></i>
       <p>Berakhlak Mulia, Terampil, Berprestasi, dan Berbudaya Lingkungan</p>
