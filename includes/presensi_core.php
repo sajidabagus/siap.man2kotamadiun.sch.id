@@ -210,21 +210,26 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
     $tanggal = date('Y-m-d');
     $jam = date('H:i:s');
     $settings = get_settings();
+    // Jadwal untuk KELAS siswa ini hari ini (memperhitungkan agenda sekolah: libur / ujian / kegiatan di luar kelas).
+    $jd = jadwal_hari($tanggal, (string) $siswa['kelas']);
 
-    // 8a. Hari non-efektif (mis. Sabtu/Minggu/libur) -> presensi ditutup.
-    if (!is_hari_efektif($tanggal)) {
-        security_log($siswaId, 'PRESENCE_REJECTED', null, 'Presensi di hari non-efektif (' . NAMA_HARI[(int) date('N')] . ').');
+    // 8a. Hari non-efektif (Sabtu/Minggu) atau hari libur yang dijadwalkan -> presensi ditutup.
+    if (!$jd['efektif']) {
+        $alasanTutup = $jd['jenis'] === 'libur' ? $jd['ket'] : NAMA_HARI[(int) date('N')];
+        security_log($siswaId, 'PRESENCE_REJECTED', null, 'Presensi di hari non-efektif (' . $alasanTutup . ').');
         return [
             'success' => false,
             'code' => 'HARI_LIBUR',
-            'message' => 'Presensi ditutup hari ini (' . NAMA_HARI[(int) date('N')] . '). Hari efektif presensi: ' . label_hari_efektif() . '.',
+            'message' => $jd['jenis'] === 'libur'
+                ? 'Presensi ditutup hari ini (' . $jd['ket'] . '). Siswa tidak dicatat Alpa.'
+                : 'Presensi ditutup hari ini (' . NAMA_HARI[(int) date('N')] . '). Hari efektif presensi: ' . label_hari_efektif() . '.',
         ];
     }
 
     // 8b. Belum masuk jam presensi (pengaturan "Jam Masuk")? Mencegah
     // presensi jauh sebelum jam sekolah dimulai (mis. tengah malam), yang
     // bisa jadi indikasi penyalahgunaan QR/device di luar jam wajar.
-    $jamBuka = $settings['jam_masuk'] ?? null;
+    $jamBuka = $jd['jam_buka'] !== '' ? $jd['jam_buka'] : null;
     if ($jamBuka && $jam < $jamBuka) {
         security_log($siswaId, 'PRESENCE_REJECTED', null, "Presensi sebelum jam buka ($jamBuka).");
         return [
@@ -235,16 +240,16 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
     }
 
     // 8c. Lewat batas absen masuk -> scan ditutup (siswa yang belum absen dicatat ALPA otomatis).
-    if (absen_sudah_ditutup($jam)) {
-        security_log($siswaId, 'PRESENCE_REJECTED', null, 'Presensi setelah batas absen (' . substr(batas_absen(), 0, 5) . ').');
+    if ($jam >= $jd['batas_absen']) {
+        security_log($siswaId, 'PRESENCE_REJECTED', null, 'Presensi setelah batas absen (' . substr($jd['batas_absen'], 0, 5) . ').');
         return [
             'success' => false,
             'code' => 'CLOSED',
-            'message' => 'Absen masuk hari ini sudah ditutup pukul ' . substr(batas_absen(), 0, 5) . '. Siswa yang belum absen tercatat Alpa. Bila Anda hadir, hubungi wali kelas/petugas.',
+            'message' => 'Absen masuk hari ini sudah ditutup pukul ' . substr($jd['batas_absen'], 0, 5) . '. Siswa yang belum absen tercatat Alpa. Bila Anda hadir, hubungi wali kelas/petugas.',
         ];
     }
 
-    $statusPresensi = tentukan_status_presensi($jam);
+    $statusPresensi = $jam <= $jd['batas_terlambat'] ? 'HADIR' : 'TERLAMBAT';   // batas terlambat sesuai jadwal kelas hari ini
 
     // 9. Geolocation jika aktif
     if (!empty($settings['gps_aktif'])) {

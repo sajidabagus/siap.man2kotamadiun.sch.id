@@ -48,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     'status' => clean($_POST['status'] ?? 'aktif'),
   ];
 
+  if ($e = nisn_galat($data['nisn'], true)) $errors[] = $e;
   if ($data['nis'] === '') $errors[] = 'NIS wajib diisi.';
   if ($data['nama'] === '') $errors[] = 'Nama wajib diisi.';
   if ($data['kelas'] === '') $errors[] = 'Kelas wajib diisi.';
@@ -147,7 +148,7 @@ $kelasList = $db->query('SELECT DISTINCT kelas FROM siswa ORDER BY kelas')->fetc
             </div>
             <div class="col-md-6">
               <label class="form-label">NISN *</label>
-              <input type="text" name="nisn" class="form-control" value="<?= e($siswa['nisn']) ?>" required>
+              <input type="text" name="nisn" class="form-control" value="<?= e($siswa['nisn']) ?>" required <?= nisn_atribut_input() ?>>
             </div>
           </div>
         </div>

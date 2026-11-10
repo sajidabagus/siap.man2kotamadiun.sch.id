@@ -66,12 +66,14 @@ if (isset($_GET['data'])) {
   }
 
   $cfg = get_settings();
+  $jdUmum = jadwal_hari();
   echo json_encode([
     'success' => true,
-    'jam_masuk' => substr((string) ($cfg['jam_masuk'] ?? ''), 0, 5),
-    'batas_terlambat' => substr((string) ($cfg['batas_terlambat'] ?? ''), 0, 5),
+    'jam_masuk' => substr($jdUmum['jam_buka'], 0, 5),
+    'batas_terlambat' => substr($jdUmum['batas_terlambat'], 0, 5),
+    'agenda' => agenda_ringkas(),
     'waktu' => date('H:i:s'),
-    'efektif' => is_hari_efektif(),
+    'efektif' => $jdUmum['efektif'],
     'total' => $total, 'hadir' => $hadir, 'tepat' => $hadirTepat, 'terlambat' => $terlambat,
     'tidak_hadir' => $tidakHadir,
     'belum' => max(0, $total - $hadir - $tidakHadir),

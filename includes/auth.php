@@ -152,6 +152,12 @@ function siapkan_hak_akses(): void
             $db->exec("INSERT IGNORE INTO role_permissions (role, izin) SELECT role, 'presensi.ubah' FROM role_permissions WHERE izin = 'siswa.ubah'");
             $db->exec("INSERT IGNORE INTO role_permissions (role, izin) VALUES ('_meta', 'migrasi_presensi_ubah')");
         }
+        // Migrasi sekali: izin baru "agenda.lihat" untuk role yang sudah boleh melihat presensi (mengelola agenda hanya admin / yang diberi izin agenda.kelola)
+        $sudahAgenda = (bool) $db->query("SELECT 1 FROM role_permissions WHERE role = '_meta' AND izin = 'migrasi_agenda_lihat' LIMIT 1")->fetchColumn();
+        if (!$sudahAgenda) {
+            $db->exec("INSERT IGNORE INTO role_permissions (role, izin) SELECT role, 'agenda.lihat' FROM role_permissions WHERE izin = 'presensi.lihat'");
+            $db->exec("INSERT IGNORE INTO role_permissions (role, izin) VALUES ('_meta', 'migrasi_agenda_lihat')");
+        }
         $_SESSION['hak_akses_siap'] = true;
     } catch (Throwable $e) {
         error_log('siapkan_hak_akses: ' . $e->getMessage());

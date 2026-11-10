@@ -26,9 +26,6 @@ if ($gateToken === '' || !validate_qr_dinamis_sesi($gateToken)) {
 }
 
 if ($mode === 'device') {
-    if (!is_hari_efektif()) {
-        json_response(['success' => false, 'code' => 'CLOSED', 'message' => 'Presensi ditutup hari ini (bukan hari efektif).']);
-    }
     if (!is_valid_install_uuid($deviceUuid)) {
         json_response(['success' => false, 'code' => 'DEVICE_INVALID', 'message' => 'Identitas perangkat tidak valid.']);
     }
@@ -42,6 +39,14 @@ if ($mode === 'device') {
     }
     if ($siswa['device_status'] === 'BLOCKED') {
         json_response(['success' => true, 'code' => 'BLOCKED', 'message' => 'Perangkat diblokir.']);
+    }
+
+    // Presensi ditutup untuk KELAS siswa ini hari ini? (hari non-efektif / libur yang dijadwalkan di Agenda Sekolah)
+    $jdKelas = jadwal_hari(null, (string) $siswa['kelas']);
+    if (!$jdKelas['efektif']) {
+        json_response(['success' => false, 'code' => 'CLOSED', 'message' => $jdKelas['jenis'] === 'libur'
+            ? 'Presensi ditutup hari ini (' . $jdKelas['ket'] . '). Siswa tidak dicatat Alpa.'
+            : 'Presensi ditutup hari ini (bukan hari efektif).']);
     }
 
     // Sudah presensi hari ini -> jangan lanjut ke konfirmasi

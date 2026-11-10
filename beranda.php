@@ -1304,7 +1304,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
           <circle cx="60" cy="60" r="1.6" fill="#2f80ff" />
         </svg>
       </div>
-      <button type="button" class="btn ap-absen" id="apAbsen" <?= $hariTutup ? ' disabled' : '' ?>><i class="bi bi-fingerprint"></i> <span><?= $hariTutup ? 'Presensi ditutup hari ini' : 'Absen Masuk' ?></span></button>
+      <button type="button" class="btn ap-absen" id="apAbsen" <?= $hariTutup ? ' disabled' : '' ?>><i class="bi bi-qr-code-scan"></i> <span><?= $hariTutup ? 'Presensi ditutup hari ini' : 'Absen Masuk' ?></span></button>
       <script>
         window.aturScanAwal && window.aturScanAwal();
       </script>
@@ -1567,7 +1567,10 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
         var cb = $('chipBuka');
         var tutupJam = d.efektif && d.ditutup;
         cb.className = 'chip ' + (d.efektif && !tutupJam ? 'ok' : 'tutup');
-        cb.textContent = !d.efektif ? 'Hari ini libur — presensi ditutup' : (tutupJam ? 'Absen masuk ditutup pukul ' + d.batas_absen : 'Presensi dibuka hari ini' + (d.batas_absen ? ' s.d. ' + d.batas_absen : ''));
+        var ag = d.agenda;
+        if (!d.efektif) cb.textContent = ag && ag.jenis === 'libur' ? ag.label + ': ' + ag.judul + ' — presensi ditutup' : 'Hari ini libur — presensi ditutup';
+        else if (tutupJam) cb.textContent = (ag ? ag.label + ': ' + ag.judul + ' · ' : '') + 'Absen masuk ditutup pukul ' + d.batas_absen;
+        else cb.textContent = (ag ? ag.label + ': ' + ag.judul + ' · ' : '') + 'Presensi dibuka hari ini' + (d.batas_absen ? ' s.d. ' + d.batas_absen : '');
         if (d.jam_masuk) {
           var cj = $('chipJam');
           cj.style.display = '';

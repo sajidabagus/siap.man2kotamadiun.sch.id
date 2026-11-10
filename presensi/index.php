@@ -21,7 +21,9 @@ if ($gate !== '') {
 // Anggap gate token kedaluwarsa jika lebih dari 5 menit sejak diverifikasi di sesi ini
 $gateValidInSession = !empty($_SESSION['gate_token']) && validate_qr_dinamis_sesi((string) $_SESSION['gate_token']);
 // Hari non-efektif: presensi ditutup, kamera tidak dibuka sama sekali.
-$tutupHariIni = !is_hari_efektif();
+$jdUmum = jadwal_hari();
+// Tutup halaman hanya bila TIDAK ada kelas mana pun yang boleh presensi hari ini (ujian/kegiatan bisa membuka hari non-efektif untuk kelas tertentu).
+$tutupHariIni = !$jdUmum['efektif'] && !agenda_ada_pembukaan(date('Y-m-d'));
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -67,7 +69,11 @@ $tutupHariIni = !is_hari_efektif();
       <div class="ps-center">
         <i class="bi bi-calendar-x" style="font-size:2.6rem;color:var(--ps-merah)"></i>
         <p style="color:var(--ps-navy);font-weight:700;margin-top:10px">Presensi ditutup hari ini</p>
+        <?php if ($jdUmum['jenis'] === 'libur'): ?>
+        <p style="margin-top:4px"><b><?= e($jdUmum['ket']) ?></b>. Siswa tidak dicatat Alpa pada hari ini.</p>
+        <?php else: ?>
         <p style="margin-top:4px">Hari ini bukan hari efektif presensi. Hari efektif: <?= e(label_hari_efektif()) ?>.</p>
+        <?php endif; ?>
         <a class="ps-btn polos" style="margin-top:14px" href="<?= BASE_URL ?>/"><i class="bi bi-house"></i> Kembali ke Beranda</a>
       </div>
     </div>
@@ -128,8 +134,8 @@ $tutupHariIni = !is_hari_efektif();
 
   <div class="ps-card d-none" id="sudahBox">
     <div class="ps-center">
-      <i class="bi bi-check-circle-fill" style="font-size:2.6rem;color:#2fb344"></i>
-      <p style="color:var(--ps-navy);font-weight:700;margin-top:10px">Anda sudah presensi hari ini</p>
+      <i class="bi bi-check-circle-fill" id="sudahIkon" style="font-size:2.6rem;color:#2fb344"></i>
+      <p style="color:var(--ps-navy);font-weight:700;margin-top:10px" id="sudahJudul">Anda sudah presensi hari ini</p>
       <p style="margin-top:4px" id="sudahKet"></p>
       <a class="ps-btn polos" style="margin-top:14px" href="<?= BASE_URL ?>/"><i class="bi bi-house"></i> Kembali ke Beranda</a>
     </div>
@@ -162,8 +168,10 @@ function extractGateToken(text) {
 }
 
 // Tampilkan kotak "sudah presensi" dan matikan semua kartu scan (kamera tidak dibuka).
-function tampilSudah(ket) {
+function tampilSudah(ket, judul, tutup) {
   document.querySelectorAll('.ps-card').forEach(c => { if (c.id !== 'sudahBox') c.classList.add('d-none'); });
+  if (judul) document.getElementById('sudahJudul').textContent = judul;
+  if (tutup) { var ik = document.getElementById('sudahIkon'); ik.className = 'bi bi-calendar-x'; ik.style.color = 'var(--ps-merah)'; }
   document.getElementById('sudahKet').textContent = ket || '';
   document.getElementById('sudahBox').classList.remove('d-none');
 }
@@ -232,7 +240,7 @@ fetch('<?= BASE_URL ?>/api/scan.php', {
   } else if (res.code === 'ALPA') {
     tampilSudah(res.message || 'Anda tercatat Alfa hari ini; absen sudah ditutup.');
   } else if (res.code === 'CLOSED') {
-    window.location.href = '<?= BASE_URL ?>/presensi/';   // halaman akan menampilkan "Presensi ditutup hari ini"
+    tampilSudah(res.message || 'Presensi ditutup hari ini.', 'Presensi ditutup untuk kelas Anda', true);   // tidak dialihkan agar tidak berulang
   } else if (res.code === 'BLOCKED') {
     document.getElementById('blockedBox').classList.remove('d-none');
   } else {

@@ -33,6 +33,35 @@ define('DEFAULT_PAGE_SIZE', 10);
  */
 /** Jumlah baris per halaman yang dipilih pengguna (?limit=...), hanya nilai yang diizinkan. */
 const OPSI_PER_HALAMAN = [10, 20, 50, 100];
+// ---------------------------------------------------------------------
+// NISN: tepat 10 digit angka (tidak boleh kurang atau lebih) — dipakai SEMUA tempat yang menerima input NISN
+// ---------------------------------------------------------------------
+const NISN_PANJANG = 10;
+
+function nisn_valid(string $nisn): bool
+{
+    return (bool) preg_match('/^[0-9]{' . NISN_PANJANG . '}$/', $nisn);
+}
+
+/**
+ * Pesan galat untuk nilai NISN, atau null bila valid. $wajib=false: kosong dianggap boleh (mis. kolom NISN opsional di impor).
+ */
+function nisn_galat(string $nisn, bool $wajib = true): ?string
+{
+    $nisn = trim($nisn);
+    if ($nisn === '') return $wajib ? 'NISN wajib diisi (tepat ' . NISN_PANJANG . ' digit angka).' : null;
+    if (!ctype_digit($nisn)) return 'NISN hanya boleh berisi angka, tanpa spasi atau huruf (tepat ' . NISN_PANJANG . ' digit).';
+    if (strlen($nisn) !== NISN_PANJANG) return 'NISN harus tepat ' . NISN_PANJANG . ' digit (terisi ' . strlen($nisn) . ' digit).';
+    return null;
+}
+
+/** Atribut HTML untuk input NISN: hanya angka, tepat 10 digit, tanpa spasi/huruf. */
+function nisn_atribut_input(string $autocomplete = 'off'): string
+{
+    return 'inputmode="numeric" pattern="[0-9]{' . NISN_PANJANG . '}" minlength="' . NISN_PANJANG . '" maxlength="' . NISN_PANJANG . '" autocomplete="' . $autocomplete . '" '
+         . 'title="NISN harus tepat ' . NISN_PANJANG . ' digit angka" oninput="this.value=this.value.replace(/\\D/g,\'\').slice(0,' . NISN_PANJANG . ')"';
+}
+
 function get_page_size(): int
 {
     $n = (int) ($_GET['limit'] ?? $_GET['per_page'] ?? DEFAULT_PAGE_SIZE);   // per_page = nama lama, tetap diterima
@@ -80,6 +109,7 @@ const DAFTAR_MODUL = [
     'siswa_detail',
     'akun_siswa',
     'izin',
+    'agenda',
     'izin_detail',
     'izin_lampiran',
     'siswa_tambah',
@@ -132,6 +162,10 @@ const DAFTAR_IZIN = [
     'Pengajuan Izin' => [
         'izin.lihat'  => 'Melihat pengajuan izin/sakit siswa & lampiran surat (data kesehatan)',
         'izin.proses' => 'Menyetujui, menolak, mencabut pengajuan & menghapus lampiran lama',
+    ],
+    'Agenda Sekolah' => [
+        'agenda.lihat'  => 'Melihat agenda sekolah (libur, ujian, kegiatan di luar kelas)',
+        'agenda.kelola' => 'Menambah, mengubah, dan menghapus agenda sekolah (mengatur jadwal absensi & Alpa)',
     ],
     'Pindah Kelas' => [
         'pindah_kelas.lihat'  => 'Melihat pengajuan pindah kelas dari siswa',
@@ -202,6 +236,7 @@ const IZIN_DEFAULT_OPERATOR = [
     'presensi.ekspor',
     'presensi.cetak',
     'presensi.ubah',
+    'agenda.lihat',
     'rekap.lihat',
     'rekap.cetak',
     'device.lihat',
@@ -215,6 +250,7 @@ const MODUL_IZIN = [
     'siswa_detail' => 'siswa.lihat',
     'akun_siswa' => 'akun_siswa.lihat',
     'izin' => 'izin.lihat',
+    'agenda' => 'agenda.lihat',
     'izin_detail' => 'izin.lihat',
     'izin_lampiran' => 'izin.lihat',
     'siswa_tambah' => 'siswa.tambah',
@@ -285,6 +321,7 @@ const RUTE_MODUL = [
     'siswa_hapus'     => 'siswa/hapus',
     'akun_siswa'      => 'akun-siswa',
     'izin'            => 'izin',
+    'agenda'          => 'agenda-sekolah',
     'izin_detail'     => 'izin/{id}',
     'izin_lampiran'   => 'izin/{id}/lampiran',
     'siswa_detail'    => 'siswa/{nis}',
@@ -564,7 +601,8 @@ function get_settings(): array
                 'nama_kepala'    => 'VARCHAR(150) NULL',
                 'portal_siswa_aktif' => 'TINYINT(1) NOT NULL DEFAULT 1',
                 'batas_absen'    => "TIME NOT NULL DEFAULT '10:00:00'",   // scan masuk ditutup + Alpa otomatis setelah jam ini
-                'alpa_otomatis_terakhir' => 'DATE NULL',                 // penanda proses Alpa otomatis (maks 1x/hari)
+                'alpa_otomatis_terakhir' => 'DATE NULL',                 // penanda proses Alpa otomatis (hari terakhir yang diproses)
+                'alpa_otomatis_jam' => 'TIME NULL',                      // jam proses terakhir pada hari itu (agar kelas dengan batas absen lebih siang ikut diproses)
             ];
             $berubah = false;
             foreach ($kolomBaru as $kolom => $definisi) {
@@ -598,11 +636,15 @@ function get_hari_efektif(): array
     return $hari ?: [1, 2, 3, 4, 5];
 }
 
-/** Apakah tanggal (Y-m-d, default hari ini) termasuk hari efektif presensi? */
-function is_hari_efektif(?string $tanggal = null): bool
+require_once __DIR__ . '/agenda.php';
+
+/**
+ * Apakah tanggal (Y-m-d, default hari ini) termasuk hari efektif presensi?
+ * Memperhitungkan agenda sekolah (libur menutup presensi; ujian/kegiatan membukanya). $kelas null = berlaku untuk semua kelas.
+ */
+function is_hari_efektif(?string $tanggal = null, ?string $kelas = null): bool
 {
-    $n = (int) date('N', $tanggal ? strtotime($tanggal) : time());
-    return in_array($n, get_hari_efektif(), true);
+    return jadwal_hari($tanggal, $kelas)['efektif'];
 }
 
 /** Teks ringkas hari efektif, mis. "Senin, Selasa, Rabu, Kamis, Jumat". */
@@ -864,26 +906,27 @@ function jalankan_pembersihan_log_otomatis(): void
 // ---------------------------------------------------------------------
 // BATAS ABSEN MASUK + ALPA OTOMATIS (tanpa cron)
 // ---------------------------------------------------------------------
-/** Jam batas absen masuk (HH:MM:SS). Setelah jam ini scan masuk ditutup dan siswa yang belum absen dicatat ALPA. */
-function batas_absen(): string
+/** Jam batas absen masuk (HH:MM:SS) untuk tanggal & kelas (default: hari ini, jadwal umum). Setelah jam ini scan ditutup dan yang belum absen dicatat ALPA. */
+function batas_absen(?string $tanggal = null, ?string $kelas = null): string
 {
-    $b = (string) (get_settings()['batas_absen'] ?? '');
-    return preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $b) ? substr($b . ':00', 0, 8) : '10:00:00';
+    return jadwal_hari($tanggal, $kelas)['batas_absen'];
 }
 
-/** Apakah absen masuk hari ini sudah ditutup (lewat batas absen)? */
-function absen_sudah_ditutup(?string $jam = null): bool
+/** Apakah absen masuk sudah ditutup (lewat batas absen) untuk tanggal & kelas? */
+function absen_sudah_ditutup(?string $jam = null, ?string $tanggal = null, ?string $kelas = null): bool
 {
-    return ($jam ?? date('H:i:s')) >= batas_absen();
+    return ($jam ?? date('H:i:s')) >= batas_absen($tanggal, $kelas);
 }
 
 /**
  * Alpa otomatis: untuk setiap hari efektif yang batas absennya sudah lewat, siswa aktif yang belum punya baris
  * presensi dicatat ALPA (metode 'OTOMATIS', jam 00:00:00). Siswa dengan izin/sakit DISETUJUI yang mencakup tanggal
- * itu dilewati. Dipicu lazily oleh request panel/portal/beranda; kerja sungguhan maks 1x per hari (kolom
- * settings.alpa_otomatis_terakhir diklaim secara atomik). Bila beberapa hari tidak ada yang membuka situs,
- * hari-hari efektif yang terlewat (maks 7 hari) ikut dikejar. Aman dijalankan ulang (UNIQUE siswa_id+tanggal + NOT EXISTS).
- * Tidak pernah melempar error ke halaman pemanggil.
+ * itu dilewati. Jadwal mengikuti AGENDA SEKOLAH per kelas (includes/agenda.php): hari libur tidak menghasilkan Alpa;
+ * ujian/kegiatan memakai batas absennya sendiri, sehingga kelas yang batasnya lebih siang diproses belakangan pada
+ * hari yang sama (settings.alpa_otomatis_jam menandai jam proses terakhir hari itu).
+ * Dipicu lazily oleh request panel/portal/beranda (tanpa cron); klaim atomik pada settings agar hanya satu request yang
+ * bekerja. Bila beberapa hari tidak ada yang membuka situs, hari efektif yang terlewat (maks 7 hari) ikut dikejar.
+ * Aman dijalankan ulang (UNIQUE siswa_id+tanggal + NOT EXISTS). Tidak pernah melempar error ke halaman pemanggil.
  */
 function jalankan_alpa_otomatis(): void
 {
@@ -894,43 +937,85 @@ function jalankan_alpa_otomatis(): void
         $settings = get_settings();
         if (!$settings || !array_key_exists('alpa_otomatis_terakhir', $settings)) return; // kolom belum bisa dibuat
         $hariIni = date('Y-m-d');
-        $tutup = absen_sudah_ditutup();
-        $sampai = $tutup ? $hariIni : date('Y-m-d', strtotime('-1 day'));
+        $sekarang = date('H:i:s');
+        $kemarin = date('Y-m-d', strtotime('-1 day'));
+        $punyaJam = array_key_exists('alpa_otomatis_jam', $settings);
         $terakhir = (string) ($settings['alpa_otomatis_terakhir'] ?? '');
-        if ($terakhir !== '' && $terakhir >= $sampai) return;               // sudah diproses
+        $jamTerakhir = $punyaJam && !empty($settings['alpa_otomatis_jam']) ? (string) $settings['alpa_otomatis_jam'] : '00:00:00';
+
+        // Batas absen yang sudah lewat hari ini (jadwal umum + semua agenda ujian/kegiatan yang menyentuh hari ini).
+        $tertutup = array_values(array_filter(agenda_batas_hari($hariIni), fn($b) => $b <= $sekarang));
+        $sampai = $tertutup ? $hariIni : $kemarin;
+
+        if ($terakhir !== '' && $terakhir >= $sampai) {
+            if ($sampai !== $hariIni) return;                                           // tidak ada kelas yang sudah tutup hari ini
+            if (!$punyaJam) return;                                                     // tanpa penanda jam: perilaku lama (sekali/hari)
+            if (!array_filter($tertutup, fn($b) => $b > $jamTerakhir)) return;          // belum ada batas baru yang terlewati
+        }
 
         $db = getDB();
         // Klaim atomik: hanya satu request yang memproses (request lain bersamaan langsung keluar).
-        $klaim = $db->prepare('UPDATE settings SET alpa_otomatis_terakhir = :s WHERE id = :id
-                               AND (alpa_otomatis_terakhir IS NULL OR alpa_otomatis_terakhir < :s2)');
-        $klaim->execute([':s' => $sampai, ':s2' => $sampai, ':id' => $settings['id']]);
+        if ($punyaJam) {
+            $jamKlaim = $sampai === $hariIni ? $sekarang : null;
+            $klaim = $db->prepare('UPDATE settings SET alpa_otomatis_terakhir = :s, alpa_otomatis_jam = :j WHERE id = :id
+                                   AND (alpa_otomatis_terakhir IS NULL OR alpa_otomatis_terakhir < :s2
+                                        OR (alpa_otomatis_terakhir = :s3 AND (alpa_otomatis_jam IS NULL OR alpa_otomatis_jam < :j2)))');
+            $klaim->execute([':s' => $sampai, ':j' => $jamKlaim, ':s2' => $sampai, ':s3' => $sampai, ':j2' => $sekarang, ':id' => $settings['id']]);
+        } else {
+            $klaim = $db->prepare('UPDATE settings SET alpa_otomatis_terakhir = :s WHERE id = :id
+                                   AND (alpa_otomatis_terakhir IS NULL OR alpa_otomatis_terakhir < :s2)');
+            $klaim->execute([':s' => $sampai, ':s2' => $sampai, ':id' => $settings['id']]);
+        }
         if ($klaim->rowCount() !== 1) return;
 
-        // Pertama kali fitur aktif: hanya proses hari ini (tidak menulis Alpa untuk masa lalu).
-        $mulai = $terakhir === '' ? $sampai : date('Y-m-d', strtotime($terakhir . ' +1 day'));
+        // Rentang tanggal yang diproses. Pertama kali fitur aktif: hanya hari terakhir yang relevan (tidak menulis Alpa untuk masa lalu).
+        if ($terakhir === $hariIni) $mulai = $hariIni;                                  // proses ulang hari ini untuk kelas yang baru tutup
+        elseif ($terakhir === '') $mulai = $sampai;
+        else $mulai = date('Y-m-d', strtotime($terakhir . ' +1 day'));
         $batasMundur = date('Y-m-d', strtotime($sampai . ' -6 days'));
         if ($mulai < $batasMundur) $mulai = $batasMundur;
+        $dariJam = $terakhir === $hariIni ? $jamTerakhir : '00:00:00';                  // hari ini: hanya kelas yang batasnya dalam (dariJam, sekarang]
 
         $izinAda = false;
         try {
             $izinAda = (bool) $db->query("SHOW TABLES LIKE 'izin_pengajuan'")->fetchColumn();
         } catch (Throwable $e) {
         }
-        $sql = "INSERT IGNORE INTO presensi (siswa_id, kelas_saat_presensi, tanggal, jam_masuk, status, metode, created_at)
+        $sqlDasar = "INSERT IGNORE INTO presensi (siswa_id, kelas_saat_presensi, tanggal, jam_masuk, status, metode, created_at)
                 SELECT s.id, s.kelas, :t, '00:00:00', 'ALPA', 'OTOMATIS', NOW() FROM siswa s
                 WHERE s.status = 'aktif' AND DATE(s.created_at) <= :t2
                   AND NOT EXISTS (SELECT 1 FROM presensi p WHERE p.siswa_id = s.id AND p.tanggal = :t3)
-                  -- Pengaman hari libur nasional/tanggal merah (belum ada tabel libur): hari tanpa satu pun scan
-                  -- kehadiran dianggap libur sehingga tidak ada yang dicatat Alpa.
+                  -- Pengaman tambahan bila admin lupa menjadwalkan libur: hari tanpa satu pun scan kehadiran dianggap libur.
                   AND EXISTS (SELECT 1 FROM presensi x WHERE x.tanggal = :t6 AND x.metode NOT IN ('PENGAJUAN','OTOMATIS'))"
             . ($izinAda ? " AND NOT EXISTS (SELECT 1 FROM izin_pengajuan i WHERE i.siswa_id = s.id AND i.status = 'disetujui'
                               AND i.tanggal_mulai <= :t4 AND i.tanggal_selesai >= :t5)" : '');
-        $ins = $db->prepare($sql);
+        $paramTanggal = fn(string $t) => [':t' => $t, ':t2' => $t, ':t3' => $t, ':t6' => $t] + ($izinAda ? [':t4' => $t, ':t5' => $t] : []);
+        $insSemua = $db->prepare($sqlDasar);
+        $insKelas = $db->prepare($sqlDasar . ' AND s.kelas = :kls');
+        $kelasList = null;
+
         $total = 0;
         for ($t = $mulai; $t <= $sampai; $t = date('Y-m-d', strtotime($t . ' +1 day'))) {
-            if (!is_hari_efektif($t)) continue;
-            $ins->execute([':t' => $t, ':t2' => $t, ':t3' => $t, ':t6' => $t] + ($izinAda ? [':t4' => $t, ':t5' => $t] : []));
-            $total += $ins->rowCount();
+            $hariIniIni = $t === $hariIni;
+            if (!agenda_ada_khusus_kelas($t)) {
+                // Tidak ada agenda khusus kelas: semua kelas memakai jadwal yang sama -> satu query seperti semula.
+                $j = jadwal_hari($t, null);
+                if (!$j['efektif']) continue;
+                if ($hariIniIni && !($j['batas_absen'] <= $sekarang && $j['batas_absen'] > $dariJam)) continue;
+                $insSemua->execute($paramTanggal($t));
+                $total += $insSemua->rowCount();
+                continue;
+            }
+            if ($kelasList === null) {
+                $kelasList = $db->query("SELECT DISTINCT kelas FROM siswa WHERE status = 'aktif' AND kelas <> ''")->fetchAll(PDO::FETCH_COLUMN);
+            }
+            foreach ($kelasList as $k) {
+                $j = jadwal_hari($t, (string) $k);
+                if (!$j['efektif']) continue;                                            // libur / bukan hari efektif: tidak ada Alpa
+                if ($hariIniIni && !($j['batas_absen'] <= $sekarang && $j['batas_absen'] > $dariJam)) continue;
+                $insKelas->execute($paramTanggal($t) + [':kls' => $k]);
+                $total += $insKelas->rowCount();
+            }
         }
         if ($total > 0 && function_exists('catat_aktivitas')) {
             try {
@@ -946,11 +1031,9 @@ function jalankan_alpa_otomatis(): void
 // ---------------------------------------------------------------------
 // STATUS PRESENSI OTOMATIS BERDASARKAN JAM SERVER
 // ---------------------------------------------------------------------
-function tentukan_status_presensi(string $jamSekarangHms): string
+function tentukan_status_presensi(string $jamSekarangHms, ?string $tanggal = null, ?string $kelas = null): string
 {
-    $settings = get_settings();
-    $batas = $settings['batas_terlambat'] ?? '07:15:00';
-    return ($jamSekarangHms <= $batas) ? 'HADIR' : 'TERLAMBAT';
+    return ($jamSekarangHms <= jadwal_hari($tanggal, $kelas)['batas_terlambat']) ? 'HADIR' : 'TERLAMBAT';
 }
 
 // ---------------------------------------------------------------------

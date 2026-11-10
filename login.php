@@ -64,7 +64,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
       } else {
         $nisn = portal_nisn($username);
-        if ($nisn !== '' && portal_aktif() && portal_siapkan_tabel()) {
+        $mirip = (bool) preg_match('/^[0-9\s.\-]+$/', $username);        // diketik berupa angka -> dianggap NISN
+        if ($mirip && !nisn_valid($nisn)) {
+          password_verify($password, PORTAL_DUMMY_HASH);               // samakan waktu respons
+          $hasilSiswa = ['ok' => false, 'format' => true];
+        } elseif ($nisn !== '' && portal_aktif() && portal_siapkan_tabel()) {
           $hasilSiswa = portal_coba_login($nisn, $password);
         } else {
           password_verify($password, PORTAL_DUMMY_HASH);   // samakan waktu respons
@@ -78,9 +82,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           header('Location: ' . portal_url());
           exit;
         }
-        $error = !empty($hasilSiswa['terkunci'])
-          ? 'Terlalu banyak percobaan gagal. Coba lagi dalam ' . (int) ceil($hasilSiswa['sisa'] / 60) . ' menit.'
-          : 'Username atau password salah.';
+        $error = !empty($hasilSiswa['format'])
+          ? (nisn_galat($nisn, true) ?? 'NISN tidak valid.')
+          : (!empty($hasilSiswa['terkunci'])
+            ? 'Terlalu banyak percobaan gagal. Coba lagi dalam ' . (int) ceil($hasilSiswa['sisa'] / 60) . ' menit.'
+            : 'Username atau password salah.');
         usleep(300000);
       }
     }
@@ -934,7 +940,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
       <!-- Hanya tampil di desktop (>= 900px) -->
       <div class="lg-info">
         <h2>Portal Absensi Digital</h2>
-        <p>Sistem Informasi Terpadu <?= e($namaSekolah) ?>. Tingkatkan kedisiplinan dan semangat belajar melalui pemantauan kehadiran yang akurat secara real&#8209;time.</p>
+        <p>Sistem Informasi Terpadu <?= e($namaSekolah) ?>. Tingkatkan kedisiplinan dan kinerja melalui pemantauan kehadiran yang akurat secara real&#8209;time.</p>
         <div class="lg-garis"></div>
       </div>
     </div>

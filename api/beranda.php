@@ -65,15 +65,18 @@ try {
         'jam' => substr((string) $x['jam_masuk'], 0, 5), 'status' => $x['status'],
     ], $st->fetchAll());
 
+    // Jadwal hari ini: untuk KELAS siswa (perangkat terdaftar) atau jadwal umum; memperhitungkan Agenda Sekolah (libur/ujian/kegiatan).
+    $jd = jadwal_hari(null, $saya ? $kelas : null);
     $out = [
         'success' => true,
         'mode' => $saya ? 'kelas' : 'sekolah',
         'waktu' => date('H:i:s'),
-        'efektif' => is_hari_efektif(),
-        'ditutup' => absen_sudah_ditutup(),
-        'batas_absen' => substr(batas_absen(), 0, 5),
-        'jam_masuk' => substr((string) ($settings['jam_masuk'] ?? ''), 0, 5),
-        'batas_terlambat' => substr((string) ($settings['batas_terlambat'] ?? ''), 0, 5),
+        'efektif' => $jd['efektif'],
+        'ditutup' => date('H:i:s') >= $jd['batas_absen'],
+        'batas_absen' => substr($jd['batas_absen'], 0, 5),
+        'jam_masuk' => substr($jd['jam_buka'], 0, 5),
+        'batas_terlambat' => substr($jd['batas_terlambat'], 0, 5),
+        'agenda' => agenda_ringkas(null, $saya ? $kelas : null),
         'binding_aktif' => !empty($settings['device_binding_aktif']),
         'total' => $total, 'hadir' => $hadir, 'tepat' => $tepat, 'terlambat' => $terlambat,
         'tidak_hadir' => $tidak, 'belum' => $belum,

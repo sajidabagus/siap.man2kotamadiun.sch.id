@@ -4,12 +4,14 @@ require_once __DIR__ . '/../includes/header.php';
 $kelas = clean($_GET['kelas'] ?? '');
 $jurusan = clean($_GET['jurusan'] ?? '');
 $q = clean($_GET['q'] ?? '');
+$nisnF = (($_GET['nisn'] ?? '') === 'bermasalah') ? 'bermasalah' : '';
 
 $where = [];
 $params = [];
 if ($kelas !== '') { $where[] = 'kelas = :kelas'; $params[':kelas'] = $kelas; }
 if ($jurusan !== '') { $where[] = 'jurusan = :jurusan'; $params[':jurusan'] = $jurusan; }
 if ($q !== '') { $where[] = '(nama LIKE :q1 OR nis LIKE :q2 OR nisn LIKE :q3)'; $params[':q1'] = "%$q%"; $params[':q2'] = "%$q%"; $params[':q3'] = "%$q%"; }
+if ($nisnF === 'bermasalah') { $where[] = "status = 'aktif' AND (nisn IS NULL OR nisn = '' OR nisn NOT REGEXP '^[0-9]{" . NISN_PANJANG . "}$')"; }
 $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
 
 $db = getDB();
@@ -29,7 +31,7 @@ $daftarSiswa = $stmt->fetchAll();
 
 $kelasList = $db->query('SELECT DISTINCT kelas FROM siswa ORDER BY kelas')->fetchAll(PDO::FETCH_COLUMN);
 $jurusanList = $db->query('SELECT DISTINCT jurusan FROM siswa WHERE jurusan IS NOT NULL ORDER BY jurusan')->fetchAll(PDO::FETCH_COLUMN);
-$extraParams = ['q' => $q, 'kelas' => $kelas, 'jurusan' => $jurusan, 'limit' => $perPage];
+$extraParams = ['q' => $q, 'kelas' => $kelas, 'jurusan' => $jurusan, 'nisn' => $nisnF, 'limit' => $perPage];
 ?>
 
 <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-3 mb-3">
@@ -55,7 +57,15 @@ $warnaAvatar = ['#20b2a0', '#4a9be8', '#a855c8', '#f59f0b', '#e5484d', '#2fb344'
 $adaFilter = ($q !== '' || $kelas !== '' || $jurusan !== '');
 $dari = $totalData ? $offset + 1 : 0;
 $sampai = $offset + count($daftarSiswa);
+$nisnBermasalah = (int) $db->query("SELECT COUNT(*) FROM siswa WHERE status = 'aktif' AND (nisn IS NULL OR nisn = '' OR nisn NOT REGEXP '^[0-9]{" . NISN_PANJANG . "}$')")->fetchColumn();
 ?>
+<?php if ($nisnBermasalah > 0): ?>
+  <div class="alert alert-warning d-flex flex-wrap align-items-center gap-2 py-2">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <div class="small flex-grow-1"><b><?= $nisnBermasalah ?> siswa aktif</b> belum memiliki NISN yang valid (harus tepat <?= NISN_PANJANG ?> digit angka). Siswa tersebut tidak bisa aktivasi/masuk ke portal sampai NISN-nya diperbaiki.</div>
+    <?php if ($nisnF !== 'bermasalah'): ?><a class="btn btn-sm btn-outline-dark" href="<?= e(modul_url('siswa', ['nisn' => 'bermasalah'])) ?>">Tampilkan</a><?php endif; ?>
+  </div>
+<?php endif; ?>
 <div class="tbl-card">
   <div class="tbl-head">
     <h6>Semua siswa</h6>
@@ -80,6 +90,10 @@ $sampai = $offset + count($daftarSiswa);
         <?php foreach ($jurusanList as $j): ?>
           <option value="<?= e($j) ?>" <?= $jurusan === $j ? 'selected' : '' ?>><?= e($j) ?></option>
         <?php endforeach; ?>
+      </select>
+      <select name="nisn" class="form-select">
+        <option value="">Semua NISN</option>
+        <option value="bermasalah" <?= $nisnF === 'bermasalah' ? 'selected' : '' ?>>NISN bermasalah</option>
       </select>
       <a href="<?= modul_url('siswa') ?>" class="btn btn-light border" title="Hapus semua filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
     </form>

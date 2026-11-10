@@ -63,7 +63,9 @@ $rekapKelas = $stmt->fetchAll();
 $cfg = get_settings();
 $tidakHadir = $rekapHariIni['IZIN'] + $rekapHariIni['SAKIT'] + $rekapHariIni['ALPA'];
 $persenHadir = $totalSiswa ? (int) round($hadirTotal / $totalSiswa * 100) : 0;
-$efektifHariIni = is_hari_efektif();
+$jdHariIni = jadwal_hari();
+$efektifHariIni = $jdHariIni['efektif'];
+$agendaMendatang = agenda_mendatang(30, 3);
 $warnaPersen = $persenHadir >= 90 ? '#2fb344' : ($persenHadir >= 70 ? '#d9631e' : ($persenHadir >= 50 ? '#e8a200' : '#e03e4a'));
 
 // Total siswa aktif per jenjang
@@ -198,12 +200,16 @@ $namaAdmin = (current_admin()['nama'] ?? '') ?: 'Admin';
           <i class="bi bi-chat-heart bg-icon"></i>
           <h5>Halo, <?= e($namaAdmin) ?>!
             <?php if (!$efektifHariIni): ?>
+              <?php if ($jdHariIni['jenis'] === 'libur'): ?>
+              Hari ini <span class="hl"><?= e($jdHariIni['ket']) ?></span> — presensi ditutup.
+              <?php else: ?>
               Hari ini <span class="hl"><?= e(NAMA_HARI[(int) date('N')]) ?></span> bukan hari efektif presensi.
+              <?php endif; ?>
             <?php else: ?>
               Sudah <span class="hl"><?= (int) $hadirTotal ?> siswa</span> hadir hari ini<?= $belumPresensi > 0 ? ', dan ' . (int) $belumPresensi . ' siswa belum presensi.' : '.' ?>
             <?php endif; ?>
           </h5>
-          <p><?= $efektifHariIni ? 'Pantau kehadiran secara langsung dan tindak lanjuti siswa yang belum presensi.' : 'Presensi siswa ditutup. Hari efektif: ' . e(label_hari_efektif()) . '.' ?></p>
+          <p><?= $efektifHariIni ? 'Pantau kehadiran secara langsung dan tindak lanjuti siswa yang belum presensi.' : ($jdHariIni['jenis'] === 'libur' ? 'Siswa tidak dicatat Alpa pada hari libur.' : 'Presensi siswa ditutup. Hari efektif: ' . e(label_hari_efektif()) . '.') ?></p>
           <a href="<?= modul_url('presensi') ?>" class="btn btn-pink btn-sm px-3">Lihat Presensi</a>
           <a href="<?= modul_url('rekap') ?>" class="btn btn-slate btn-sm px-3">Rekap Bulanan</a>
         </div>
@@ -212,7 +218,17 @@ $namaAdmin = (current_admin()['nama'] ?? '') ?: 'Admin';
       <div class="col-md-5">
         <div class="card dash-card h-100"><div class="card-body">
           <h6 class="mb-2">Info &amp; Pengingat</h6>
-          <div class="info-item"><i class="bi bi-alarm text-primary"></i><div class="small">Presensi mulai <b><?= e(substr((string) ($cfg['jam_masuk'] ?? '07:00'), 0, 5)) ?></b>, terlambat setelah <b><?= e(substr((string) ($cfg['batas_terlambat'] ?? '07:15'), 0, 5)) ?></b>.</div></div>
+          <div class="info-item"><i class="bi bi-alarm text-primary"></i><div class="small">Presensi mulai <b><?= e(substr($jdHariIni['jam_buka'] ?: '07:00', 0, 5)) ?></b>, terlambat setelah <b><?= e(substr($jdHariIni['batas_terlambat'], 0, 5)) ?></b>, ditutup <b><?= e(substr($jdHariIni['batas_absen'], 0, 5)) ?></b><?= $jdHariIni['agenda'] && $jdHariIni['jenis'] !== 'libur' ? ' <span class="text-muted">(' . e($jdHariIni['ket']) . ')</span>' : '' ?>.</div></div>
+          <?php if (can_modul('agenda')): ?>
+          <div class="info-item"><i class="bi bi-calendar-event <?= $agendaMendatang ? 'text-primary' : 'text-warning' ?>"></i><div class="small">
+            <?php if ($agendaMendatang): ?>
+              Agenda terdekat: <?php foreach ($agendaMendatang as $i => $ag): ?><?= $i ? '; ' : '' ?><b><?= e($ag['judul']) ?></b> (<?= e(agenda_label_tanggal($ag['tanggal_mulai'], $ag['tanggal_selesai'])) ?>)<?php endforeach; ?>.
+              <a href="<?= modul_url('agenda') ?>">Kelola agenda</a>
+            <?php else: ?>
+              Belum ada agenda 30 hari ke depan. Jadwalkan libur, ujian, atau kegiatan agar siswa tidak tercatat Alpa. <a href="<?= modul_url('agenda') ?>">Jadwalkan</a>
+            <?php endif; ?>
+          </div></div>
+          <?php endif; ?>
           <div class="info-item"><i class="bi bi-geo-alt <?= !empty($cfg['gps_aktif']) ? 'text-success' : 'text-secondary' ?>"></i><div class="small">Validasi lokasi GPS <?= !empty($cfg['gps_aktif']) ? '<b>aktif</b>' : '<b>nonaktif</b>' ?>.</div></div>
           <div class="info-item"><i class="bi bi-phone <?= !empty($cfg['device_binding_aktif']) ? 'text-success' : 'text-secondary' ?>"></i><div class="small">Device binding <?= !empty($cfg['device_binding_aktif']) ? '<b>aktif</b>' : '<b>nonaktif</b>' ?>.</div></div>
         </div></div>

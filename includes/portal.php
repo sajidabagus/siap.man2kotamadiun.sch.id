@@ -811,7 +811,15 @@ function portal_presensi_hari(int $siswaId, string $ymd): ?array
  */
 function portal_scan_status(int $siswaId): array
 {
-    if (!is_hari_efektif()) return ['aktif' => false, 'alasan' => 'Presensi ditutup hari ini (bukan hari efektif)'];
+    $kelasSiswa = null;
+    try {
+        $q = getDB()->prepare('SELECT kelas FROM siswa WHERE id = :id');
+        $q->execute([':id' => $siswaId]);
+        $kelasSiswa = (string) ($q->fetchColumn() ?: '');
+    } catch (Throwable $e) {
+    }
+    $jd = jadwal_hari(null, $kelasSiswa !== '' ? $kelasSiswa : null);
+    if (!$jd['efektif']) return ['aktif' => false, 'alasan' => $jd['jenis'] === 'libur' ? $jd['ket'] . ' — presensi ditutup' : 'Presensi ditutup hari ini (bukan hari efektif)'];
     $p = portal_presensi_hari($siswaId, date('Y-m-d'));
     if ($p && $p['status'] === 'ALPA') return ['aktif' => false, 'alasan' => 'Anda tercatat Alfa hari ini; absen sudah ditutup'];
     if ($p) {

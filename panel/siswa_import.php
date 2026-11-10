@@ -27,6 +27,7 @@ function proses_baris_import_siswa(array $row, int $nomorBaris, PDOStatement $in
   [$nis, $nisn, $nama, $jk, $tempat, $tgl, $kelas, $jurusan, $tahun] = array_pad(array_values($row), 9, '');
   $nis = trim((string) $nis);
   $nisn = trim((string) $nisn);
+  if (preg_match('/^([0-9]+)\.0+$/', $nisn, $mNisn)) $nisn = $mNisn[1];                // angka dari Excel terbaca "51234571.0"
   $nama = trim((string) $nama);
   $kelas = trim((string) $kelas);
   $tgl = xlsx_normalize_possible_date(trim((string) $tgl)); // aman dipanggil utk CSV juga (tak berefek pada teks biasa)
@@ -38,6 +39,11 @@ function proses_baris_import_siswa(array $row, int $nomorBaris, PDOStatement $in
   $cekNis->execute([':nis' => $nis]);
   if ($cekNis->fetch()) {
     return ['status' => 'gagal', 'alasan' => "Baris $nomorBaris: NIS \"$nis\" duplikat (sudah dipakai siswa lain).", 'nis' => $nis];
+  }
+
+  // NISN (opsional di impor): bila diisi harus tepat 10 digit angka.
+  if (($galatNisn = nisn_galat($nisn, false)) !== null) {
+    return ['status' => 'gagal', 'alasan' => "Baris $nomorBaris (NIS \"$nis\"): NISN \"$nisn\" tidak valid. $galatNisn Bila NISN diawali angka 0, format kolom NISN di Excel sebagai Teks agar 0 di depan tidak hilang.", 'nis' => $nis];
   }
 
   if ($nisn !== '') {

@@ -322,6 +322,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <label class="form-check-label" for="hari<?= $n ?>"><?= $namaHari ?></label>
         </div>
       <?php endforeach; ?>
+      <div class="w-100 small text-muted mt-2"><i class="bi bi-calendar-event"></i> Ini jadwal mingguan biasa. Untuk <b>hari libur nasional</b>, <b>ujian madrasah</b>, atau <b>kegiatan di luar kelas</b>, jadwalkan di menu <?= can_modul('agenda') ? '<a href="' . e(modul_url('agenda')) . '">Agenda Sekolah</a>' : 'Agenda Sekolah' ?> agar siswa tidak tercatat Alpa.</div>
     </div>
   </div>
 

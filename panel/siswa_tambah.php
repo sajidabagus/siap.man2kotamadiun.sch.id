@@ -28,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     'status' => clean($_POST['status'] ?? 'aktif'),
   ];
 
+  if ($e = nisn_galat($old['nisn'], true)) $errors[] = $e;
   if ($old['nis'] === '') $errors[] = 'NIS wajib diisi.';
   if ($old['nama'] === '') $errors[] = 'Nama wajib diisi.';
   if ($old['kelas'] === '') $errors[] = 'Kelas wajib diisi.';
@@ -114,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <div class="col-md-4">
           <label class="form-label">NISN *</label>
-          <input type="text" name="nisn" class="form-control" value="<?= e($old['nisn'] ?? '') ?>" required>
+          <input type="text" name="nisn" class="form-control" value="<?= e($old['nisn'] ?? '') ?>" required <?= nisn_atribut_input() ?>>
         </div>
         <div class="col-md-4">
           <label class="form-label">Nama Lengkap *</label>

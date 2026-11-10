@@ -20,6 +20,7 @@ $menuGroups = [
   'dashboard.php'     => ['dashboard.php'],
   'akun_siswa.php'     => ['akun_siswa.php'],
   'izin.php'           => ['izin.php', 'izin_detail.php', 'izin_lampiran.php'],
+  'agenda.php'         => ['agenda.php'],
   'siswa.php'          => ['siswa.php', 'siswa_detail.php', 'siswa_tambah.php', 'siswa_edit.php', 'siswa_hapus.php', 'siswa_import.php'],
   'master_kelas.php'   => ['master_kelas.php'],
   'kenaikan_kelas.php' => ['kenaikan_kelas.php'],
@@ -105,7 +106,7 @@ function is_menu_active(string $menuKey, array $groups, string $current): bool
           </ul>
         <?php endif; ?>
 
-        <?php if (can_any_modul(['presensi', 'papan', 'rekap', 'izin'])): ?>
+        <?php if (can_any_modul(['presensi', 'papan', 'rekap', 'izin', 'agenda'])): ?>
           <div class="sidebar-section-title">Presensi</div>
           <ul class="nav flex-column">
             <?php if (can_modul('presensi')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('presensi.php', $menuGroups, $current) ? 'active' : '' ?>" href="<?= modul_url('presensi') ?>"><i class="bi bi-calendar-check"></i> Data Presensi</a></li><?php endif; ?>
@@ -113,6 +114,7 @@ function is_menu_active(string $menuKey, array $groups, string $current): bool
             <?php if (can_modul('rekap')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('rekap.php', $menuGroups, $current) ? 'active' : '' ?>" href="<?= modul_url('rekap') ?>"><i class="bi bi-bar-chart"></i> Rekap Kehadiran</a></li><?php endif; ?>
             <?php if (can_modul('izin')): require_once __DIR__ . '/izin.php';
               $nIzin = izin_menunggu_jumlah(); ?><li class="nav-item"><a class="nav-link <?= is_menu_active('izin.php', $menuGroups, $current) ? 'active' : '' ?>" href="<?= modul_url('izin') ?>"><i class="bi bi-envelope-paper"></i> Pengajuan Izin<?php if ($nIzin > 0): ?> <span class="badge rounded-pill bg-warning text-dark ms-1" title="Menunggu persetujuan"><?= $nIzin > 99 ? '99+' : $nIzin ?></span><?php endif; ?></a></li><?php endif; ?>
+            <?php if (can_modul('agenda')): ?><li class="nav-item"><a class="nav-link <?= is_menu_active('agenda.php', $menuGroups, $current) ? 'active' : '' ?>" href="<?= modul_url('agenda') ?>"><i class="bi bi-calendar-event"></i> Agenda Sekolah</a></li><?php endif; ?>
           </ul>
         <?php endif; ?>
 
@@ -178,6 +180,7 @@ function is_menu_active(string $menuKey, array $groups, string $current): bool
       'presensi' => 'Data Presensi',
       'rekap' => 'Rekap Bulanan',
       'izin' => 'Pengajuan Izin',
+      'agenda' => 'Agenda Sekolah',
       'device' => 'Manajemen Perangkat',
       'log_security' => 'Log Keamanan',
       'log_aktivitas' => 'Log Aktivitas',
@@ -204,6 +207,7 @@ function is_menu_active(string $menuKey, array $groups, string $current): bool
       'presensi' => 'Presensi',
       'rekap' => 'Presensi',
       'izin' => 'Presensi',
+      'agenda' => 'Presensi',
       'device' => 'Sistem & Keamanan',
       'log_security' => 'Sistem & Keamanan',
       'log_aktivitas' => 'Sistem & Keamanan',
