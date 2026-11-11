@@ -70,6 +70,31 @@ function akun_terbitkan_banyak(array $ids, int $adminId): array
   return [$berhasil, $dilewati];
 }
 
+/** Terbitkan kode perangkat massal untuk akun aktif yang belum memiliki perangkat. */
+function akun_terbitkan_perangkat_banyak(array $ids, int $adminId): array
+{
+  @set_time_limit(180);
+  $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+  $ids = array_slice($ids, 0, 1000);
+  $berhasil = [];
+  $dilewati = [];
+  if (!$ids) return [$berhasil, $dilewati];
+
+  $in = implode(',', $ids); // sudah berupa bilangan bulat
+  $rows = getDB()->query("SELECT s.id, s.nama, s.kelas, s.nisn
+                            FROM siswa s
+                            INNER JOIN siswa_akun a ON a.siswa_id = s.id AND a.status = 'aktif'
+                            LEFT JOIN device_bindings dv ON dv.siswa_id = s.id
+                            WHERE s.status = 'aktif' AND s.id IN ($in) AND dv.siswa_id IS NULL
+                            ORDER BY s.kelas, s.nama")->fetchAll();
+  foreach ($rows as $r) {
+    $h = portal_terbitkan_kode_perangkat((int) $r['id'], $adminId);
+    if (!empty($h['ok'])) $berhasil[] = $r + ['kode' => $h['kode_tampil'], 'berlaku' => $h['berlaku']];
+    else $dilewati[] = $r + ['alasan' => $h['alasan'] ?? 'Kode perangkat tidak dapat diterbitkan.'];
+  }
+  return [$berhasil, $dilewati];
+}
+
 $hasil = null;      // diisi bila ada kode yang baru diterbitkan (ditampilkan sekali)
 
 // ---------------------------------------------------------------------
@@ -90,7 +115,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
   $aksi = (string) ($_POST['aksi'] ?? '');
   $sid  = (int) ($_POST['id'] ?? 0);
 
-  if (in_array($aksi, ['kode_satu', 'reset_satu', 'kode_terpilih', 'kode_kelas'], true)) {
+  if (in_array($aksi, ['kode_satu', 'reset_satu', 'kode_terpilih', 'kode_kelas', 'kode_perangkat_kelas'], true)) {
     if (!akun_nonce_pakai((string) ($_POST['nonce'] ?? ''))) {
       set_flash('warning', 'Permintaan ini sudah diproses atau halaman sudah kedaluwarsa. Kode lama tidak diubah. Muat ulang halaman bila perlu membuat kode lagi.');
       header('Location: ' . akun_url_kembali());
@@ -112,6 +137,21 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         $berhasil = [];
         $dilewati = [['nama' => nama_siswa_log($sid), 'kelas' => '', 'alasan' => $h['alasan']]];
       }
+    } elseif ($aksi === 'kode_perangkat_kelas') {
+      $k = clean($_POST['kelas'] ?? '');
+      $sql = "SELECT s.id FROM siswa s
+              INNER JOIN siswa_akun a ON a.siswa_id = s.id AND a.status = 'aktif'
+              LEFT JOIN device_bindings dv ON dv.siswa_id = s.id
+              WHERE s.status = 'aktif' AND dv.siswa_id IS NULL" . ($k !== '' ? ' AND s.kelas = :k' : '') . ' ORDER BY s.kelas, s.nama';
+      $st = $db->prepare($sql);
+      $st->execute($k !== '' ? [':k' => $k] : []);
+      $ids = $st->fetchAll(PDO::FETCH_COLUMN);
+      [$berhasil, $dilewati] = akun_terbitkan_perangkat_banyak($ids, $adminId);
+      if ($berhasil) {
+        $ket = count($berhasil) . ' siswa' . ($k !== '' ? ' (' . $k . ')' : ' (seluruh sekolah)');
+        catat_aktivitas('GENERATE', 'akun_siswa', 'Menerbitkan kode perangkat massal: ' . $ket);
+      }
+      $hasil = ['berhasil' => $berhasil, 'dilewati' => $dilewati, 'jenis' => 'perangkat'];
     } else {
       if ($aksi === 'kode_satu') $ids = [$sid];
       elseif ($aksi === 'kode_terpilih') $ids = (array) ($_POST['ids'] ?? []);
@@ -128,8 +168,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         $ket = count($berhasil) . ' siswa' . ($aksi === 'kode_kelas' ? ' (' . (clean($_POST['kelas'] ?? '') ?: 'seluruh sekolah') . ')' : '');
         catat_aktivitas('GENERATE', 'akun_siswa', 'Menerbitkan kode aktivasi akun portal: ' . $ket);
       }
+      $hasil = ['berhasil' => $berhasil, 'dilewati' => $dilewati];
     }
-    $hasil = ['berhasil' => $berhasil, 'dilewati' => $dilewati];
   } elseif ($aksi === 'ganti_hp') {
     // Siswa ganti HP: HANYA mereset perangkat terdaftar (kuota bulanan berlaku). Akun AKTIF tidak diubah sama
     // sekali (password, status, sesi tetap); siswa mendaftarkan HP baru dari portal (tombol "Daftarkan perangkat
@@ -369,16 +409,64 @@ if ($hasil !== null) {
 
   <script>
     document.getElementById('btnCsv')?.addEventListener('click', function() {
-      var baris = [
-        ['Kelas', 'Nama', 'NISN', <?= json_encode($kodePerangkat ? 'Kode Perangkat' : 'Kode Aktivasi') ?>, 'Berlaku Hingga']
+      // Definisi kolom menjadi acuan bersama untuk judul dan isi setiap baris.
+      // Dengan begitu, setiap data selalu masuk ke kolom sesuai nama header-nya.
+      var kolom = [{
+          nama: 'Kelas',
+          ambil: function(s) {
+            return s.dataset.kelas;
+          }
+        },
+        {
+          nama: 'Nama',
+          ambil: function(s) {
+            return s.dataset.nama;
+          }
+        },
+        {
+          nama: 'NISN',
+          ambil: function(s) {
+            return s.dataset.nisn;
+          },
+          teks: true
+        },
+        {
+          nama: <?= json_encode($kodePerangkat ? 'Kode Perangkat' : 'Kode Aktivasi') ?>,
+          ambil: function(s) {
+            return s.dataset.kode;
+          }
+        },
+        {
+          nama: 'Berlaku Hingga',
+          ambil: function(s) {
+            return s.dataset.berlaku;
+          }
+        }
       ];
+
+      // Baris pertama berisi seluruh nama kolom; baris berikutnya mengikuti urutan kolom di atas.
+      var baris = [kolom.map(function(k) {
+        return k.nama;
+      })];
       document.querySelectorAll('.slip').forEach(function(s) {
-        baris.push([s.dataset.kelas, s.dataset.nama, s.dataset.nisn, s.dataset.kode, s.dataset.berlaku]);
+        baris.push(kolom.map(function(k) {
+          return k.ambil(s) == null ? '' : String(k.ambil(s));
+        }));
       });
-      var csv = '\ufeff' + baris.map(function(r) {
-        return r.map(function(c) {
-          return '"' + String(c).replace(/"/g, '""') + '"';
-        }).join(',');
+
+      // Semua kolom dan semua baris ditulis ke CSV; NISN dipaksa menjadi teks di Excel.
+      var csv = '\ufeff' + baris.map(function(r, index) {
+        return r.map(function(c, kolomIndex) {
+          var nilai = String(c == null ? '' : c);
+
+          if (index > 0 && kolom[kolomIndex].teks && nilai !== '') {
+            nilai = '="' + nilai.replace(/"/g, '""') + '"';
+          }
+
+          return '"' + nilai.replace(/"/g, '""') + '"';
+          // Excel dengan pengaturan regional Indonesia umumnya memakai titik koma
+          // sebagai pemisah kolom CSV, bukan koma.
+        }).join(';');
       }).join('\r\n');
       var a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([csv], {
@@ -484,6 +572,13 @@ $badge = [
   'masalah' => ['warning', 'Perlu dicek'],
 ];
 $jumlahBelumAktif = $ringkas['belum'] + $ringkas['menunggu'] + $ringkas['kedaluwarsa'];
+$sqlTanpaPerangkat = "SELECT COUNT(*) FROM siswa s
+                      INNER JOIN siswa_akun a ON a.siswa_id = s.id AND a.status = 'aktif'
+                      LEFT JOIN device_bindings dv ON dv.siswa_id = s.id
+                      WHERE s.status = 'aktif' AND dv.siswa_id IS NULL" . ($kelas !== '' ? ' AND s.kelas = :k' : '');
+$stTanpaPerangkat = $db->prepare($sqlTanpaPerangkat);
+$stTanpaPerangkat->execute($kelas !== '' ? [':k' => $kelas] : []);
+$jumlahTanpaPerangkat = (int) $stTanpaPerangkat->fetchColumn();
 ?>
 <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-3 mb-3">
   <h4 class="mb-0"><i class="bi bi-person-lock"></i> Akun Siswa</h4>
@@ -518,6 +613,15 @@ $jumlahBelumAktif = $ringkas['belum'] + $ringkas['menunggu'] + $ringkas['kedaluw
     <form method="post" onsubmit="return confirm('Terbitkan kode aktivasi untuk semua siswa yang belum aktif<?= $kelas !== '' ? ' di kelas ' . e($kelas) : ' (seluruh sekolah)' ?>?\n\nKode lama yang belum dipakai akan diganti.')">
       <?= csrf_field() ?><input type="hidden" name="aksi" value="kode_kelas"><input type="hidden" name="nonce" value="<?= e($nonce) ?>"><input type="hidden" name="kelas" value="<?= e($kelas) ?>"><input type="hidden" name="kembali" value="<?= e($kembali) ?>">
       <button class="btn btn-primary"><i class="bi bi-key"></i> Terbitkan kode: semua yang belum aktif<?= $kelas !== '' ? ' di ' . e($kelas) : ' (seluruh sekolah)' ?></button>
+    </form>
+  </div>
+<?php endif; ?>
+
+<?php if ($bolehKelola && $perangkatF === 'belum' && $jumlahTanpaPerangkat > 0): ?>
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    <form method="post" onsubmit="return confirm('Terbitkan kode perangkat untuk <?= $jumlahTanpaPerangkat ?> siswa yang akun portalnya sudah aktif tetapi belum mendaftarkan perangkat<?= $kelas !== '' ? ' di kelas ' . e($kelas) : ' di seluruh sekolah' ?>?\n\nAkun dan password siswa tidak akan diubah.')">
+      <?= csrf_field() ?><input type="hidden" name="aksi" value="kode_perangkat_kelas"><input type="hidden" name="nonce" value="<?= e($nonce) ?>"><input type="hidden" name="kelas" value="<?= e($kelas) ?>"><input type="hidden" name="kembali" value="<?= e($kembali) ?>">
+      <button class="btn btn-outline-primary"><i class="bi bi-phone-vibrate"></i> Terbitkan kode perangkat: semua yang Belum (<?= $jumlahTanpaPerangkat ?>)</button>
     </form>
   </div>
 <?php endif; ?>
