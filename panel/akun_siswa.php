@@ -37,7 +37,7 @@ function akun_url_kembali(): string
 {
   parse_str((string) ($_POST['kembali'] ?? ''), $kb);
   $boleh = [];
-  foreach (['q', 'kelas', 'status', 'limit', 'page'] as $k) if (isset($kb[$k]) && is_scalar($kb[$k])) $boleh[$k] = (string) $kb[$k];
+  foreach (['q', 'kelas', 'status', 'perangkat', 'limit', 'page'] as $k) if (isset($kb[$k]) && is_scalar($kb[$k])) $boleh[$k] = (string) $kb[$k];
   return modul_url('akun_siswa', $boleh);
 }
 
@@ -401,6 +401,9 @@ if ($hasil !== null) {
 $q = clean($_GET['q'] ?? '');
 $kelas = clean($_GET['kelas'] ?? '');
 $statusF = clean($_GET['status'] ?? '');
+$perangkatF = clean($_GET['perangkat'] ?? '');
+$daftarPerangkat = ['belum' => 'Belum', 'terdaftar' => 'Terdaftar', 'diblokir' => 'Diblokir'];
+if (!isset($daftarPerangkat[$perangkatF])) $perangkatF = '';
 $daftarStatus = ['belum' => 'Belum dibuat', 'menunggu' => 'Menunggu aktivasi', 'kedaluwarsa' => 'Kode kedaluwarsa', 'aktif' => 'Aktif', 'nonaktif' => 'Diblokir', 'masalah' => 'NISN kosong / ganda'];
 if (!isset($daftarStatus[$statusF])) $statusF = '';
 
@@ -432,6 +435,15 @@ if ($statusF !== '') {
   $where[] = 't.st = :st';
   $params[':st'] = $statusF;
 }
+if ($perangkatF !== '') {
+  if ($perangkatF === 'belum') {
+    $where[] = "(t.dev_status IS NULL OR t.dev_status = '')";
+  } elseif ($perangkatF === 'terdaftar') {
+    $where[] = "(t.dev_status IS NOT NULL AND t.dev_status <> '' AND t.dev_status <> 'BLOCKED')";
+  } elseif ($perangkatF === 'diblokir') {
+    $where[] = "t.dev_status = 'BLOCKED'";
+  }
+}
 if ($q !== '') {
   $where[] = '(t.nama LIKE :q1 OR t.nis LIKE :q2 OR t.nisn LIKE :q3)';
   $params[':q1'] = "%$q%";
@@ -456,7 +468,7 @@ $ringkas = ['belum' => 0, 'menunggu' => 0, 'kedaluwarsa' => 0, 'aktif' => 0, 'no
 foreach ($db->query("SELECT t.st, COUNT(*) c FROM ($dasar) t GROUP BY t.st")->fetchAll() as $r) $ringkas[$r['st']] = (int) $r['c'];
 $kelasList = $db->query("SELECT DISTINCT kelas FROM siswa WHERE status = 'aktif' ORDER BY kelas")->fetchAll(PDO::FETCH_COLUMN);
 
-$extraParams = ['q' => $q, 'kelas' => $kelas, 'status' => $statusF, 'limit' => $perPage];
+$extraParams = ['q' => $q, 'kelas' => $kelas, 'status' => $statusF, 'perangkat' => $perangkatF, 'limit' => $perPage];
 $kembali = http_build_query(array_filter($extraParams + ['page' => $page], fn($v) => $v !== '' && $v !== null));
 $portalBuka = portal_aktif();
 $nonce = akun_nonce();
@@ -530,6 +542,10 @@ $jumlahBelumAktif = $ringkas['belum'] + $ringkas['menunggu'] + $ringkas['kedaluw
       <select name="status" class="form-select">
         <option value="">Semua Status</option>
         <?php foreach ($daftarStatus as $k => $label): ?><option value="<?= e($k) ?>" <?= $statusF === $k ? 'selected' : '' ?>><?= e($label) ?></option><?php endforeach; ?>
+      </select>
+      <select name="perangkat" class="form-select">
+        <option value="">Semua Perangkat</option>
+        <?php foreach ($daftarPerangkat as $k => $label): ?><option value="<?= e($k) ?>" <?= $perangkatF === $k ? 'selected' : '' ?>><?= e($label) ?></option><?php endforeach; ?>
       </select>
       <a href="<?= e(modul_url('akun_siswa')) ?>" class="btn btn-light border" title="Hapus semua filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
     </form>
