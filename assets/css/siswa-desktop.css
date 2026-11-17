@@ -13,13 +13,13 @@
 
   /* ---------- sidebar ---------- */
   :is(body.ap-app, body.mode-siswa, body.presensi-page) .sd-side { display: flex !important; flex-direction: column; position: fixed; z-index: 60; top: 0; left: 0; bottom: 0; width: var(--sd-w);
-    padding: 34px 18px 28px; background: #fff; border-right: 1px solid #edf0f5; overflow: hidden; font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; }
-  .sd-brand { display: flex; align-items: center; gap: 12px; padding: 0 12px 24px; margin-bottom: 22px; border-bottom: 1px solid #eef1f6; }
+    padding: 34px 18px 28px; background: #fff; border-right: 1px solid #edf0f5; overflow-x: hidden; overflow-y: auto; font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; }
+  .sd-brand { flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 12px 24px; margin-bottom: 22px; border-bottom: 1px solid #eef1f6; }
   .sd-logo { width: 58px; height: 58px; flex: none; display: grid; place-items: center; color: #2563eb; font-size: 34px; }
   .sd-logo img { width: 100%; height: 100%; object-fit: contain; }
   .sd-brand b { display: block; font-size: 1.02rem; font-weight: 700; line-height: 1.25; color: #0f172a; }
   .sd-brand small { display: block; margin-top: 4px; font-size: .78rem; color: #64748b; }
-  .sd-menu { display: flex; flex-direction: column; gap: 8px; }
+  .sd-menu { flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
   .sd-menu a { display: flex; align-items: center; gap: 16px; padding: 13px 20px; border-radius: 10px; color: #1e293b; font-size: 1rem; font-weight: 600; text-decoration: none; transition: background .15s, color .15s; }
   .sd-menu a i { font-size: 1.25rem; width: 24px; text-align: center; color: #475569; }
   .sd-menu a:hover { background: #f1f5fb; }
@@ -27,7 +27,7 @@
   .sd-menu a.on i { color: #fff; }
   .sd-menu a:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
   .sd-badge { margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: #ef4444; color: #fff; font-size: .72rem; line-height: 20px; text-align: center; }
-  .sd-motto { position: relative; margin-top: auto; padding: 24px 12px 0; color: #475569; }
+  .sd-motto { flex-shrink: 0; position: relative; margin-top: auto; padding: 24px 12px 0; color: #475569; }
   .sd-motto::before { content: ""; position: absolute; z-index: 0; left: -60px; right: -30px; bottom: -60px; height: 300px; border-radius: 48% 52% 0 0 / 40% 45% 0 0; background: #f2f6fd; }
   .sd-motto > * { position: relative; z-index: 1; }
   .sd-motto i { display: block; font-size: 2rem; color: #94a3b8; margin-bottom: 12px; }
@@ -81,7 +81,7 @@
   body.mode-siswa .ap-jam .sd-tgl { display: flex !important; align-items: center; gap: 8px; font-size: 1rem; margin-bottom: 8px; }
   :is(.pt-v2 .pt-jam, body.mode-siswa .ap-jam) svg { width: 150px !important; height: 150px !important; margin-right: 60px; filter: drop-shadow(0 10px 18px rgba(15,23,42,.25)); }
 
-  /* Tombol Scan/Absen di dalam halaman disembunyikan di desktop: scan tetap bisa lewat menu "Scan QR Absen" di sidebar.
+  /* Tombol Scan/Absen disembunyikan di desktop: pemindaian tetap memakai HP (kebijakan antarmuka saat ini).
      (Di HP/tablet sempit di bawah 1024 px tombolnya tetap tampil seperti biasa.) */
   .pt-v2 .pt-absen, body.mode-siswa .ap-absen { display: none !important; }
 
@@ -124,8 +124,8 @@
 .sd-menu a.mati { opacity: .45; cursor: not-allowed; pointer-events: none; }
 
 /* =====================================================================
-   HOME DESKTOP MUAT SATU LAYAR (tanpa scroll): ukuran vertikal mengikuti tinggi layar (vh).
-   Di bawah tinggi 640 px kembali ke tampilan biasa (boleh scroll). Tidak memakai overflow:hidden,
+   HOME DESKTOP RINGKAS: ukuran header/kartu mengikuti tinggi layar (vh).
+   Di bawah tinggi 640 px kembali ke tampilan biasa. Halaman tetap boleh scroll,
    jadi bila ada isi tambahan (mis. pemberitahuan) tidak ada yang terpotong.
    ===================================================================== */
 @media (min-width: 1024px) and (min-height: 640px) {
@@ -153,18 +153,14 @@
   html body.ap-app.pg-beranda .pt-ringkas a, html body.mode-siswa .ap-tiles a { min-height: clamp(84px, 12vh, 132px); padding-top: clamp(12px, 2.2vh, 24px); padding-bottom: clamp(12px, 2.2vh, 24px); }
   html body.ap-app.pg-beranda .pt-ringkas small, html body.mode-siswa .ap-tiles small { margin-top: clamp(2px, .8vh, 8px); }
 
-  /* Beranda perangkat terdaftar (mode-siswa): kartu "Absensi Kelas" mengisi sisa tinggi layar; baris yang tidak muat
-     otomatis pindah ke kolom tersembunyi (tanpa scroll halaman). */
-  html body.mode-siswa { height: 100vh; height: 100dvh; display: flex; flex-direction: column; }
-  html body.mode-siswa .wrap { flex: 1 1 0; min-height: 0; width: 100%; display: flex; flex-direction: column; }
-  html body.mode-siswa .sd-top { width: 100%; flex: none; }
-  html body.mode-siswa .app { flex: none; }
-  html body.mode-siswa .grid { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
-  html body.mode-siswa .grid > .card.panel:not(#panelDonut) { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; margin-top: clamp(10px, 2vh, 18px); padding: clamp(8px, 1.6vh, 16px) 22px 0; }
-  html body.mode-siswa .grid > .card.panel .ket { margin-bottom: 6px; }
-  html body.mode-siswa #feed { flex: 1 1 0; min-height: 0; max-height: none; overflow: hidden; display: flex; flex-flow: column wrap; align-content: flex-start; }
-  html body.mode-siswa #feed > * { flex: none; width: 100%; }
-  html body.mode-siswa .foot { flex: none; margin: 4px 0 0; font-size: .7rem; }
+  /* API kini mengirim seluruh presensi kelas. Jangan membungkus baris ke kolom tersembunyi
+     demi memuat satu layar: daftar tetap bisa digulir, halaman boleh bertambah tinggi. */
+  html body.mode-siswa #feed {
+    max-height: clamp(180px, 24vh, 320px);
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
 }
 
 /* Tombol Keluar di sidebar desktop (form POST + CSRF) */
@@ -174,4 +170,12 @@
   .sd-menu form.sd-keluar button i { font-size: 1.25rem; width: 24px; text-align: center; color: #dc2626; }
   .sd-menu form.sd-keluar button:hover { background: #fef2f2; }
   .sd-menu form.sd-keluar button:focus-visible { outline: 2px solid #dc2626; outline-offset: 2px; }
+}
+/* Desktop kompak: ruang tersisa setelah sidebar hanya 760–935px.
+   Kurangi dekorasi, bukan isi label/nilai ringkasan. Tidak mengubah HP/tablet. */
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .pg-beranda .pt-ringkas, body.mode-siswa .ap-tiles { gap: 16px; }
+  .pg-beranda .pt-ringkas a, body.mode-siswa .ap-tiles a { padding-left: 72px; padding-right: 16px; }
+  .pg-beranda .sd-bul, body.mode-siswa .sd-bul { left: 18px; width: 38px; height: 38px; }
+  .pg-beranda .pt-ringkas a > i, body.mode-siswa .ap-tiles a > i { display: none !important; }
 }
