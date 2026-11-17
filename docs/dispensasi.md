@@ -2,6 +2,9 @@
 
 ## Aturan
 
+- Semua pengajuan baru **izin, sakit, dan dispensasi wajib lampiran**, termasuk satu hari.
+  Izin/sakit menerima foto JPG/JPEG/PNG/WebP atau PDF; dispensasi hanya foto.
+  Data/pengajuan lama tanpa lampiran tetap dapat dilihat dan diproses, tanpa validasi retroaktif.
 - Jenis ketiga di menu **Izin → Dispensasi**; keterangan kegiatan 10–500 karakter dan
   **foto dokumen JPG/JPEG/PNG/WebP wajib**. PDF tetap diizinkan untuk izin/sakit lama, bukan dispensasi.
 - Durasi: **jam** (satu tanggal, selesai > mulai, tidak melewati tengah malam),

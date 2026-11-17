@@ -100,14 +100,24 @@ $db->prepare("INSERT INTO agenda_sekolah (judul,jenis,tanggal_mulai,tanggal_sele
 $beforeCutoff=draft($full,2);cek(izin_setujui($beforeCutoff,$admin)['ok'] && izin_cabut($beforeCutoff,$admin,'Kegiatan sebelum cutoff dibatalkan')['ok'],'revoke before class cutoff');
 $q->execute([':t'=>$today]);cek((int)$q->fetchColumn()===0,'before-cutoff creates no ALPA');
 $db->exec('DELETE FROM agenda_sekolah');agenda_semua(true);
-// Legacy behavior: izin can still be submitted without a document; sakit >1 school day requires one.
+// New submissions require documents; pre-existing legacy records without documents remain processable.
 $legacy=['jenis'=>'izin','mulai'=>$tomorrow,'selesai'=>$tomorrow,'alasan'=>'Keperluan keluarga pengujian'];
-$old=izin_buat(2,$legacy,null);cek($old['ok'],'legacy izin still accepts optional document');
+foreach (['izin','sakit','dispensasi'] as $jenis) {
+    $missing=izin_buat(2,array_merge($legacy,['jenis'=>$jenis,'mode_durasi'=>'sehari']),null);
+    cek(!$missing['ok'] && isset($missing['galat']['lampiran']),$jenis.' single day rejects missing document');
+}
+$db->prepare("INSERT INTO izin_pengajuan (siswa_id,jenis,tanggal_mulai,tanggal_selesai,alasan) VALUES (2,'izin',:a,:b,'Pengajuan lama tanpa dokumen')")->execute([':a'=>$tomorrow,':b'=>$tomorrow]);
+$old=['id'=>(int)$db->lastInsertId()];
+cek(izin_ambil($old['id'])['lampiran']===null,'legacy record without document remains readable');
 cek(izin_setujui($old['id'],$admin)['ok'],'legacy izin approval');
 $ls=$db->prepare('SELECT status FROM presensi WHERE siswa_id=2 AND tanggal=:t');$ls->execute([':t'=>$tomorrow]);cek($ls->fetchColumn()==='IZIN','legacy writes IZIN not dispensasi');
 cek(izin_cabut($old['id'],$admin,'Keperluan telah dibatalkan')['ok'],'legacy revoke preserved');
 $oldSakit=izin_buat(2,array_merge($legacy,['jenis'=>'sakit','selesai'=>date('Y-m-d',strtotime('+2 days'))]),null);
 cek(!$oldSakit['ok'] && isset($oldSakit['galat']['lampiran']),'legacy multi-school-day sickness requires document');
+$db->prepare("INSERT INTO izin_pengajuan (siswa_id,jenis,tanggal_mulai,tanggal_selesai,alasan) VALUES (2,'sakit',:a,:b,'Sakit lama tanpa lampiran')")->execute([':a'=>$tomorrow,':b'=>$tomorrow]);
+$oldSakitId=(int)$db->lastInsertId();
+cek(izin_ambil($oldSakitId)['lampiran']===null && izin_setujui($oldSakitId,$admin)['ok'],'legacy sickness without document remains readable and approvable');
+cek(izin_cabut($oldSakitId,$admin,'Pengujian sakit lama selesai')['ok'],'legacy sickness revocation preserved');
 // Ensure later HTTP upload has a clear interval and no pending conflicts.
 $db->exec("DELETE FROM izin_pengajuan WHERE status <> 'disetujui'");
 echo "PASS integration complete\n";

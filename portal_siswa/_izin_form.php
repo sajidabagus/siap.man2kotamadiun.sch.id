@@ -17,14 +17,14 @@ function portal_izin_form(array $in, array $galat): void
   <?php if (isset($galat['umum'])) portal_alert('err', $galat['umum']); ?>
   <div class="pt-aturan">
     <b>Aturan singkat:</b> bisa diajukan maksimal <b><?= IZIN_MUNDUR_HARI ?> hari ke belakang</b> dan <b><?= IZIN_MAJU_HARI ?> hari ke depan</b>;
-    satu pengajuan maksimal <b><?= IZIN_MAKS_DURASI ?> hari</b>. <b>Sakit lebih dari 1 hari sekolah wajib melampirkan surat</b> (foto atau PDF; foto dikompres otomatis, PDF maks. 3 MB).
+    satu pengajuan maksimal <b><?= IZIN_MAKS_DURASI ?> hari</b>. <b>Semua pengajuan izin, sakit, dan dispensasi wajib melampirkan dokumen, termasuk satu hari.</b> Izin/sakit: foto atau PDF (foto dikompres otomatis, PDF maks. 3 MB).
     <b>Dispensasi wajib keterangan kegiatan dan foto dokumen.</b> Dispensasi jam tidak menggantikan absen masuk. Dispensasi satu/beberapa hari yang disetujui membebaskan Alpa otomatis pada hari efektif tercakup, tanpa menghapus presensi asli.
   </div>
   <form method="post" action="<?= e(portal_url('izin/baru')) ?>" enctype="multipart/form-data" data-sekali>
     <?= csrf_field() ?>
     <div class="pt-radio pt-radio-pengajuan" role="radiogroup" aria-label="Jenis pengajuan">
       <label><input type="radio" name="jenis" value="izin" <?= $in['jenis'] === 'izin' ? 'checked' : '' ?> required><span><i class="bi bi-envelope-paper"></i> Izin<small>keperluan keluarga, dll.</small></span></label>
-      <label><input type="radio" name="jenis" value="sakit" <?= $in['jenis'] === 'sakit' ? 'checked' : '' ?>><span><i class="bi bi-thermometer-half"></i> Sakit<small>surat bila &gt; 1 hari</small></span></label>
+      <label><input type="radio" name="jenis" value="sakit" <?= $in['jenis'] === 'sakit' ? 'checked' : '' ?>><span><i class="bi bi-thermometer-half"></i> Sakit<small>dokumen wajib</small></span></label>
       <label><input type="radio" name="jenis" value="dispensasi" <?= $in['jenis'] === 'dispensasi' ? 'checked' : '' ?>><span><i class="bi bi-person-workspace"></i> Dispensasi<small>kegiatan + foto dokumen</small></span></label>
     </div>
     <?= $f('jenis') ?>
@@ -48,9 +48,9 @@ function portal_izin_form(array $in, array $galat): void
     <div class="pt-field"><label for="alasan" id="labelAlasan">Alasan / keterangan kegiatan</label>
       <textarea id="alasan" name="alasan" maxlength="<?= IZIN_ALASAN_MAKS ?>" placeholder="Tuliskan alasan dengan jelas (minimal <?= IZIN_ALASAN_MIN ?> karakter)" required><?= e($in['alasan']) ?></textarea>
       <div class="pt-hitung"><span id="hitung">0</span>/<?= IZIN_ALASAN_MAKS ?></div><?= $f('alasan') ?></div>
-    <div class="pt-field"><label for="lampiran">Lampiran surat <span id="wajibLamp" style="color:#b42318"></span></label>
+    <div class="pt-field"><label for="lampiran">Lampiran surat <span id="wajibLamp" style="color:#b42318">(wajib)</span></label>
       <div class="pt-unggah" id="unggah" data-maks="<?= (int) IZIN_LAMPIRAN_MAKS ?>">
-        <input type="file" id="lampiran" name="lampiran" class="pt-unggah-input" data-kompres="1800" data-kompres-target="2621440" accept="image/*,.jpg,.jpeg,.png,.webp,.pdf,application/pdf" aria-describedby="lampiranInfo">
+        <input type="file" id="lampiran" name="lampiran" required class="pt-unggah-input" data-kompres="1800" data-kompres-target="2621440" accept="image/*,.jpg,.jpeg,.png,.webp,.pdf,application/pdf" aria-describedby="lampiranInfo">
         <label for="lampiran" class="pt-unggah-zona" id="unggahZona">
           <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
           <span class="j">Pilih file / foto surat</span>
@@ -85,11 +85,9 @@ function portal_izin_form(array $in, array $galat): void
     document.getElementById('lampiranInfo').textContent = disp ? 'Foto dokumen JPG/PNG/WEBP · dikompres otomatis, hasil maks. 3 MB · bukan PDF' : 'Foto JPG/PNG/WEBP (dikompres otomatis) atau PDF maks. 3 MB';
     s.closest('.pt-field').hidden = !beberapa;
     if (disp && !beberapa) s.value = m.value;
-    var dari = m.value, ke = s.value || m.value;
-    var lebih = dari && ke && (new Date(ke) - new Date(dari)) >= 86400000;
-    w.textContent = disp ? '(wajib: foto dokumen dispensasi)' : ((jenis && jenis.value === 'sakit' && lebih) ? '(wajib untuk sakit lebih dari 1 hari sekolah)' : '');
+    w.textContent = disp ? '(wajib: foto dokumen dispensasi)' : '(wajib: foto dokumen atau PDF)';
     var file = document.getElementById('lampiran');
-    file.required = !!disp;
+    file.required = true;
     file.accept = disp ? 'image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp' : 'image/jpeg,image/png,image/webp,application/pdf,.jpg,.jpeg,.png,.webp,.pdf';
     file.setCustomValidity(disp && file.files && file.files[0] && /\.pdf$/i.test(file.files[0].name) ? 'Dispensasi membutuhkan foto dokumen, bukan PDF.' : '');
     document.getElementById('labelAlasan').textContent = disp ? 'Keterangan kegiatan (wajib)' : 'Alasan';

@@ -334,7 +334,7 @@ function izin_validasi(int $siswaId, array $in): array
     return ['galat' => $g, 'data' => [
         'jenis' => $jenis, 'mulai' => $mulai, 'selesai' => $selesai, 'alasan' => $alasan,
         'mode_durasi' => $durasi['mode_durasi'], 'jam_mulai' => $durasi['jam_mulai'], 'jam_selesai' => $durasi['jam_selesai'],
-        'efektif' => $efektif, 'lampiran_wajib' => ($jenis === 'dispensasi' || ($jenis === 'sakit' && count($efektif) > 1)),
+        'efektif' => $efektif, 'lampiran_wajib' => true,
     ]];
 }
 
@@ -352,7 +352,7 @@ function izin_buat(int $siswaId, array $in, ?array $file): array
         $g = $v['galat']; $d = $v['data'];
         if (!$cek['ok']) $g['lampiran'] = $cek['pesan'];
         elseif ($d['jenis'] === 'dispensasi' && (!$cek['ada'] || !in_array($cek['mime'] ?? '', ['image/jpeg', 'image/png', 'image/webp'], true))) $g['lampiran'] = 'Dispensasi wajib menyertakan foto dokumen (JPG/PNG/WEBP), bukan PDF.';
-        elseif ($d['lampiran_wajib'] && !$cek['ada']) $g['lampiran'] = 'Sakit lebih dari 1 hari wajib melampirkan surat dokter/keterangan (foto atau PDF).';
+        elseif ($d['lampiran_wajib'] && !$cek['ada']) $g['lampiran'] = izin_label_jenis($d['jenis']) . ' wajib melampirkan dokumen (foto JPG/PNG/WEBP atau PDF), termasuk pengajuan satu hari.';
         if ($g) { $db->rollBack(); return ['ok' => false, 'galat' => $g]; }
 
         $asli = null; $tipe = null;

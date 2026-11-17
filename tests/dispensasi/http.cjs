@@ -8,9 +8,27 @@ await other.get('/_test/student-session?other=1');
 const a=await(await admin.get('/_test/admin-session')).json();
 const v=await(await viewer.get('/_test/admin-session?viewer=1')).json();
 await noaccess.get('/_test/admin-session?noaccess=1');
+const html=await(await owner.get('/portal/izin/baru')).text();assert(/<input[^>]+name="lampiran"[^>]+required/.test(html),'HTML required exists without JavaScript');
 const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jakarta'}).format(new Date());
 const photo={name:'dokumen.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jKX0AAAAASUVORK5CYII=','base64')};
 const form={jenis:'dispensasi',mode_durasi:'jam',mulai:today,jam_mulai:'13:00',jam_selesai:'14:00',alasan:'Kegiatan lomba pengujian dokumen dispensasi',lampiran:photo};
+// Bypass browser validation: server must reject every new category without a file.
+const later = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jakarta'}).format(new Date(Date.now()+2*86400000));
+const {lampiran:ignored,...withoutFile}=form;
+for (const jenis of ['izin','sakit','dispensasi']) {
+ const noFile=await owner.post('/portal/izin/baru',{multipart:{...withoutFile,jenis,mulai:later,selesai:later,mode_durasi:'sehari',csrf_token:o.csrf},maxRedirects:0});
+ assert.equal(noFile.status(),200,jenis);assert((await noFile.text()).includes(jenis==='dispensasi'?'Dispensasi wajib menyertakan foto dokumen':(jenis==='izin'?'Izin':'Sakit')+' wajib melampirkan dokumen'),jenis);
+}
+// Existing file policies are unchanged: leave/sickness accept both photo and PDF.
+const pdf={name:'dokumen.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.4\n1 0 obj<</Type /Catalog>>endobj\n%%EOF')};
+for (const jenis of ['izin','sakit']) for (const lampiran of [photo,pdf]) {
+ const upload=await owner.post('/portal/izin/baru',{multipart:{...form,jenis,mulai:later,selesai:later,lampiran,csrf_token:o.csrf},maxRedirects:0});
+ assert.equal(upload.status(),302,jenis+' '+lampiran.name+' '+await upload.text());
+ const legacyId=upload.headers().location.match(/izin\/(\d+)/)[1];
+ const uploaded=await owner.get(`/portal/izin/${legacyId}/lampiran`);assert.equal(uploaded.status(),200);assert(uploaded.headers()['content-type'].startsWith(lampiran.mimeType));
+ await admin.post('/izin/'+legacyId,{form:{aksi:'tolak',csrf_token:a.csrf,catatan:'Selesai pengujian lampiran wajib'},maxRedirects:0});
+}
+console.log('PASS mandatory attachments: no-file POST rejected for izin/sakit/dispensasi single day; PNG and PDF accepted for izin/sakit; legacy documents accessible');
 let bad=await owner.post('/portal/izin/baru',{multipart:{...form,csrf_token:'wrong'},maxRedirects:0});assert.equal(bad.status(),200);assert((await bad.text()).includes('Sesi halaman kedaluwarsa'));
 let valid=await owner.post('/portal/izin/baru',{multipart:{...form,csrf_token:o.csrf},maxRedirects:0});assert.equal(valid.status(),302,await valid.text());let match=valid.headers().location.match(/izin\/(\d+)/);assert(match,JSON.stringify(valid.headers()));let id=match[1];
 let row=async()=>await(await anon.get('/_test/row?id='+id)).json();assert.equal((await row()).status,'menunggu');
