@@ -7,7 +7,6 @@ const assert = require('node:assert/strict');
   });
   try {
     for (const [width, height] of [[390, 844], [1366, 768]]) {
-      if (process.env.SIAP_TEST_BEFORE_ONLY === '1') return;
     const page = await browser.newPage({ viewport: { width, height }, locale: 'id-ID' });
       const errors = [];
       page.on('pageerror', e => errors.push(e.message));
@@ -48,6 +47,7 @@ const assert = require('node:assert/strict');
       console.log(`PASS browser ${width}: three duration modes, required photo, time validation, legacy sick form, no overflow/JS errors`);
       await page.close();
     }
+    if (process.env.SIAP_TEST_BEFORE_ONLY === '1') return;
     const page = await browser.newPage({ viewport: { width: 1366, height: 900 }, locale: 'id-ID' });
     await page.request.get(process.env.SIAP_TEST_URL + '/_test/admin-session');
     await page.goto(process.env.SIAP_TEST_URL + '/izin/' + process.env.SIAP_TEST_PENDING_ID);
