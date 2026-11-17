@@ -291,7 +291,7 @@ notifikasi di portal. Izin yang **disetujui** ditulis ke tabel `presensi` (statu
 ekspor yang sudah ada otomatis ikut tanpa diubah.
 
 **Aturan pengajuan** (konstanta di `includes/izin.php`): mundur maksimal 3 hari, maju maksimal 30 hari; satu pengajuan
-maksimal 14 hari; **sakit lebih dari 1 hari sekolah wajib melampirkan surat** (JPG/PNG/WEBP/PDF, maks. 3 MB); satu
+maksimal 14 hari; **semua pengajuan baru izin/sakit/dispensasi wajib melampirkan dokumen**, termasuk satu hari (izin/sakit: JPG/PNG/WEBP/PDF; dispensasi: foto JPG/PNG/WEBP; hasil maks. 3 MB); satu
 pengajuan aktif per tanggal; maksimal 5 pengajuan menunggu sekaligus; siswa boleh membatalkan selama masih menunggu.
 
 **Keputusan petugas:** _Setujui_ (catatan opsional), _Tolak_ (alasan **wajib**, dibaca siswa), _Cabut persetujuan_
