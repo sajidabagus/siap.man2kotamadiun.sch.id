@@ -38,7 +38,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
   $ringkasLog = $row['nama'] . ' (' . $row['kelas'] . '), ' .
     izin_label_jenis($row['jenis']) . ' ' .
-    izin_teks_rentang($row['tanggal_mulai'], $row['tanggal_selesai']);
+    dispensasi_teks_durasi($row);
 
   if ($aksi === 'setujui') {
 
@@ -48,14 +48,14 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
       catat_aktivitas(
         'UBAH',
         'izin',
-        "Menyetujui pengajuan #$id: $ringkasLog ({$h['diterapkan']} hari ditulis ke presensi)"
+        "Menyetujui pengajuan #$id: $ringkasLog ({$h['diterapkan']} hari diproses)"
       );
 
       set_flash(
         'success',
         'Pengajuan disetujui. ' .
           $h['diterapkan'] .
-          ' hari presensi ditulis' .
+          ($row['jenis'] === 'dispensasi' ? ' hari kegiatan dispensasi dicatat (presensi asli tetap)' : ' hari presensi ditulis') .
           ($h['dilewati']
             ? ', ' . $h['dilewati'] . ' hari dilewati karena presensi sudah tercatat.'
             : '.')
@@ -130,6 +130,7 @@ $efektif = izin_efektif_dalam(
 );
 
 $sid = (int) $row['siswa_id'];
+if ($row['jenis'] === 'dispensasi') $efektif = array_values(array_filter(izin_rentang($row['tanggal_mulai'], $row['tanggal_selesai']), fn($t) => is_hari_efektif($t, (string) $row['kelas'])));
 
 $st = $db->prepare(
   'SELECT tanggal, status, metode
@@ -217,13 +218,15 @@ $warnaPresensi = [
   'ALPA' => 'danger'
 ];
 
-$perluSurat = $row['jenis'] === 'sakit' && count($efektif) > 1;
+$perluSurat = $row['jenis'] === 'dispensasi' || ($row['jenis'] === 'sakit' && count($efektif) > 1);
 
 // ---------------------------------------------------------------------
 // REKOMENDASI KALIMAT
 // ---------------------------------------------------------------------
 
-if ($row['jenis'] === 'sakit') {
+if ($row['jenis'] === 'dispensasi') {
+  $rekomendasiSetuju = ['disetujui' => 'Dispensasi kegiatan disetujui sesuai tanggal dan durasi pada dokumen yang telah diperiksa.'];
+} elseif ($row['jenis'] === 'sakit') {
 
   $rekomendasiSetuju = [
     'disetujui' =>
@@ -332,7 +335,7 @@ $rekomendasiTolak = [
           <dt class="col-sm-4 text-muted fw-normal">Tanggal</dt>
 
           <dd class="col-sm-8">
-            <?= e(izin_teks_rentang($row['tanggal_mulai'], $row['tanggal_selesai'])) ?>
+            <?= e(dispensasi_teks_durasi($row)) ?>
             <span class="text-muted">
               (<?= count($efektif) ?> hari sekolah)
             </span>
@@ -359,7 +362,7 @@ $rekomendasiTolak = [
 
         <hr>
 
-        <div class="small text-muted mb-1">Alasan dari siswa</div>
+        <div class="small text-muted mb-1"><?= $row['jenis'] === 'dispensasi' ? 'Keterangan kegiatan siswa' : 'Alasan dari siswa' ?></div>
 
         <div class="p-3 bg-light rounded" style="white-space:pre-wrap">
           <?= e($row['alasan']) ?>
@@ -379,7 +382,7 @@ $rekomendasiTolak = [
 
           <div class="small text-muted mt-3">
             Dampak ke presensi:
-            <b><?= $hari['diterapkan'] ?></b> hari ditulis
+            <b><?= $hari['diterapkan'] ?></b> <?= $row['jenis'] === 'dispensasi' ? 'hari kegiatan dicatat terpisah (presensi asli tetap)' : 'hari ditulis' ?>
             <?= $hari['sudah_ada'] ? ', <b>' . $hari['sudah_ada'] . '</b> dilewati (sudah ada presensi)' : '' ?>
             <?= $hari['dipakai_hadir'] ? ', <b>' . $hari['dipakai_hadir'] . '</b> hari siswa tetap hadir' : '' ?>
             <?= $hari['dicabut'] ? ', <b>' . $hari['dicabut'] . '</b> dicabut' : '' ?>.
@@ -440,7 +443,7 @@ $rekomendasiTolak = [
           <div class="text-muted small">
             Tidak ada lampiran.
             <?= $perluSurat
-              ? ' <span class="text-danger fw-semibold">Seharusnya wajib untuk sakit lebih dari 1 hari.</span>'
+              ? ' <span class="text-danger fw-semibold">Dokumen wajib untuk pengajuan ini.</span>'
               : '' ?>
           </div>
 
@@ -533,9 +536,14 @@ $rekomendasiTolak = [
           </h6>
 
           <p class="small text-muted">
+            <?php if ($row['jenis'] === 'dispensasi'): ?>
+            Dispensasi dicatat sebagai kegiatan terpisah sesuai durasi; tidak mengganti status kehadiran asli.
+            <?= dispensasi_bebas_alpa($row) ? 'Hari efektif tercakup bebas Alpa otomatis selama persetujuan berlaku.' : 'Rentang jam tidak membebaskan Alpa sehari penuh.' ?>
+            <?php else: ?>
             Hari sekolah dalam rentang ini akan ditulis sebagai
             <b><?= $row['jenis'] === 'sakit' ? 'SAKIT' : 'IZIN' ?></b>
             di presensi. Hari yang sudah tercatat presensi dilewati.
+            <?php endif; ?>
           </p>
 
           <form method="post">

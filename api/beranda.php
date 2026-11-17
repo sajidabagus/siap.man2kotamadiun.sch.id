@@ -6,6 +6,7 @@
  * Body (opsional): {"device_uuid": "..."} ; tanpa body berperilaku seperti perangkat belum dikenali.
  */
 require_once __DIR__ . '/../includes/presensi_core.php';
+require_once __DIR__ . '/../includes/izin.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -96,6 +97,8 @@ try {
             'izin' => ($p && ($p['metode'] === 'PENGAJUAN' || in_array($p['status'], ['IZIN', 'SAKIT'], true))) ? $p['status'] : null,
             'jam' => ($p && !in_array($p['metode'], ['PENGAJUAN', 'OTOMATIS'], true) && !in_array($p['status'], ['IZIN', 'SAKIT', 'ALPA'], true)) ? substr((string) $p['jam_masuk'], 0, 5) : null,
         ];
+
+        $out['saya']['dispensasi'] = array_map(fn($d) => ['id' => (int) $d['id'], 'durasi' => dispensasi_teks_durasi($d), 'kegiatan' => $d['alasan']], dispensasi_daftar_hari(date('Y-m-d'), date('Y-m-d'), (int) $saya['id']));
 
         // Ringkasan bulan ini untuk tampilan siswa (perangkat terdaftar): Hadir (termasuk terlambat), Izin (izin+sakit), Alfa.
         $awalBulan = date('Y-m-01');

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../includes/izin.php';
 require_once __DIR__ . '/../includes/header.php';
 require_once __DIR__ . '/../includes/presensi_koreksi.php';
 
@@ -197,6 +198,7 @@ $extraParams = compact('tanggal', 'kelas', 'jurusan', 'status') + ['limit' => $p
   </div>
 </div>
 
+<?php dispensasi_tabel_laporan(dispensasi_daftar_hari($tanggal, $tanggal, 0, $kelas, $jurusan)); ?>
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
 
 <?php if ($bolehUbah): ?>

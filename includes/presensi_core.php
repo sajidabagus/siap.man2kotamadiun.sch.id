@@ -189,7 +189,7 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
 
     // 6b. Sudah mengajukan izin/sakit (menunggu atau disetujui) untuk hari ini? Tidak boleh absen.
     try {
-        $iz = $db->prepare("SELECT jenis, status FROM izin_pengajuan WHERE siswa_id = :s AND status IN ('menunggu','disetujui')
+        $iz = $db->prepare("SELECT jenis, status FROM izin_pengajuan WHERE siswa_id = :s AND jenis IN ('izin','sakit') AND status IN ('menunggu','disetujui')
                             AND tanggal_mulai <= :t AND tanggal_selesai >= :t LIMIT 1");
         $iz->execute([':s' => $siswaId, ':t' => date('Y-m-d')]);
         $izRow = $iz->fetch();

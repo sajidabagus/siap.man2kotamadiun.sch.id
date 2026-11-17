@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../includes/izin.php';
 require_once __DIR__ . '/../includes/header.php';
 
 $bulan = (int) ($_GET['bulan'] ?? date('n'));
@@ -170,4 +171,6 @@ $extraParams = ['bulan' => $bulan, 'tahun' => $tahun, 'kelas' => $kelas, 'limit'
   </div>
 </div>
 
+<?php $awalDisp = sprintf('%04d-%02d-01', max(2000, min(2100, $tahun)), max(1, min(12, $bulan)));
+ dispensasi_tabel_laporan(dispensasi_daftar_hari($awalDisp, date('Y-m-t', strtotime($awalDisp)), 0, $kelas)); ?>
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

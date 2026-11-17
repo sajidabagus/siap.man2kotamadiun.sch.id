@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../includes/izin.php';
 // Halaman cetak Data Presensi (semua baris sesuai filter, tanpa paginasi, tanpa sidebar).
 require_once __DIR__ . '/../includes/auth.php';
 require_login();
@@ -745,6 +746,7 @@ $namaKementerian = 'KEMENTERIAN AGAMA REPUBLIK INDONESIA';
          TANDA TANGAN KEPALA MADRASAH
     ==================================================== -->
 
+    <?php dispensasi_tabel_laporan(dispensasi_daftar_hari($tanggal, $tanggal, 0, $kelas, $jurusan)); ?>
     <div class="ttd">
 
       <div>
