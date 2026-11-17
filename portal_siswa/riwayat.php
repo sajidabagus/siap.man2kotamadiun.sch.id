@@ -80,4 +80,11 @@ portal_app_awal('Riwayat Absensi', $akun, 'riwayat', ['kembali' => '', 'aksi' =>
   b.addEventListener('click', function () { var buka = p.hidden; p.hidden = !buka; b.setAttribute('aria-expanded', buka ? 'true' : 'false'); });
 })();
 </script>
-<?php portal_app_akhir();
+<?php
+$awalDisp = $bulan . '-01';
+$dispRiwayat = dispensasi_daftar_hari($awalDisp, date('Y-m-t', strtotime($awalDisp)), $sid);
+if ($dispRiwayat): ?>
+<section class="pt-card"><h3>Dispensasi disetujui</h3><p class="pt-kosong">Kegiatan terpisah dari status kehadiran di atas.</p>
+<?php foreach ($dispRiwayat as $disp): ?><p><a href="<?= e(portal_url('izin/' . $disp['id'])) ?>"><?= e(tgl_indo_pendek($disp['tanggal'])) ?> · <?= e(dispensasi_teks_durasi($disp)) ?></a><br><?= e($disp['alasan']) ?></p><?php endforeach; ?>
+</section>
+<?php endif; portal_app_akhir();

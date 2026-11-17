@@ -1,6 +1,6 @@
 <?php
 /**
- * PENGAJUAN IZIN / SAKIT + NOTIFIKASI PORTAL
+ * PENGAJUAN IZIN / SAKIT / DISPENSASI + NOTIFIKASI PORTAL
  *
  * Alur: siswa mengajukan (portal) -> petugas piket menyetujui/menolak (panel) -> bila disetujui,
  * hari efektif dalam rentang ditulis ke tabel `presensi` (status IZIN/SAKIT, metode 'PENGAJUAN'),
@@ -12,6 +12,7 @@
  * proses_simpan_presensi) dan izin hari itu ditandai "dipakai_hadir".
  */
 require_once __DIR__ . '/portal.php';
+require_once __DIR__ . '/dispensasi.php'; // overlay kegiatan; tidak menulis status HADIR/IZIN palsu
 
 const IZIN_MUNDUR_HARI         = 3;
 const IZIN_MAJU_HARI           = 30;
@@ -88,6 +89,7 @@ function izin_siapkan_tabel(): bool
                 CONSTRAINT fk_notif_siswa FOREIGN KEY (siswa_id) REFERENCES siswa (id) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
         }
+        dispensasi_migrasi($db);
         return $ok = true;
     } catch (Throwable $e) {
         error_log('izin_siapkan_tabel: ' . $e->getMessage());
@@ -127,7 +129,7 @@ function izin_teks_rentang(string $a, string $b): string
 
 function izin_label_jenis(string $j): string
 {
-    return $j === 'sakit' ? 'Sakit' : 'Izin';
+    return ['izin' => 'Izin', 'sakit' => 'Sakit', 'dispensasi' => 'Dispensasi'][$j] ?? $j;
 }
 
 // ---------------------------------------------------------------------
@@ -148,7 +150,7 @@ function izin_dir(): string
  * (sisi terpanjang 1800 px, JPEG 85% agar tulisan surat tetap terbaca); PDF tetap maksimal 3 MB (tidak dikompres).
  * @return array{ok:bool,ada:bool,pesan?:string,mime?:string,ext?:string,asli?:string,tmp_kompres?:?string}
  */
-function izin_periksa_lampiran(?array $f): array
+function izin_periksa_lampiran(?array $f, bool $periksaEkstensi = false): array
 {
     if (!$f || ($f['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) return ['ok' => true, 'ada' => false];
     $err = (int) $f['error'];
@@ -159,6 +161,9 @@ function izin_periksa_lampiran(?array $f): array
 
     $mime = deteksi_mime_file((string) $f['tmp_name']);   // finfo -> mime_content_type -> magic bytes (lihat includes/compat.php)
     if (!isset(IZIN_LAMPIRAN_TIPE[$mime])) return ['ok' => false, 'ada' => true, 'pesan' => 'Jenis file tidak diizinkan. Gunakan foto (JPG/PNG/WEBP) atau PDF.'];
+    $namaExt = strtolower(pathinfo((string) ($f['name'] ?? ''), PATHINFO_EXTENSION));
+    $cocok = ['image/jpeg' => ['jpg','jpeg'], 'image/png' => ['png'], 'image/webp' => ['webp'], 'application/pdf' => ['pdf']];
+    if ($periksaEkstensi && !in_array($namaExt, $cocok[$mime], true)) return ['ok' => false, 'ada' => true, 'pesan' => 'Ekstensi file tidak sesuai isi dokumen. Gunakan JPG/PNG/WEBP atau PDF yang benar.'];
     $gambar = $mime !== 'application/pdf';
     $bisaKompres = $gambar && kompres_tersedia();
     if ((int) $f['size'] > ($bisaKompres ? UNGGAH_MAKS_MENTAH : IZIN_LAMPIRAN_MAKS)) {
@@ -262,7 +267,12 @@ function izin_validasi(int $siswaId, array $in): array
     $db = getDB();
 
     $jenis = (string) ($in['jenis'] ?? '');
-    if (!in_array($jenis, ['izin', 'sakit'], true)) $g['jenis'] = 'Pilih jenis pengajuan: izin atau sakit.';
+    if (!in_array($jenis, ['izin', 'sakit', 'dispensasi'], true)) $g['jenis'] = 'Pilih jenis pengajuan: izin, sakit, atau dispensasi.';
+    $durasi = ['mode_durasi' => 'sehari', 'jam_mulai' => null, 'jam_selesai' => null];
+    if ($jenis === 'dispensasi') {
+        $dv = dispensasi_validasi_durasi($in);
+        $g += $dv['galat']; $durasi = $dv['data']; $in = array_merge($in, $durasi);
+    }
 
     $mulai = izin_tanggal_valid((string) ($in['mulai'] ?? ''));
     if (!$mulai) $g['mulai'] = 'Tanggal mulai tidak valid.';
@@ -291,18 +301,27 @@ function izin_validasi(int $siswaId, array $in): array
                 $g['selesai'] = 'Satu pengajuan maksimal ' . IZIN_MAKS_DURASI . ' hari. Pecah menjadi beberapa pengajuan.';
             } else {
                 $efektif = izin_efektif_dalam($rentang);
+                if ($jenis === 'dispensasi') {
+                    $ks = $db->prepare('SELECT kelas FROM siswa WHERE id=:id'); $ks->execute([':id' => $siswaId]);
+                    $kelasDisp = (string) $ks->fetchColumn();
+                    $efektif = array_values(array_filter($rentang, fn($t) => is_hari_efektif($t, $kelasDisp)));
+                }
                 if (!$efektif) {
                     $g['mulai'] = 'Rentang tanggal itu tidak mencakup hari efektif sekolah (' . label_hari_efektif() . ').';
                 } else {
                     $st = $db->prepare("SELECT tanggal FROM presensi WHERE siswa_id = :s AND tanggal BETWEEN :a AND :b AND metode NOT IN ('PENGAJUAN','OTOMATIS') ORDER BY tanggal");
                     $st->execute([':s' => $siswaId, ':a' => $mulai, ':b' => $selesai]);
                     $sudah = $st->fetchAll(PDO::FETCH_COLUMN);
-                    if ($sudah) $g['mulai'] = 'Anda sudah absen pada ' . tgl_indo_pendek($sudah[0]) . ', jadi tidak bisa mengajukan izin/sakit untuk tanggal itu. Pilih tanggal lain.';
+                    if ($jenis !== 'dispensasi' && $sudah) $g['mulai'] = 'Anda sudah absen pada ' . tgl_indo_pendek($sudah[0]) . ', jadi tidak bisa mengajukan izin/sakit untuk tanggal itu. Pilih tanggal lain.';
 
-                    $st = $db->prepare("SELECT COUNT(*) FROM izin_pengajuan WHERE siswa_id = :s AND status IN ('menunggu','disetujui')
+                    $st = $db->prepare("SELECT * FROM izin_pengajuan WHERE siswa_id = :s AND status IN ('menunggu','disetujui')
                                         AND tanggal_mulai <= :b AND tanggal_selesai >= :a");
                     $st->execute([':s' => $siswaId, ':a' => $mulai, ':b' => $selesai]);
-                    if ((int) $st->fetchColumn() > 0) $g['mulai'] = 'Pada rentang tanggal itu sudah ada pengajuan lain yang menunggu atau sudah disetujui.';
+                    foreach ($st->fetchAll() as $lain) {
+                        if ($jenis !== 'dispensasi' || dispensasi_beririsan(['mulai' => $mulai, 'selesai' => $selesai] + $durasi, $lain)) {
+                            $g['mulai'] = 'Rentang ini beririsan dengan pengajuan lain yang menunggu atau disetujui.'; break;
+                        }
+                    }
                 }
             }
         }
@@ -314,7 +333,8 @@ function izin_validasi(int $siswaId, array $in): array
 
     return ['galat' => $g, 'data' => [
         'jenis' => $jenis, 'mulai' => $mulai, 'selesai' => $selesai, 'alasan' => $alasan,
-        'efektif' => $efektif, 'lampiran_wajib' => ($jenis === 'sakit' && count($efektif) > 1),
+        'mode_durasi' => $durasi['mode_durasi'], 'jam_mulai' => $durasi['jam_mulai'], 'jam_selesai' => $durasi['jam_selesai'],
+        'efektif' => $efektif, 'lampiran_wajib' => ($jenis === 'dispensasi' || ($jenis === 'sakit' && count($efektif) > 1)),
     ]];
 }
 
@@ -322,7 +342,7 @@ function izin_validasi(int $siswaId, array $in): array
 function izin_buat(int $siswaId, array $in, ?array $file): array
 {
     $db = getDB();
-    $cek = izin_periksa_lampiran($file);
+    $cek = izin_periksa_lampiran($file, ($in['jenis'] ?? '') === 'dispensasi');
     $tersimpan = null;
     try {
         $db->beginTransaction();
@@ -331,6 +351,7 @@ function izin_buat(int $siswaId, array $in, ?array $file): array
         $v = izin_validasi($siswaId, $in);
         $g = $v['galat']; $d = $v['data'];
         if (!$cek['ok']) $g['lampiran'] = $cek['pesan'];
+        elseif ($d['jenis'] === 'dispensasi' && (!$cek['ada'] || !in_array($cek['mime'] ?? '', ['image/jpeg', 'image/png', 'image/webp'], true))) $g['lampiran'] = 'Dispensasi wajib menyertakan foto dokumen (JPG/PNG/WEBP), bukan PDF.';
         elseif ($d['lampiran_wajib'] && !$cek['ada']) $g['lampiran'] = 'Sakit lebih dari 1 hari wajib melampirkan surat dokter/keterangan (foto atau PDF).';
         if ($g) { $db->rollBack(); return ['ok' => false, 'galat' => $g]; }
 
@@ -340,9 +361,9 @@ function izin_buat(int $siswaId, array $in, ?array $file): array
             if (!$tersimpan) { $db->rollBack(); return ['ok' => false, 'galat' => ['lampiran' => 'Lampiran gagal disimpan di server.']]; }
             $asli = $cek['asli']; $tipe = $cek['mime'];
         }
-        $db->prepare('INSERT INTO izin_pengajuan (siswa_id, jenis, tanggal_mulai, tanggal_selesai, alasan, lampiran, lampiran_nama, lampiran_tipe)
-                      VALUES (:s, :j, :a, :b, :al, :l, :ln, :lt)')
-           ->execute([':s' => $siswaId, ':j' => $d['jenis'], ':a' => $d['mulai'], ':b' => $d['selesai'], ':al' => $d['alasan'], ':l' => $tersimpan, ':ln' => $asli, ':lt' => $tipe]);
+        $db->prepare('INSERT INTO izin_pengajuan (siswa_id, jenis, tanggal_mulai, tanggal_selesai, alasan, lampiran, lampiran_nama, lampiran_tipe, mode_durasi, jam_mulai, jam_selesai)
+                      VALUES (:s, :j, :a, :b, :al, :l, :ln, :lt, :md, :jm, :js)')
+           ->execute([':s' => $siswaId, ':j' => $d['jenis'], ':a' => $d['mulai'], ':b' => $d['selesai'], ':al' => $d['alasan'], ':l' => $tersimpan, ':ln' => $asli, ':lt' => $tipe, ':md' => $d['mode_durasi'], ':jm' => $d['jam_mulai'], ':js' => $d['jam_selesai']]);
         $id = (int) $db->lastInsertId();
         $db->commit();
         return ['ok' => true, 'id' => $id];
@@ -384,6 +405,7 @@ function izin_catatan(string $c): string
 /** Setujui + tulis presensi IZIN/SAKIT untuk hari efektif yang belum punya presensi. */
 function izin_setujui(int $id, array $admin, string $catatan = ''): array
 {
+    if ((izin_ambil($id)['jenis'] ?? '') === 'dispensasi') return dispensasi_setujui($id, $admin, $catatan);
     $db = getDB();
     try {
         $db->beginTransaction();
@@ -436,7 +458,7 @@ function izin_tolak(int $id, array $admin, string $catatan): array
     $u->execute([':a' => $admin['id'] ?? null, ':n' => izin_nama_admin($admin), ':c' => $catatan, ':id' => $id]);
     if ($u->rowCount() !== 1) return ['ok' => false, 'pesan' => 'Pengajuan sudah diproses (status: ' . (IZIN_STATUS_LABEL[$r['status']] ?? $r['status']) . ').'];
     portal_notif_tambah((int) $r['siswa_id'], 'izin_ditolak', 'Pengajuan ditolak',
-        izin_label_jenis($r['jenis']) . ' ' . izin_teks_rentang($r['tanggal_mulai'], $r['tanggal_selesai']) . ' ditolak. Alasan: ' . $catatan, 'izin/' . $id);
+        izin_label_jenis($r['jenis']) . ' ' . dispensasi_teks_durasi($r) . ' ditolak. Alasan: ' . $catatan, 'izin/' . $id);
     return ['ok' => true, 'siswa_id' => (int) $r['siswa_id'], 'jenis' => $r['jenis'], 'rentang' => izin_teks_rentang($r['tanggal_mulai'], $r['tanggal_selesai'])];
 }
 
@@ -445,6 +467,7 @@ function izin_cabut(int $id, array $admin, string $catatan): array
 {
     $catatan = izin_catatan($catatan);
     if (mb_strlen($catatan) < 5) return ['ok' => false, 'pesan' => 'Alasan pencabutan wajib diisi (minimal 5 karakter).'];
+    if ((izin_ambil($id)['jenis'] ?? '') === 'dispensasi') return dispensasi_cabut($id, $admin, $catatan);
     $db = getDB();
     try {
         $db->beginTransaction();

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../includes/izin.php';
 // Halaman cetak Rekap Kehadiran Bulanan (semua siswa, tanpa paginasi).
 require_once __DIR__ . '/../includes/auth.php';
 require_login();
@@ -164,6 +165,7 @@ $tot = ['hadir' => 0, 'terlambat' => 0, 'izin' => 0, 'sakit' => 0, 'alpa' => 0];
   <p class="catatan">Keterangan: kolom <strong>Hadir</strong> sudah termasuk siswa yang terlambat; kolom <strong>Terlambat</strong> adalah bagian dari Hadir.
     Dicetak pada <?= date('d') . ' ' . $namaBulan[(int) date('n')] . ' ' . date('Y, H:i') ?>.</p>
 
+  <?php $awalDisp = sprintf('%04d-%02d-01', max(2000, min(2100, $tahun)), $bulan); dispensasi_tabel_laporan(dispensasi_daftar_hari($awalDisp, date('Y-m-t', strtotime($awalDisp)), 0, $kelas)); ?>
   <div class="ttd">
     <div>
       Mengetahui,<br>Kepala Madrasah

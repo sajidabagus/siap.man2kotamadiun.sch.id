@@ -22,10 +22,10 @@ $st = $db->prepare("SELECT COUNT(*) FROM izin_pengajuan WHERE siswa_id = :s AND 
 $st->execute([':s' => $sid]);
 $menunggu = (int) $st->fetchColumn();
 
-portal_app_awal('Izin / Sakit', $akun, 'izin', ['kembali' => '']);
+portal_app_awal('Izin / Sakit / Dispensasi', $akun, 'izin', ['kembali' => '']);
 if ($info !== '') portal_alert('ok', $info);
 // Formulir langsung di halaman ini (hanya halaman pertama, agar paginasi daftar tetap ringkas).
-if ($hal === 1) portal_izin_form(['jenis' => '', 'mulai' => '', 'selesai' => '', 'alasan' => ''], []);
+if ($hal === 1) portal_izin_form(['jenis' => '', 'mulai' => '', 'selesai' => '', 'alasan' => '', 'mode_durasi' => 'sehari', 'jam_mulai' => '', 'jam_selesai' => ''], []);
 ?>
 <h2 class="pt-sub-judul">Pengajuan sebelumnya<?= $total > 0 ? ' <small>(' . $total . ')</small>' : '' ?></h2>
 <?php if ($menunggu > 0): ?>
@@ -37,7 +37,7 @@ if ($hal === 1) portal_izin_form(['jenis' => '', 'mulai' => '', 'selesai' => '',
   <?php foreach ($daftar as $r): ?>
   <a class="pt-item" href="<?= e(portal_url('izin/' . (int) $r['id'])) ?>">
     <div class="r1">
-      <span class="tgl"><?= e(izin_teks_rentang($r['tanggal_mulai'], $r['tanggal_selesai'])) ?></span>
+      <span class="tgl"><?= e(dispensasi_teks_durasi($r)) ?></span>
       <span class="pt-st <?= e($r['status']) ?>"><?= e(IZIN_STATUS_LABEL[$r['status']] ?? $r['status']) ?></span>
     </div>
     <div class="als"><span class="pt-jenis <?= e($r['jenis']) ?>"><?= e(izin_label_jenis($r['jenis'])) ?></span> <?= e($r['alasan']) ?></div>

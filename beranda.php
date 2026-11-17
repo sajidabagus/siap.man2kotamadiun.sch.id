@@ -1317,6 +1317,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
           <i class="bi bi-chevron-right ch"></i>
         </a>
       </div>
+      <div id="apDispensasi" aria-label="Dispensasi hari ini"></div>
       <div class="ap-sec">
         <h2>Ringkasan Bulan Ini</h2><a href="<?= BASE_URL ?>/portal/riwayat">Lihat Semua <i class="bi bi-chevron-right sd-ik"></i></a>
       </div>
@@ -1624,6 +1625,14 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
           ALPA: ['Alfa', '#e03e4a', 'x-lg'],
           BELUM: ['Belum absen', '#8a94a6', 'hourglass-split']
         };
+        var dispBox = $('apDispensasi');
+        dispBox.textContent = '';
+        (s.dispensasi || []).forEach(function (x) {
+          var el = document.createElement('a'); el.className = 'ap-dispensasi';
+          el.href = BASE + '/portal/izin/' + encodeURIComponent(x.id);
+          el.textContent = 'Dispensasi disetujui · ' + x.durasi + ' · ' + x.kegiatan;
+          dispBox.appendChild(el);
+        });
         var kunci = s.status || s.izin || 'BELUM',
           st = STATUS[kunci] || STATUS.BELUM;
         $('apStatus').style.setProperty('--c', st[1]);

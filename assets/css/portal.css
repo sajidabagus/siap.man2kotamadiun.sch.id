@@ -539,3 +539,10 @@ body.pt-v2 { --hj: #2563eb; --hj2: #2563eb; --hj-muda: #eff4ff; --teks: #0f172a;
 .pt-field input[type="password"]::-ms-clear { display: none !important; }
 .pt-field input[type="password"]::-webkit-credentials-auto-fill-button,
 .pt-field input[type="password"]::-webkit-contacts-auto-fill-button { visibility: hidden; pointer-events: none; position: absolute; right: 0; }
+/* Jenis pengajuan ketiga memakai kartu/formulir yang sama, tetap terbaca di HP. */
+.pt-radio-pengajuan { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pt-radio-pengajuan label, .pt-radio-pengajuan span { min-width: 0; }
+.pt-jenis.dispensasi { color: #2563eb; background: #eff6ff; }
+@media (max-width: 600px) { .pt-radio-pengajuan { grid-template-columns: 1fr; } }
+
+#durasiDispensasi[hidden], #jamDispensasi[hidden], #formIzin .pt-field[hidden] { display: none !important; }

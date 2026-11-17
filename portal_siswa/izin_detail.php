@@ -32,14 +32,14 @@ if ($galat !== '') portal_alert('err', $galat);
   <dl class="pt-dl">
     <dt>Status</dt><dd><span class="pt-st <?= e($row['status']) ?>"><?= e(IZIN_STATUS_LABEL[$row['status']] ?? $row['status']) ?></span></dd>
     <dt>Jenis</dt><dd><span class="pt-jenis <?= e($row['jenis']) ?>"><?= e(izin_label_jenis($row['jenis'])) ?></span></dd>
-    <dt>Tanggal</dt><dd><?= e(izin_teks_rentang($row['tanggal_mulai'], $row['tanggal_selesai'])) ?></dd>
+    <dt>Tanggal / durasi</dt><dd><?= e(dispensasi_teks_durasi($row)) ?></dd>
     <dt>Diajukan</dt><dd><?= e(date('d/m/Y H:i', strtotime($row['diajukan_at']))) ?></dd>
     <?php if ($row['diproses_at']): ?>
     <dt><?= $row['status'] === 'dibatalkan' ? 'Dibatalkan' : 'Diproses' ?></dt>
     <dd><?= e(date('d/m/Y H:i', strtotime($row['diproses_at']))) ?><?= $row['status'] !== 'dibatalkan' && $row['diproses_nama'] ? ' oleh ' . e($row['diproses_nama']) : '' ?></dd>
     <?php endif; ?>
   </dl>
-  <h3 style="margin-top:18px">Alasan</h3>
+  <h3 style="margin-top:18px"><?= $row['jenis'] === 'dispensasi' ? 'Keterangan kegiatan' : 'Alasan' ?></h3>
   <p class="pt-alasan"><?= e($row['alasan']) ?></p>
 
   <?php if ($row['catatan_petugas']): ?>
@@ -47,7 +47,9 @@ if ($galat !== '') portal_alert('err', $galat);
     <div class="pt-catatan <?= in_array($row['status'], ['ditolak', 'dicabut'], true) ? 'tolak' : '' ?>"><?= e($row['catatan_petugas']) ?></div>
   <?php endif; ?>
 
-  <?php if ($row['status'] === 'disetujui'): ?>
+  <?php if ($row['jenis'] === 'dispensasi' && $row['status'] === 'disetujui'): ?>
+    <h3>Pengaruh ke presensi</h3><p class="pt-kosong">Dispensasi tercatat sebagai kegiatan terpisah. Presensi asli tetap berlaku. <?= dispensasi_bebas_alpa($row) ? 'Hari efektif tercakup bebas Alpa otomatis selama persetujuan berlaku.' : 'Rentang jam tidak menggantikan kewajiban absen masuk dan tidak membebaskan Alpa sehari penuh.' ?></p>
+  <?php elseif ($row['status'] === 'disetujui'): ?>
     <h3 style="margin-top:18px">Pengaruh ke presensi</h3>
     <p class="pt-kosong">Tercatat <?= e(strtolower(izin_label_jenis($row['jenis']))) ?> pada <b><?= $ringkas['diterapkan'] + $ringkas['dipakai_hadir'] ?></b> hari sekolah<?= $ringkas['sudah_ada'] ? '; ' . $ringkas['sudah_ada'] . ' hari dilewati karena presensi sudah tercatat' : '' ?><?= $ringkas['dipakai_hadir'] ? '; ' . $ringkas['dipakai_hadir'] . ' hari Anda tetap hadir sehingga tercatat HADIR' : '' ?>.</p>
   <?php endif; ?>

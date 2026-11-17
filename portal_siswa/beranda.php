@@ -89,6 +89,9 @@ if ($galatFlash !== '') portal_alert('err', $galatFlash);
   <i class="bi bi-chevron-right m-ch"></i>
 </a>
 
+<?php foreach (dispensasi_daftar_hari($hariIni, $hariIni, $sid) as $disp): ?>
+<a class="pt-peringatan" href="<?= e(portal_url('izin/' . $disp['id'])) ?>"><i class="bi bi-person-workspace"></i><span><b>Dispensasi disetujui</b><br><?= e(dispensasi_teks_durasi($disp)) ?> · <?= e($disp['alasan']) ?></span></a>
+<?php endforeach; ?>
 <div class="pt-sec"><h2>Ringkasan Bulan Ini</h2><a href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni])) ?>">Lihat Semua <i class="bi bi-chevron-right sd-ik"></i></a></div>
 <div class="pt-ringkas">
   <a class="h" href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni])) ?>"><em class="sd-bul"><i class="bi bi-check-lg"></i></em><b><?= $hadir ?></b><span>Hadir</span><?php if ($rekap['TERLAMBAT'] > 0): ?><small><?= $rekap['TERLAMBAT'] ?> terlambat</small><?php else: ?><small class="sd-only">Tepat waktu</small><?php endif; ?><i class="bi bi-calendar-check"></i><s class="sd-ch bi bi-chevron-right"></s></a>
