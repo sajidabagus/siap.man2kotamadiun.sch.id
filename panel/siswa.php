@@ -265,5 +265,4 @@ $nisnBermasalah = (int) $db->query("SELECT COUNT(*) FROM siswa WHERE status = 'a
     </div>
   </div>
 </div>
-
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
