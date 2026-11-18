@@ -39,6 +39,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   <link href="<?= BASE_URL ?>/assets/css/siswa-desktop.css?v=<?= @filemtime(__DIR__ . '/assets/css/siswa-desktop.css') ?: time() ?>" rel="stylesheet">
   <link href="<?= BASE_URL ?>/assets/css/siswa-app.css?v=<?= @filemtime(__DIR__ . '/assets/css/siswa-app.css') ?: time() ?>" rel="stylesheet">
   <style>
+    .ap-pulang { font-size:13px; color:var(--abu); line-height:1.6; margin:8px 4px 18px; }
     :root {
       --biru: #0d6efd;
       --navy: #14213d;
@@ -1229,12 +1230,13 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
         alpa = s.status === 'ALPA',
         sudah = !!s.status && !alpa,
         izin = !!s.izin && !sudah,
-        mati = !d.efektif || sudah || alpa || izin;
+        mati = s.scan ? !s.scan.aktif : true;
       var b = document.getElementById('apAbsen');
       if (b) {
         b.disabled = mati;
         var sp = b.querySelector('span');
         if (sp) sp.textContent = alpa ? 'Absen ditutup (Alfa)' : sudah ? 'Sudah Absen Masuk' : (!d.efektif ? 'Presensi ditutup hari ini' : (izin ? (s.izin === 'SAKIT' ? 'Sakit disetujui hari ini' : 'Izin disetujui hari ini') : 'Absen Masuk'));
+        if (s.scan) { var label = s.scan.aktif ? (s.scan.sesi === 'pulang' ? 'Absen Pulang' : 'Absen Datang') : (s.jam_pulang ? 'Sudah Absen Pulang' : 'Scan belum tersedia'); b.querySelector('span').textContent = label; }
       }
       var n = document.getElementById('apNavScan');
       if (n) {
@@ -1312,11 +1314,12 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
         <h2>Status Hari Ini</h2>
         <a class="ap-status" id="apStatus" href="<?= BASE_URL ?>/portal/riwayat">
           <span class="lg"><i class="bi bi-hourglass-split" id="apStIkon"></i></span>
-          <span><em class="sd-lbl">Status Hari Ini</em><b id="apStJudul">Belum absen</b><span id="apStMasuk">Masuk: -</span><span class="sd-hide">Pulang: -</span></span>
+          <span><em class="sd-lbl">Status Hari Ini</em><b id="apStJudul">Belum absen</b><span id="apStMasuk">Masuk: -</span><span id="apStPulang">Pulang: -</span></span>
           <span class="sd-detail"><i class="bi bi-clock"></i> Lihat Detail <i class="bi bi-chevron-right"></i></span>
           <i class="bi bi-chevron-right ch"></i>
         </a>
       </div>
+      <div id="apDispensasi" aria-label="Dispensasi hari ini"></div>
       <div class="ap-sec">
         <h2>Ringkasan Bulan Ini</h2><a href="<?= BASE_URL ?>/portal/riwayat">Lihat Semua <i class="bi bi-chevron-right sd-ik"></i></a>
       </div>
@@ -1409,6 +1412,11 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
 
   <script src="<?= BASE_URL ?>/assets/js/device.js?v=<?= @filemtime(__DIR__ . '/assets/js/device.js') ?: 0 ?>"></script>
   <script>
+(async function () {
+  guardDeviceIdentityForms();
+  try {
+    await prepareDeviceIdentity();
+
     (function() {
       var BASE = <?= json_encode(BASE_URL) ?>;
       var $ = function(id) {
@@ -1574,7 +1582,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
         if (d.jam_masuk) {
           var cj = $('chipJam');
           cj.style.display = '';
-          cj.textContent = 'Masuk ' + d.jam_masuk + (d.batas_terlambat ? ' · terlambat setelah ' + d.batas_terlambat : '');
+          cj.textContent = 'Masuk ' + d.jam_masuk + (d.batas_terlambat ? ' · terlambat setelah ' + d.batas_terlambat : '') + ' · Pulang ' + d.pulang_buka + '–' + d.pulang_tutup;
         }
         $('waktuUpdate').textContent = (modeKelas ? d.terbaru.length + ' siswa sudah presensi' + (d.terbaru.length > 5 ? ' · gulir untuk melihat semua' : '') + ' · ' : '') + 'Diperbarui ' + d.waktu;
         $('liveBadge').classList.remove('putus');
@@ -1585,8 +1593,8 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
       function aturTombolScan(d) {
         var alpa = !!(d.mode === 'kelas' && d.saya && d.saya.status === 'ALPA');
         var sudah = !!(d.mode === 'kelas' && d.saya && (d.saya.status || d.saya.izin)); // sudah presensi, izin/sakit disetujui, atau Alfa
-        var mati = !d.efektif || sudah;
-        var alasan = !d.efektif ? 'Presensi ditutup hari ini (bukan hari efektif)' : (alpa ? 'Anda tercatat Alfa hari ini; absen sudah ditutup' : (sudah ? 'Anda sudah presensi hari ini' : ''));
+        var mati = d.mode === 'kelas' && d.saya && d.saya.scan ? !d.saya.scan.aktif : !d.efektif;
+        var alasan = d.saya && d.saya.scan ? d.saya.scan.alasan : (!d.efektif ? 'Presensi ditutup hari ini (bukan hari efektif)' : '');
         var hero = $('btnScan');
         hero.disabled = mati;
         hero.title = alasan;
@@ -1624,18 +1632,30 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
           ALPA: ['Alfa', '#e03e4a', 'x-lg'],
           BELUM: ['Belum absen', '#8a94a6', 'hourglass-split']
         };
+        var dispBox = $('apDispensasi');
+        dispBox.textContent = '';
+        (s.dispensasi || []).forEach(function (x) {
+          var el = document.createElement('a'); el.className = 'ap-dispensasi';
+          el.href = BASE + '/portal/izin/' + encodeURIComponent(x.id);
+          el.textContent = 'Dispensasi disetujui · ' + x.durasi + ' · ' + x.kegiatan;
+          dispBox.appendChild(el);
+        });
         var kunci = s.status || s.izin || 'BELUM',
           st = STATUS[kunci] || STATUS.BELUM;
         $('apStatus').style.setProperty('--c', st[1]);
         $('apStJudul').textContent = st[0];
         $('apStIkon').className = 'bi bi-' + st[2];
         $('apStMasuk').textContent = 'Masuk: ' + (s.jam && s.jam !== '00:00' ? s.jam + ' WIB' : '-');
+        $('apStPulang').textContent = 'Pulang: ' + (s.jam_pulang ? s.jam_pulang + ' WIB' : 'Belum tercatat');
+        if (!$('apPulangBulan')) { var el = document.createElement('p'); el.id = 'apPulangBulan'; el.className = 'ap-pulang'; $('apDispensasi').after(el); }
+        $('apPulangBulan').textContent = 'Pulang tercatat bulan ini: ' + (+s.pulang_bulan || 0) + ' hari · Jendela pulang ' + d.pulang_buka + '–' + d.pulang_tutup;
         var alpa = s.status === 'ALPA';
         var sudah = !!s.status && !alpa;
         var izinHariIni = !!s.izin && !sudah && !alpa;
         var b = $('apAbsen');
-        b.disabled = sudah || alpa || izinHariIni || !d.efektif;
+        b.disabled = !s.scan || !s.scan.aktif;
         b.querySelector('span').textContent = alpa ? 'Absen ditutup (Alfa)' : sudah ? 'Sudah Absen Masuk' : (!d.efektif ? 'Presensi ditutup hari ini' : (izinHariIni ? (s.izin === 'SAKIT' ? 'Sakit disetujui hari ini' : 'Izin disetujui hari ini') : 'Absen Masuk'));
+        if (s.scan) { var label = s.scan.aktif ? (s.scan.sesi === 'pulang' ? 'Absen Pulang' : 'Absen Datang') : (s.jam_pulang ? 'Sudah Absen Pulang' : 'Scan belum tersedia'); b.querySelector('span').textContent = label; }
         if (s.bulan) {
           $('apHadir').textContent = s.bulan.hadir;
           $('apIzin').textContent = s.bulan.izin;
@@ -1839,7 +1859,10 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
         tutup('mdDaftar');
       });
     })();
-  </script>
+
+  } catch (error) { showDeviceIdentityError(error); }
+})();
+</script>
 </body>
 
 </html>

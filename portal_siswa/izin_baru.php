@@ -4,7 +4,7 @@ require_once __DIR__ . '/_izin_form.php';
 $akun = portal_wajib_login();
 $sid = (int) $akun['siswa_id'];
 
-$in = ['jenis' => '', 'mulai' => '', 'selesai' => '', 'alasan' => ''];
+$in = ['jenis' => '', 'mulai' => '', 'selesai' => '', 'alasan' => '', 'mode_durasi' => 'sehari', 'jam_mulai' => '', 'jam_selesai' => ''];
 $galat = [];
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
@@ -25,7 +25,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 }
 
 
-portal_app_awal('Ajukan Izin / Sakit', $akun, 'izin', ['kembali' => 'izin']);
+portal_app_awal('Ajukan Izin / Sakit / Dispensasi', $akun, 'izin', ['kembali' => 'izin']);
 ?>
 <?php portal_izin_form($in, $galat); ?>
 <?php portal_app_akhir();

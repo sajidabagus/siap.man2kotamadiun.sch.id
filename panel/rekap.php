@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../includes/izin.php';
 require_once __DIR__ . '/../includes/header.php';
 
 $bulan = (int) ($_GET['bulan'] ?? date('n'));
@@ -51,7 +52,7 @@ $sql = "SELECT s.id, s.nisn, s.nama, s.kelas,
           s.kelas
         ) AS kelas_bulan_ini,
         SUM(p.status IN ('HADIR','TERLAMBAT')) hadir, SUM(p.status='TERLAMBAT') terlambat,
-        SUM(p.status='IZIN') izin, SUM(p.status='SAKIT') sakit, SUM(p.status='ALPA') alpa,
+        SUM(p.status='IZIN') izin, SUM(p.status='SAKIT') sakit, SUM(p.status='ALPA') alpa, SUM(p.jam_pulang IS NOT NULL AND p.status IN ('HADIR','TERLAMBAT')) pulang,
         COUNT(p.id) total_masuk
         FROM siswa s LEFT JOIN presensi p ON p.siswa_id = s.id AND MONTH(p.tanggal)=:bulan AND YEAR(p.tanggal)=:tahun
         WHERE s.status='aktif'" . ($kelas !== '' ? ' AND s.kelas = :kelas' : '') . "
@@ -68,7 +69,7 @@ $rekapSiswa = $stmt->fetchAll();
 // tercatat presensi di kelas tsb bulan ini (bukan jumlah siswa yang
 // SEKARANG terdaftar di kelas itu).
 $sqlKelas = "SELECT p.kelas_saat_presensi AS kelas, COUNT(DISTINCT p.siswa_id) total_siswa,
-             SUM(p.status IN ('HADIR','TERLAMBAT')) hadir, SUM(p.status='TERLAMBAT') terlambat, SUM(p.status='ALPA') alpa
+             SUM(p.status IN ('HADIR','TERLAMBAT')) hadir, SUM(p.status='TERLAMBAT') terlambat, SUM(p.status='ALPA') alpa, SUM(p.jam_pulang IS NOT NULL AND p.status IN ('HADIR','TERLAMBAT')) pulang
              FROM presensi p
              WHERE MONTH(p.tanggal)=:bulan AND YEAR(p.tanggal)=:tahun
              GROUP BY p.kelas_saat_presensi ORDER BY p.kelas_saat_presensi";
@@ -112,7 +113,7 @@ $extraParams = ['bulan' => $bulan, 'tahun' => $tahun, 'kelas' => $kelas, 'limit'
           <th>Jumlah Siswa</th>
           <th>Hadir<br><small class="fw-normal text-muted">(incl. terlambat)</small></th>
           <th>Terlambat<br><small class="fw-normal text-muted">(bagian dari hadir)</small></th>
-          <th>Alpa</th>
+          <th>Alpa</th><th>Pulang</th>
         </tr>
       </thead>
       <tbody>
@@ -122,7 +123,7 @@ $extraParams = ['bulan' => $bulan, 'tahun' => $tahun, 'kelas' => $kelas, 'limit'
             <td><?= (int)$k['total_siswa'] ?></td>
             <td><?= (int)$k['hadir'] ?></td>
             <td><?= (int)$k['terlambat'] ?></td>
-            <td><?= (int)$k['alpa'] ?></td>
+            <td><?= (int)$k['alpa'] ?></td><td><?= (int) $k['pulang'] ?></td>
           </tr>
         <?php endforeach; ?>
       </tbody>
@@ -141,7 +142,7 @@ $extraParams = ['bulan' => $bulan, 'tahun' => $tahun, 'kelas' => $kelas, 'limit'
           <th>Terlambat<br><small class="fw-normal text-muted">(bagian dari hadir)</small></th>
           <th>Izin</th>
           <th>Sakit</th>
-          <th>Alpa</th>
+          <th>Alpa</th><th>Pulang</th>
         </tr>
       </thead>
       <tbody>
@@ -155,7 +156,7 @@ $extraParams = ['bulan' => $bulan, 'tahun' => $tahun, 'kelas' => $kelas, 'limit'
             <td><?= (int)$r['terlambat'] ?></td>
             <td><?= (int)$r['izin'] ?></td>
             <td><?= (int)$r['sakit'] ?></td>
-            <td><?= (int)$r['alpa'] ?></td>
+            <td><?= (int)$r['alpa'] ?></td><td><?= (int) $r['pulang'] ?></td>
           </tr>
         <?php endforeach; ?>
       </tbody>
@@ -170,4 +171,6 @@ $extraParams = ['bulan' => $bulan, 'tahun' => $tahun, 'kelas' => $kelas, 'limit'
   </div>
 </div>
 
+<?php $awalDisp = sprintf('%04d-%02d-01', max(2000, min(2100, $tahun)), max(1, min(12, $bulan)));
+ dispensasi_tabel_laporan(dispensasi_daftar_hari($awalDisp, date('Y-m-t', strtotime($awalDisp)), 0, $kelas)); ?>
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

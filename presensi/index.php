@@ -160,6 +160,11 @@ $tutupHariIni = !$jdUmum['efektif'] && !agenda_ada_pembukaan(date('Y-m-d'));
 <script src="<?= BASE_URL ?>/assets/js/vendor/html5-qrcode.min.js"></script>
 <script src="<?= BASE_URL ?>/assets/js/device.js?v=<?= @filemtime(__DIR__ . '/../assets/js/device.js') ?: 0 ?>"></script>
 <script>
+(async function () {
+  guardDeviceIdentityForms();
+  try {
+    await prepareDeviceIdentity();
+
 function extractGateToken(text) {
   try {
     const url = new URL(text);
@@ -215,8 +220,8 @@ fetch('<?= BASE_URL ?>/api/beranda.php', {
 .then(r => r.json())
 .then(d => {
   const s = d && d.success && d.mode === 'kelas' ? d.saya : null;
-  if (s && (s.status || s.izin)) {
-    tampilSudah(s.status === 'ALPA' ? 'Anda tercatat Alfa hari ini; absen sudah ditutup. Bila Anda hadir, hubungi wali kelas/petugas.' : s.status ? 'Tercatat pukul ' + (s.jam || '-') + ' (' + s.status.toLowerCase() + ').' : 'Pengajuan ' + (s.izin === 'SAKIT' ? 'sakit' : 'izin') + ' hari ini sudah disetujui.');
+  if (s && s.scan && !s.scan.aktif) {
+    tampilSudah(s.scan.alasan || (s.status === 'ALPA' ? 'Anda tercatat Alfa hari ini; absen sudah ditutup. Bila Anda hadir, hubungi wali kelas/petugas.' : s.status ? 'Tercatat pukul ' + (s.jam || '-') + ' (' + s.status.toLowerCase() + ').' : 'Pengajuan ' + (s.izin === 'SAKIT' ? 'sakit' : 'izin') + ' hari ini sudah disetujui.'));
   } else { mulaiScanner1(); }
 })
 .catch(() => mulaiScanner1());
@@ -281,6 +286,9 @@ fetch('<?= BASE_URL ?>/api/scan.php', {
   .then(r => r.json())
   .then(d => { if (!d.success || d.status === 'BELUM') alt.classList.remove('d-none'); })
   .catch(() => alt.classList.remove('d-none'));   // gagal memeriksa: tetap beri jalan untuk mendaftar
+})();
+
+  } catch (error) { showDeviceIdentityError(error); }
 })();
 </script>
 </body>

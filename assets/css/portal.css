@@ -298,7 +298,9 @@ body.pt-v2 { background: #f3f6f4; padding-bottom: calc(96px + env(safe-area-inse
 
 /* gerbang masuk otomatis */
 body.pt-gerbang { min-height: 100vh; min-height: 100svh; display: grid; place-items: center; background: linear-gradient(150deg, #0f5c3c, #0b3a27); color: #fff; text-align: center; }
-.pt-gerbang-in { padding: 24px; }
+.pt-gerbang-in { padding: 24px; max-width: 440px; }
+.pt-device-actions { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.pt-device-actions [hidden] { display: none !important; }
 .pt-gerbang-logo { width: 72px; height: 72px; margin: 0 auto 18px; display: grid; place-items: center; font-size: 52px; }
 .pt-gerbang-logo img { width: 100%; height: 100%; object-fit: contain; }
 .pt-spin { width: 34px; height: 34px; margin: 0 auto 12px; border: 3px solid rgba(255,255,255,.25); border-top-color: #fff; border-radius: 50%; animation: pt-putar .8s linear infinite; }
@@ -539,3 +541,10 @@ body.pt-v2 { --hj: #2563eb; --hj2: #2563eb; --hj-muda: #eff4ff; --teks: #0f172a;
 .pt-field input[type="password"]::-ms-clear { display: none !important; }
 .pt-field input[type="password"]::-webkit-credentials-auto-fill-button,
 .pt-field input[type="password"]::-webkit-contacts-auto-fill-button { visibility: hidden; pointer-events: none; position: absolute; right: 0; }
+/* Jenis pengajuan ketiga memakai kartu/formulir yang sama, tetap terbaca di HP. */
+.pt-radio-pengajuan { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pt-radio-pengajuan label, .pt-radio-pengajuan span { min-width: 0; }
+.pt-jenis.dispensasi { color: #2563eb; background: #eff6ff; }
+@media (max-width: 600px) { .pt-radio-pengajuan { grid-template-columns: 1fr; } }
+
+#durasiDispensasi[hidden], #jamDispensasi[hidden], #formIzin .pt-field[hidden] { display: none !important; }

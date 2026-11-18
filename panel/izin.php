@@ -69,7 +69,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 // ---------------------------------------------------------------------
 $statusF = (string) ($_GET['status'] ?? 'menunggu');
 if ($statusF !== 'semua' && !isset(IZIN_STATUS_LABEL[$statusF])) $statusF = 'menunggu';
-$jenisF = in_array($_GET['jenis'] ?? '', ['izin', 'sakit'], true) ? $_GET['jenis'] : '';
+$jenisF = in_array($_GET['jenis'] ?? '', ['izin', 'sakit', 'dispensasi'], true) ? $_GET['jenis'] : '';
 $kelas = clean($_GET['kelas'] ?? '');
 $q = clean($_GET['q'] ?? '');
 $dari = izin_tanggal_valid((string) ($_GET['dari'] ?? '')) ?: '';
@@ -140,7 +140,7 @@ $tunggu = function (int $jam): string {
 };
 ?>
 <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-2 mb-3">
-  <h4 class="mb-0"><i class="bi bi-envelope-paper"></i> Pengajuan Izin &amp; Sakit</h4>
+  <h4 class="mb-0"><i class="bi bi-envelope-paper"></i> Pengajuan Izin, Sakit &amp; Dispensasi</h4>
 </div>
 
 <div class="row g-2 mb-3">
@@ -174,8 +174,9 @@ $tunggu = function (int $jam): string {
           <option value="<?= $k ?>" <?= $statusF === $k ? 'selected' : '' ?>><?= e($l) ?></option><?php endforeach; ?>
       </select>
       <select name="jenis" class="form-select">
-        <option value="">Izin &amp; Sakit</option>
+        <option value="">Semua jenis pengajuan</option>
         <option value="izin" <?= $jenisF === 'izin' ? 'selected' : '' ?>>Izin</option>
+        <option value="dispensasi" <?= $jenisF === 'dispensasi' ? 'selected' : '' ?>>Dispensasi</option>
         <option value="sakit" <?= $jenisF === 'sakit' ? 'selected' : '' ?>>Sakit</option>
       </select>
       <select name="kelas" class="form-select">

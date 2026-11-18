@@ -283,6 +283,23 @@ terkunci sementara dengan menebak password berulang (pemulihannya otomatis setel
 
 ---
 
+### Keandalan identitas Safari dan masuk otomatis
+
+- Identitas browser dicadangkan di localStorage dan cookie. Bila keduanya berbeda, tunggu pemilihan
+  tepat satu binding ACTIVE oleh server sebelum menyinkronkan; tidak reset/daftar perangkat baru.
+  Dua kandidat ACTIVE atau tidak ada yang sah ditolak tanpa menimpa cadangan.
+- Gerbang/login membedakan penolakan perangkat dari koneksi gagal. Gangguan transport, timeout,
+  respons tidak valid atau server sibuk dicoba maksimal dua kali per tahap, lalu tampil **Coba lagi**
+  dan pilihan password. Tidak ada redirect login hanya karena jaringan gagal.
+- Semua pemanggil identitas (beranda, scan, konfirmasi, pairing, profil, aktivasi) menunggu pemeriksaan.
+  Pendaftaran tidak dikirim ketika identitas belum pasti; aktivasi tanpa pendaftaran tetap dapat dipakai.
+- Batas idle **2 jam**, revocation akun/sesi, CSRF/logout dan password ulang aksi sensitif tetap berlaku.
+  Cookie sesi bukan remember-me permanen; cookie server iOS menargetkan 400 hari, bukan jaminan
+  penyimpanan Safari/Private/ITP tidak pernah dihapus. Gunakan browser/origin yang sama, bukan Private.
+- Endpoint resolver hanya mengembalikan indeks kandidat yang cocok (atau penolakan generik), tanpa
+  nama/status siswa/UUID di respons atau log. UUID adalah kredensial, jangan dicatat di log/screenshot.
+- Regresi: [`tests/safari/README.md`](tests/safari/README.md).
+
 ## 8c. PENGAJUAN IZIN / SAKIT & NOTIFIKASI
 
 **Alur:** siswa mengajukan di `/portal/izin/baru` → petugas piket memutuskan di `/izin` → siswa mendapat
@@ -291,7 +308,7 @@ notifikasi di portal. Izin yang **disetujui** ditulis ke tabel `presensi` (statu
 ekspor yang sudah ada otomatis ikut tanpa diubah.
 
 **Aturan pengajuan** (konstanta di `includes/izin.php`): mundur maksimal 3 hari, maju maksimal 30 hari; satu pengajuan
-maksimal 14 hari; **sakit lebih dari 1 hari sekolah wajib melampirkan surat** (JPG/PNG/WEBP/PDF, maks. 3 MB); satu
+maksimal 14 hari; **semua pengajuan baru izin/sakit/dispensasi wajib melampirkan dokumen**, termasuk satu hari (izin/sakit: JPG/PNG/WEBP/PDF; dispensasi: foto JPG/PNG/WEBP; hasil maks. 3 MB); satu
 pengajuan aktif per tanggal; maksimal 5 pengajuan menunggu sekaligus; siswa boleh membatalkan selama masih menunggu.
 
 **Keputusan petugas:** _Setujui_ (catatan opsional), _Tolak_ (alasan **wajib**, dibaca siswa), _Cabut persetujuan_
@@ -357,3 +374,21 @@ server tanpa internet. Untuk memperbarui, cukup ganti file di folder `vendor/`.
   Permintaan API / AJAX dijawab JSON (`{"success":false,"code":"DB_UNAVAILABLE",...}`), dan popup formulir
   hanya menampilkan pesan singkat. Logikanya ada di `tampilkan_error_database()` di `config/database.php`.
 - Ganti password `admin` bawaan dan password database sebelum dipakai produksi.
+
+
+## Absen datang dan pulang
+
+Sesi otomatis mengikuti jam server saat konfirmasi: datang atau pulang. Pengaturan
+**Jam absensi** menyediakan jendela datang/pulang, batas terlambat opsional dan
+linimasa live. Pulang wajib sudah datang hari itu; tidak mengubah status/jam datang.
+Belum pulang tidak otomatis menjadi Alpa. Alpa tetap mengikuti **tutup datang**.
+
+**Instalasi existing: backup dan jalankan migrasi additive sebelum rilis kode:**
+`php database/migrate_absen_pulang.php` lalu `php database/migrate_absen_pulang.php --check`.
+Periksa jam datang existing, default pulang13:00–16:00 dan agenda per kelas di staging.
+Jangan import ulang dump untuk memperbarui database yang sudah berisi data.
+
+Aturan rinci, desain, langkah rilis/rollback dan keterbatasan:
+[`docs/absen-pulang.md`](docs/absen-pulang.md).
+Regresi MariaDB/PHP HTTP/browser:
+[`tests/pulang/README.md`](tests/pulang/README.md).

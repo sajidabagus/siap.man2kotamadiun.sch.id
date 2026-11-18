@@ -637,6 +637,7 @@ function get_hari_efektif(): array
 }
 
 require_once __DIR__ . '/agenda.php';
+require_once __DIR__ . '/pulang.php';
 
 /**
  * Apakah tanggal (Y-m-d, default hari ini) termasuk hari efektif presensi?
@@ -981,13 +982,19 @@ function jalankan_alpa_otomatis(): void
             $izinAda = (bool) $db->query("SHOW TABLES LIKE 'izin_pengajuan'")->fetchColumn();
         } catch (Throwable $e) {
         }
+        // Skema lama tetap berjalan sebelum migrasi; setelah kolom ada, hanya dispensasi FULL-DAY
+        // yang membebaskan Alpa. Jam tertentu tidak mengubah kewajiban absen masuk.
+        $kondisiBebas = "i.jenis IN ('izin','sakit')";
+        if ($izinAda && $db->query("SHOW COLUMNS FROM izin_pengajuan WHERE Field = 'mode_durasi'")->fetch()) {
+            $kondisiBebas = "(i.jenis IN ('izin','sakit') OR (i.jenis='dispensasi' AND i.mode_durasi IN ('sehari','beberapa_hari')))";
+        }
         $sqlDasar = "INSERT IGNORE INTO presensi (siswa_id, kelas_saat_presensi, tanggal, jam_masuk, status, metode, created_at)
                 SELECT s.id, s.kelas, :t, '00:00:00', 'ALPA', 'OTOMATIS', NOW() FROM siswa s
                 WHERE s.status = 'aktif' AND DATE(s.created_at) <= :t2
                   AND NOT EXISTS (SELECT 1 FROM presensi p WHERE p.siswa_id = s.id AND p.tanggal = :t3)
                   -- Pengaman tambahan bila admin lupa menjadwalkan libur: hari tanpa satu pun scan kehadiran dianggap libur.
                   AND EXISTS (SELECT 1 FROM presensi x WHERE x.tanggal = :t6 AND x.metode NOT IN ('PENGAJUAN','OTOMATIS'))"
-            . ($izinAda ? " AND NOT EXISTS (SELECT 1 FROM izin_pengajuan i WHERE i.siswa_id = s.id AND i.status = 'disetujui'
+            . ($izinAda ? " AND NOT EXISTS (SELECT 1 FROM izin_pengajuan i WHERE i.siswa_id = s.id AND i.status = 'disetujui' AND $kondisiBebas
                               AND i.tanggal_mulai <= :t4 AND i.tanggal_selesai >= :t5)" : '');
         $paramTanggal = fn(string $t) => [':t' => $t, ':t2' => $t, ':t3' => $t, ':t6' => $t] + ($izinAda ? [':t4' => $t, ':t5' => $t] : []);
         $insSemua = $db->prepare($sqlDasar);
@@ -1033,7 +1040,7 @@ function jalankan_alpa_otomatis(): void
 // ---------------------------------------------------------------------
 function tentukan_status_presensi(string $jamSekarangHms, ?string $tanggal = null, ?string $kelas = null): string
 {
-    return ($jamSekarangHms <= jadwal_hari($tanggal, $kelas)['batas_terlambat']) ? 'HADIR' : 'TERLAMBAT';
+    return presensi_status_datang(jadwal_hari($tanggal, $kelas), $jamSekarangHms);
 }
 
 // ---------------------------------------------------------------------

@@ -88,6 +88,11 @@ if ($galatFlash !== '') portal_alert('err', $galatFlash);
 <form id="fCek" method="post" action="<?= e(portal_url('perangkat')) ?>" hidden><?= csrf_field() ?><input type="hidden" name="aksi" value="cek"><input type="hidden" name="device_uuid" class="devuuid" value=""></form>
 <script src="<?= BASE_URL ?>/assets/js/device.js?v=<?= @filemtime(__DIR__ . '/../assets/js/device.js') ?: 0 ?>"></script>
 <script>
+(async function () {
+  guardDeviceIdentityForms();
+  try {
+    await prepareDeviceIdentity();
+
 (function () {
   var uuid = ''; try { uuid = getOrCreateDeviceUuid(); } catch (e) {}
   document.querySelectorAll('.devuuid').forEach(function (i) { i.value = uuid; });
@@ -104,6 +109,9 @@ if ($galatFlash !== '') portal_alert('err', $galatFlash);
       el.innerHTML = d.cocok ? '<i class="bi bi-check-circle-fill" style="color:#16a34a"></i> Anda sedang memakai perangkat yang terdaftar.'
         : '<i class="bi bi-exclamation-triangle-fill" style="color:#d97706"></i> Penyimpanan di sini <b>berbeda</b> dari perangkat yang terdaftar. Presensi hanya bisa dari perangkat terdaftar (buka aplikasi SIAP di Android, atau browser yang sama di iPhone, pada HP yang didaftarkan).';
     }).catch(function () {});
+})();
+
+  } catch (error) { showDeviceIdentityError(error); }
 })();
 </script>
 <?php endif; ?>

@@ -6,6 +6,7 @@
  * Body (opsional): {"device_uuid": "..."} ; tanpa body berperilaku seperti perangkat belum dikenali.
  */
 require_once __DIR__ . '/../includes/presensi_core.php';
+require_once __DIR__ . '/../includes/izin.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -76,6 +77,8 @@ try {
         'batas_absen' => substr($jd['batas_absen'], 0, 5),
         'jam_masuk' => substr($jd['jam_buka'], 0, 5),
         'batas_terlambat' => substr($jd['batas_terlambat'], 0, 5),
+        'pulang_buka' => substr($jd['pulang_buka'], 0, 5), 'pulang_tutup' => substr($jd['pulang_tutup'], 0, 5),
+        'sesi' => presensi_sesi($jd),
         'agenda' => agenda_ringkas(null, $saya ? $kelas : null),
         'binding_aktif' => !empty($settings['device_binding_aktif']),
         'total' => $total, 'hadir' => $hadir, 'tepat' => $tepat, 'terlambat' => $terlambat,
@@ -85,7 +88,7 @@ try {
     ];
 
     if ($saya) {
-        $st = $db->prepare('SELECT status, jam_masuk, metode FROM presensi WHERE siswa_id = :s AND tanggal = CURDATE() LIMIT 1');
+        $st = $db->prepare('SELECT * FROM presensi WHERE siswa_id = :s AND tanggal = CURDATE() LIMIT 1');
         $st->execute([':s' => $saya['id']]);
         $p = $st->fetch();
         $out['kelas'] = $kelas;
@@ -96,6 +99,11 @@ try {
             'izin' => ($p && ($p['metode'] === 'PENGAJUAN' || in_array($p['status'], ['IZIN', 'SAKIT'], true))) ? $p['status'] : null,
             'jam' => ($p && !in_array($p['metode'], ['PENGAJUAN', 'OTOMATIS'], true) && !in_array($p['status'], ['IZIN', 'SAKIT', 'ALPA'], true)) ? substr((string) $p['jam_masuk'], 0, 5) : null,
         ];
+
+        $out['saya']['jam_pulang'] = !empty($p['jam_pulang']) ? substr($p['jam_pulang'], 0, 5) : null;
+        $out['saya']['scan'] = presensi_scan_aturan((int) $saya['id'], $p ?: null, $jd);
+        $out['saya']['pulang_bulan'] = presensi_jumlah_pulang((int) $saya['id'], date('Y-m'));
+        $out['saya']['dispensasi'] = array_map(fn($d) => ['id' => (int) $d['id'], 'durasi' => dispensasi_teks_durasi($d), 'kegiatan' => $d['alasan']], dispensasi_daftar_hari(date('Y-m-d'), date('Y-m-d'), (int) $saya['id']));
 
         // Ringkasan bulan ini untuk tampilan siswa (perangkat terdaftar): Hadir (termasuk terlambat), Izin (izin+sakit), Alfa.
         $awalBulan = date('Y-m-01');

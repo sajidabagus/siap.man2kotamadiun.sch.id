@@ -799,14 +799,14 @@ function portal_bulan_valid(string $ym): string
 /** Baris presensi siswa pada tanggal tertentu (satu baris per hari), atau null. */
 function portal_presensi_hari(int $siswaId, string $ymd): ?array
 {
-    $st = getDB()->prepare('SELECT tanggal, jam_masuk, status, metode FROM presensi WHERE siswa_id = :s AND tanggal = :t ORDER BY id DESC LIMIT 1');
+    $st = getDB()->prepare('SELECT * FROM presensi WHERE siswa_id = :s AND tanggal = :t ORDER BY id DESC LIMIT 1');
     $st->execute([':s' => $siswaId, ':t' => $ymd]);
     return $st->fetch() ?: null;
 }
 
 /**
  * Apakah tombol scan QR absen boleh aktif untuk siswa ini hari ini?
- * Nonaktif bila hari ini bukan hari efektif, atau siswa sudah presensi / izin-sakit disetujui / tercatat Alfa hari ini.
+ * Memakai aturan jendela datang/pulang bersama, tanpa menebak sesi dari status datang saja.
  * @return array{aktif:bool,alasan:string}
  */
 function portal_scan_status(int $siswaId): array
@@ -819,14 +819,8 @@ function portal_scan_status(int $siswaId): array
     } catch (Throwable $e) {
     }
     $jd = jadwal_hari(null, $kelasSiswa !== '' ? $kelasSiswa : null);
-    if (!$jd['efektif']) return ['aktif' => false, 'alasan' => $jd['jenis'] === 'libur' ? $jd['ket'] . ' — presensi ditutup' : 'Presensi ditutup hari ini (bukan hari efektif)'];
     $p = portal_presensi_hari($siswaId, date('Y-m-d'));
-    if ($p && $p['status'] === 'ALPA') return ['aktif' => false, 'alasan' => 'Anda tercatat Alfa hari ini; absen sudah ditutup'];
-    if ($p) {
-        $izin = ($p['metode'] ?? '') === 'PENGAJUAN' || in_array($p['status'], ['IZIN', 'SAKIT'], true);
-        return ['aktif' => false, 'alasan' => $izin ? 'Pengajuan izin/sakit hari ini sudah disetujui' : 'Anda sudah presensi hari ini'];
-    }
-    return ['aktif' => true, 'alasan' => ''];
+    return presensi_scan_aturan($siswaId, $p ?: null, $jd);
 }
 
 /** Jumlah per status dalam satu bulan. @return array<string,int> */
@@ -846,7 +840,7 @@ function portal_riwayat_bulan(int $siswaId, string $ym, string $status = ''): ar
 {
     $awal = $ym . '-01';
     $akhir = date('Y-m-d', strtotime($awal . ' +1 month'));
-    $sql = 'SELECT tanggal, jam_masuk, status, metode FROM presensi WHERE siswa_id = :s AND tanggal >= :a AND tanggal < :b';
+    $sql = 'SELECT * FROM presensi WHERE siswa_id = :s AND tanggal >= :a AND tanggal < :b';
     $p = [':s' => $siswaId, ':a' => $awal, ':b' => $akhir];
     if (isset(PORTAL_LABEL_STATUS[$status])) {
         $sql .= ' AND status = :st';

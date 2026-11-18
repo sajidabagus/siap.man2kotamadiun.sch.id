@@ -57,12 +57,12 @@ function identify_siswa_by_device(string $installUuid): ?array
  * dengan zona waktu yang di-set di config/database.php, walau di hosting
  * yang membatasi perintah SET time_zone sekalipun.
  */
-function sudah_presensi_hari_ini(int $siswaId): ?array
+function sudah_presensi_hari_ini(int $siswaId, ?string $tanggal = null): ?array
 {
     // Baris izin/sakit yang DISETUJUI (metode PENGAJUAN) bukan presensi kehadiran: siswa yang tetap
     // datang boleh presensi, dan baris itu digantikan oleh presensi HADIR (lihat proses_simpan_presensi).
     $stmt = getDB()->prepare("SELECT * FROM presensi WHERE siswa_id = :sid AND tanggal = :tgl AND metode NOT IN ('PENGAJUAN','OTOMATIS') LIMIT 1");
-    $stmt->execute([':sid' => $siswaId, ':tgl' => date('Y-m-d')]);
+    $stmt->execute([':sid' => $siswaId, ':tgl' => $tanggal ?? date('Y-m-d')]);
     return $stmt->fetch() ?: null;
 }
 
@@ -163,21 +163,25 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
         return ['success' => false, 'code' => $deviceResult['code'], 'message' => $deviceResult['message']];
     }
 
-    // 6. Presensi ganda hari ini?
-    $existing = sudah_presensi_hari_ini($siswaId);
-    if ($existing) {
-        security_log($siswaId, 'PRESENCE_REJECTED', null, 'Sudah presensi hari ini.');
-        return [
-            'success' => false,
-            'code' => 'ALREADY_PRESENT',
-            'message' => 'Anda sudah melakukan presensi hari ini.',
-            'data' => ['jam' => $existing['jam_masuk'], 'status' => $existing['status']],
-        ];
+    // Sesi tidak pernah diterima dari klien. Waktu server dan jadwal kelas menentukan aksi.
+    $waktuScan = new DateTimeImmutable();
+    $tanggal = $waktuScan->format('Y-m-d');
+    $jam = $waktuScan->format('H:i:s');
+    $settings = get_settings();
+    $jd = jadwal_hari($tanggal, (string) $siswa['kelas']);
+    $sesi = presensi_sesi($jd, $jam);
+    $existing = sudah_presensi_hari_ini($siswaId, $tanggal);
+    if ($sesi === 'pulang') {
+        $hambatan = presensi_hambatan_pulang($siswaId, $tanggal, $existing);
+        if ($hambatan !== '') return ['success' => false, 'code' => 'PULANG_REJECTED', 'message' => $hambatan];
+    } elseif ($existing && $sesi === 'datang') {
+        return ['success' => false, 'code' => 'ALREADY_PRESENT', 'message' => 'Anda sudah absen datang hari ini.',
+            'data' => ['jam' => $existing['jam_masuk'], 'status' => $existing['status']]];
     }
 
     // 6a. Sudah tercatat ALFA hari ini (absen ditutup)? Tidak boleh absen lagi; koreksi hanya lewat wali kelas/petugas.
     $alpaCek = $db->prepare("SELECT 1 FROM presensi WHERE siswa_id = :s AND tanggal = :t AND status = 'ALPA' LIMIT 1");
-    $alpaCek->execute([':s' => $siswaId, ':t' => date('Y-m-d')]);
+    $alpaCek->execute([':s' => $siswaId, ':t' => $tanggal]);
     if ($alpaCek->fetchColumn()) {
         security_log($siswaId, 'PRESENCE_REJECTED', null, 'Sudah tercatat Alfa hari ini.');
         return [
@@ -189,9 +193,9 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
 
     // 6b. Sudah mengajukan izin/sakit (menunggu atau disetujui) untuk hari ini? Tidak boleh absen.
     try {
-        $iz = $db->prepare("SELECT jenis, status FROM izin_pengajuan WHERE siswa_id = :s AND status IN ('menunggu','disetujui')
-                            AND tanggal_mulai <= :t AND tanggal_selesai >= :t LIMIT 1");
-        $iz->execute([':s' => $siswaId, ':t' => date('Y-m-d')]);
+        $iz = $db->prepare("SELECT jenis, status FROM izin_pengajuan WHERE siswa_id = :s AND jenis IN ('izin','sakit') AND status IN ('menunggu','disetujui')
+                            AND tanggal_mulai <= :t AND tanggal_selesai >= :t2 LIMIT 1");
+        $iz->execute([':s' => $siswaId, ':t' => $tanggal, ':t2' => $tanggal]);
         $izRow = $iz->fetch();
     } catch (Throwable $e) {
         $izRow = null;
@@ -206,12 +210,7 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
         ];
     }
 
-    // 7 & 8. Tanggal & jam server (SUMBER WAKTU SELALU DARI SERVER, bukan dari klien)
-    $tanggal = date('Y-m-d');
-    $jam = date('H:i:s');
-    $settings = get_settings();
-    // Jadwal untuk KELAS siswa ini hari ini (memperhitungkan agenda sekolah: libur / ujian / kegiatan di luar kelas).
-    $jd = jadwal_hari($tanggal, (string) $siswa['kelas']);
+    // 7 & 8. Pakai SATU snapshot waktu server di atas agar sesi/cutoff tidak berbeda saat melintasi batas detik.
 
     // 8a. Hari non-efektif (Sabtu/Minggu) atau hari libur yang dijadwalkan -> presensi ditutup.
     if (!$jd['efektif']) {
@@ -240,16 +239,16 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
     }
 
     // 8c. Lewat batas absen masuk -> scan ditutup (siswa yang belum absen dicatat ALPA otomatis).
-    if ($jam >= $jd['batas_absen']) {
+    if ($sesi === null) {
         security_log($siswaId, 'PRESENCE_REJECTED', null, 'Presensi setelah batas absen (' . substr($jd['batas_absen'], 0, 5) . ').');
         return [
             'success' => false,
             'code' => 'CLOSED',
-            'message' => 'Absen masuk hari ini sudah ditutup pukul ' . substr($jd['batas_absen'], 0, 5) . '. Siswa yang belum absen tercatat Alpa. Bila Anda hadir, hubungi wali kelas/petugas.',
+            'message' => 'Di luar jendela scan. Datang ' . substr($jd['jam_buka'], 0, 5) . '–' . substr($jd['batas_absen'], 0, 5) . '; pulang ' . substr($jd['pulang_buka'], 0, 5) . '–' . substr($jd['pulang_tutup'], 0, 5) . '. Scan ditolak.',
         ];
     }
 
-    $statusPresensi = $jam <= $jd['batas_terlambat'] ? 'HADIR' : 'TERLAMBAT';   // batas terlambat sesuai jadwal kelas hari ini
+    $statusPresensi = presensi_status_datang($jd, $jam);   // batas terlambat sesuai jadwal kelas hari ini
 
     // 9. Geolocation jika aktif
     if (!empty($settings['gps_aktif'])) {
@@ -265,6 +264,21 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
             security_log($siswaId, 'PRESENCE_REJECTED', null, 'Di luar radius sekolah (' . round($jarak) . 'm).');
             return ['success' => false, 'code' => 'OUT_OF_RANGE', 'message' => 'Presensi hanya dapat dilakukan di area sekolah.'];
         }
+    }
+
+    if ($sesi === 'pulang') {
+        // Compare-and-set: dua request tidak dapat mengisi jam pulang dua kali.
+        // Status/jam datang/metode/snapshot kelas tidak diganti.
+        $q = $db->prepare("UPDATE presensi SET jam_pulang=:jam WHERE id=:id AND jam_pulang IS NULL
+            AND status IN ('HADIR','TERLAMBAT') AND metode NOT IN ('PENGAJUAN','OTOMATIS') AND jam_masuk < :sekarang");
+        $q->execute([':jam' => $jam, ':id' => $existing['id'], ':sekarang' => $jam]);
+        if ($q->rowCount() !== 1) return ['success' => false, 'code' => 'PULANG_REJECTED', 'message' => 'Absen pulang sudah tercatat atau data datang berubah. Muat ulang halaman.'];
+        security_log($siswaId, 'PRESENCE_SUCCESS', build_device_hash($installUuid), "Presensi PULANG jam $jam");
+        return ['success' => true, 'code' => 'OK', 'message' => 'Absen pulang berhasil dicatat.', 'data' => [
+            'siswa_id' => $siswaId, 'nama' => $siswa['nama'], 'nis' => $siswa['nis'], 'kelas' => $siswa['kelas'],
+            'foto' => $siswa['foto'], 'status_siswa' => $siswa['status'], 'tanggal' => $tanggal,
+            'jam' => $jam, 'jam_masuk' => $existing['jam_masuk'], 'jam_pulang' => $jam,
+            'sesi' => 'pulang', 'status' => $existing['status'], 'device_new' => false]];
     }
 
     // 10. Simpan presensi (kelas_saat_presensi = SNAPSHOT kelas siswa SAAT
@@ -308,7 +322,7 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
         } catch (PDOException $e) {
             // Dua permintaan bersamaan (dobel-tap / jaringan lambat): UNIQUE(siswa_id, tanggal) menolak yang kedua.
             if ($e->getCode() !== '23000') throw $e;
-            $existing = sudah_presensi_hari_ini($siswaId);
+            $existing = sudah_presensi_hari_ini($siswaId, $tanggal);
             return [
                 'success' => false,
                 'code' => 'ALREADY_PRESENT',
@@ -335,6 +349,7 @@ function proses_simpan_presensi(int $siswaId, string $gateToken, string $install
             'tanggal' => $tanggal,
             'jam' => $jam,
             'status' => $statusPresensi,
+            'sesi' => 'datang',
             'device_new' => ($deviceResult['code'] === 'REGISTERED_NEW'),
         ],
     ];

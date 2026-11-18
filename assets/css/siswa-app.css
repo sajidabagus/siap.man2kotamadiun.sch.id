@@ -49,3 +49,4 @@ body.mode-siswa .ap-nav, body.ap-app .ap-nav { display: flex; }
 
 /* Tombol scan nonaktif (hari non-efektif / sudah presensi) */
 .ap-nav a.scan.mati, .ap-nav a.scan[aria-disabled="true"] { background: #b8c2d3; box-shadow: none; cursor: not-allowed; pointer-events: none; filter: none; }
+.ap-dispensasi { display: block; margin-top: 14px; padding: 14px 16px; border-radius: 14px; background: #eff6ff; color: #1e40af; text-decoration: none; overflow-wrap: anywhere; }

@@ -4,6 +4,8 @@
  * Izin 'izin.lihat' sudah diperiksa router. Setiap pembukaan dicatat di Log Keamanan sebagai jejak audit.
  * Sengaja TIDAK memuat header.php: keluarannya berkas, bukan halaman.
  */
+require_once __DIR__ . '/../includes/auth.php';
+require_login();
 require_once __DIR__ . '/../includes/izin.php';
 
 $row = izin_siapkan_tabel() ? izin_ambil((int) ($_GET['id'] ?? 0)) : null;
