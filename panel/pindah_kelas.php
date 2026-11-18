@@ -104,12 +104,6 @@ $st = $db->prepare("SELECT p.*, s.nama, s.nis, s.kelas AS kelas_sekarang, TIMEST
 $st->execute($params);
 $daftar = $st->fetchAll();
 
-$awalBulan = date('Y-m-01');
-$ringkas = [
-  'menunggu'  => (int) $db->query("SELECT COUNT(*) FROM pindah_kelas_pengajuan WHERE status = 'menunggu'")->fetchColumn(),
-  'disetujui' => (int) $db->query("SELECT COUNT(*) FROM pindah_kelas_pengajuan WHERE status = 'disetujui' AND diproses_at >= '$awalBulan'")->fetchColumn(),
-  'ditolak'   => (int) $db->query("SELECT COUNT(*) FROM pindah_kelas_pengajuan WHERE status = 'ditolak' AND diproses_at >= '$awalBulan'")->fetchColumn(),
-];
 $kelasList = $db->query("SELECT DISTINCT kelas FROM siswa WHERE status = 'aktif' ORDER BY kelas")->fetchAll(PDO::FETCH_COLUMN);
 
 $extraParams = ['status' => $statusF, 'kelas' => $kelas, 'q' => $q, 'limit' => $perPage];
@@ -127,36 +121,99 @@ $tunggu = function (int $jam): string {
   <h4 class="mb-0"><i class="bi bi-arrow-left-right"></i> Pengajuan Pindah Kelas</h4>
 </div>
 
-<div class="row g-2 mb-3">
-  <?php foreach ([['menunggu', 'warning', 'Menunggu persetujuan', $ringkas['menunggu']], ['disetujui', 'success', 'Disetujui bulan ini', $ringkas['disetujui']], ['ditolak', 'danger', 'Ditolak bulan ini', $ringkas['ditolak']]] as [$k, $w, $l, $n]): ?>
-    <div class="col-6 col-md-3">
-      <a class="card text-decoration-none h-100 <?= $statusF === $k ? 'border-primary' : '' ?>" href="<?= e(modul_url('pindah_kelas', ['status' => $k])) ?>">
-        <div class="card-body py-2 px-3">
-          <div class="fs-4 fw-bold text-<?= $w ?>"><?= $n ?></div>
-          <div class="small text-muted"><?= e($l) ?></div>
-        </div>
-      </a>
-    </div>
-  <?php endforeach; ?>
-</div>
+<style>
+  /* Bar filter: sama dengan halaman Data Presensi */
+  .pf-filter {
+    display: grid !important;
+    grid-template-columns: auto auto auto minmax(200px, 1fr) auto;
+    align-items: center;
+    gap: .75rem !important;
+    width: 100%;
+  }
 
-<div class="tbl-card">
-  <div class="tbl-tools">
-    <form method="get" data-live data-live-target="#hasil-live"><?= hidden_modul() ?>
-      <?= render_per_page_field($perPage, false) ?>
-      <div class="tbl-search"><i class="bi bi-search"></i><input type="text" name="q" class="form-control" placeholder="Cari nama/NIS/NISN..." value="<?= e($q) ?>"></div>
-      <select name="status" class="form-select">
+  .pf-filter>* {
+    margin: 0 !important;
+    min-width: 0;
+  }
+
+  .pf-filter .form-select,
+  .pf-filter .form-control {
+    width: 100% !important;
+    flex: none !important;
+    max-width: none !important;
+  }
+
+  .pf-filter .pf-pp {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    white-space: nowrap;
+  }
+
+  .pf-filter .pf-pp .form-select {
+    width: auto !important;
+  }
+
+  .pf-filter .pf-sel {
+    min-width: 150px;
+  }
+
+  .pf-filter .pf-btn {
+    white-space: nowrap;
+  }
+
+  .pf-filter .pf-search {
+    position: relative;
+  }
+
+  .pf-filter .pf-search .bi-search {
+    position: absolute;
+    top: 50%;
+    left: .85rem;
+    transform: translateY(-50%);
+    color: #6c757d;
+    pointer-events: none;
+  }
+
+  .pf-filter .pf-search .form-control {
+    padding-left: 2.4rem;
+  }
+
+  @media (max-width: 991.98px) {
+    .pf-filter {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .pf-filter .pf-pp,
+    .pf-filter .pf-search {
+      grid-column: 1 / -1;
+    }
+  }
+</style>
+
+<!-- Kartu filter -->
+<div class="tbl-card mb-3">
+  <div class="p-3">
+    <form method="get" data-live data-live-target="#hasil-live" id="formFilter" class="pf-filter"><?= hidden_modul() ?>
+      <div class="pf-pp"><?= render_per_page_field($perPage, false) ?></div>
+      <select name="status" class="form-select pf-sel">
         <?php foreach (['menunggu' => 'Menunggu', 'disetujui' => 'Disetujui', 'ditolak' => 'Ditolak', 'dibatalkan' => 'Dibatalkan siswa', 'semua' => 'Semua status'] as $k => $l): ?>
           <option value="<?= $k ?>" <?= $statusF === $k ? 'selected' : '' ?>><?= e($l) ?></option><?php endforeach; ?>
       </select>
-      <select name="kelas" class="form-select">
+      <select name="kelas" class="form-select pf-sel">
         <option value="">Semua Kelas</option>
         <?php foreach ($kelasList as $k): ?><option value="<?= e($k) ?>" <?= $kelas === $k ? 'selected' : '' ?>><?= e($k) ?></option><?php endforeach; ?>
       </select>
-      <a href="<?= e(modul_url('pindah_kelas')) ?>" class="btn btn-light border" title="Hapus filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
+      <div class="pf-search">
+        <i class="bi bi-search"></i>
+        <input type="search" name="q" class="form-control" value="<?= e($q) ?>" placeholder="Cari nama siswa / NIS..." autocomplete="off">
+      </div>
+      <a href="<?= e(modul_url('pindah_kelas')) ?>" class="btn btn-primary pf-btn" title="Hapus semua filter">Reset</a>
     </form>
   </div>
+</div>
 
+<div class="tbl-card">
   <div id="hasil-live">
     <div class="table-responsive">
       <table class="table tbl align-middle">
@@ -200,7 +257,7 @@ $tunggu = function (int $jam): string {
             </tr>
           <?php endforeach; ?>
           <?php if (!$daftar): ?><tr>
-              <td colspan="6" class="text-center text-muted py-4"><?= $statusF === 'menunggu' ? 'Tidak ada pengajuan yang menunggu. 🎉' : 'Tidak ada data yang cocok.' ?></td>
+              <td colspan="6" class="text-center text-muted py-4"><?= $statusF === 'menunggu' ? 'Tidak ada pengajuan yang menunggu.' : 'Tidak ada data yang cocok.' ?></td>
             </tr><?php endif; ?>
         </tbody>
       </table>

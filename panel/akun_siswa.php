@@ -592,76 +592,129 @@ $jumlahTanpaPerangkat = (int) $stTanpaPerangkat->fetchColumn();
         <button class="btn btn-sm btn-outline-secondary"><?= $portalBuka ? '<i class="bi bi-lock"></i> Tutup portal' : '<i class="bi bi-unlock"></i> Buka portal' ?></button>
       </form>
     <?php endif; ?>
+    <?php if ($bolehKelola && $jumlahBelumAktif > 0): ?>
+      <form method="post" class="d-inline" onsubmit="return confirm('Terbitkan kode aktivasi untuk semua siswa yang belum aktif<?= $kelas !== '' ? ' di kelas ' . e($kelas) : ' (seluruh sekolah)' ?>?\n\nKode lama yang belum dipakai akan diganti.')">
+        <?= csrf_field() ?><input type="hidden" name="aksi" value="kode_kelas"><input type="hidden" name="nonce" value="<?= e($nonce) ?>"><input type="hidden" name="kelas" value="<?= e($kelas) ?>"><input type="hidden" name="kembali" value="<?= e($kembali) ?>">
+        <button class="btn btn-primary text-nowrap"><i class="bi bi-key"></i> Terbitkan kode: semua yang belum aktif<?= $kelas !== '' ? ' di ' . e($kelas) : '' ?></button>
+      </form>
+    <?php endif; ?>
+    <?php if ($bolehKelola && $perangkatF === 'belum' && $jumlahTanpaPerangkat > 0): ?>
+      <form method="post" class="d-inline" onsubmit="return confirm('Terbitkan kode perangkat untuk <?= $jumlahTanpaPerangkat ?> siswa yang akun portalnya sudah aktif tetapi belum mendaftarkan perangkat<?= $kelas !== '' ? ' di kelas ' . e($kelas) : ' di seluruh sekolah' ?>?\n\nAkun dan password siswa tidak akan diubah.')">
+        <?= csrf_field() ?><input type="hidden" name="aksi" value="kode_perangkat_kelas"><input type="hidden" name="nonce" value="<?= e($nonce) ?>"><input type="hidden" name="kelas" value="<?= e($kelas) ?>"><input type="hidden" name="kembali" value="<?= e($kembali) ?>">
+        <button class="btn btn-outline-primary text-nowrap"><i class="bi bi-phone-vibrate"></i> Terbitkan kode perangkat: semua yang Belum (<?= $jumlahTanpaPerangkat ?>)</button>
+      </form>
+    <?php endif; ?>
+    <?php if ($bolehKelola): ?>
+      <form method="post" id="formPilih" class="d-inline-flex align-items-center gap-2" onsubmit="return pilihAda()">
+        <?= csrf_field() ?><input type="hidden" name="aksi" value="kode_terpilih"><input type="hidden" name="nonce" value="<?= e($nonce) ?>"><input type="hidden" name="kembali" value="<?= e($kembali) ?>">
+        <button class="btn btn-outline-primary text-nowrap"><i class="bi bi-key"></i> Terbitkan kode untuk yang dicentang</button>
+        <span class="small text-muted" id="infoPilih"></span>
+      </form>
+    <?php endif; ?>
   </div>
 </div>
 
-<div class="row g-2 mb-3">
-  <?php foreach (['aktif' => ['success', 'Aktif'], 'menunggu' => ['warning', 'Menunggu aktivasi'], 'kedaluwarsa' => ['danger', 'Kode kedaluwarsa'], 'belum' => ['secondary', 'Belum dibuat'], 'nonaktif' => ['dark', 'Diblokir'], 'masalah' => ['warning', 'NISN bermasalah']] as $k => [$warna, $label]): ?>
-    <div class="col-6 col-md-2">
-      <a class="card text-decoration-none h-100 <?= $statusF === $k ? 'border-primary' : '' ?>" href="<?= e(modul_url('akun_siswa', ['status' => $statusF === $k ? '' : $k, 'kelas' => $kelas, 'limit' => $perPage])) ?>">
-        <div class="card-body py-2 px-3">
-          <div class="fs-4 fw-bold text-<?= $warna ?>"><?= $ringkas[$k] ?></div>
-          <div class="small text-muted"><?= e($label) ?></div>
-        </div>
-      </a>
-    </div>
-  <?php endforeach; ?>
+<style>
+  /* Bar filter: sama dengan halaman Data Presensi */
+  .pf-filter {
+    display: grid !important;
+    grid-template-columns: auto auto auto auto minmax(200px, 1fr) auto;
+    align-items: center;
+    gap: .75rem !important;
+    width: 100%;
+  }
+
+  .pf-filter>* {
+    margin: 0 !important;
+    min-width: 0;
+  }
+
+  .pf-filter .form-select,
+  .pf-filter .form-control {
+    width: 100% !important;
+    flex: none !important;
+    max-width: none !important;
+  }
+
+  .pf-filter .pf-pp {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    white-space: nowrap;
+  }
+
+  .pf-filter .pf-pp .form-select {
+    width: auto !important;
+  }
+
+  .pf-filter .pf-sel {
+    min-width: 150px;
+  }
+
+  .pf-filter .pf-btn {
+    white-space: nowrap;
+  }
+
+  .pf-filter .pf-search {
+    position: relative;
+  }
+
+  .pf-filter .pf-search .bi-search {
+    position: absolute;
+    top: 50%;
+    left: .85rem;
+    transform: translateY(-50%);
+    color: #6c757d;
+    pointer-events: none;
+  }
+
+  .pf-filter .pf-search .form-control {
+    padding-left: 2.4rem;
+  }
+
+  @media (max-width: 1199.98px) {
+    .pf-filter {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .pf-filter .pf-pp,
+    .pf-filter .pf-search {
+      grid-column: 1 / -1;
+    }
+  }
+</style>
+
+<!-- Kartu filter -->
+<div class="tbl-card mb-3">
+  <div class="p-3">
+    <form method="get" data-live data-live-target="#hasil-live" id="formFilter" class="pf-filter"><?= hidden_modul() ?>
+      <div class="pf-pp"><?= render_per_page_field($perPage, false) ?></div>
+      <select name="kelas" class="form-select pf-sel">
+        <option value="">Semua Kelas</option>
+        <?php foreach ($kelasList as $k): ?><option value="<?= e($k) ?>" <?= $kelas === $k ? 'selected' : '' ?>><?= e($k) ?></option><?php endforeach; ?>
+      </select>
+      <select name="status" class="form-select pf-sel">
+        <option value="">Semua Status</option>
+        <?php foreach ($daftarStatus as $k => $label): ?><option value="<?= e($k) ?>" <?= $statusF === $k ? 'selected' : '' ?>><?= e($label) ?></option><?php endforeach; ?>
+      </select>
+      <select name="perangkat" class="form-select pf-sel">
+        <option value="">Semua Perangkat</option>
+        <?php foreach ($daftarPerangkat as $k => $label): ?><option value="<?= e($k) ?>" <?= $perangkatF === $k ? 'selected' : '' ?>><?= e($label) ?></option><?php endforeach; ?>
+      </select>
+      <div class="pf-search">
+        <i class="bi bi-search"></i>
+        <input type="search" name="q" class="form-control" value="<?= e($q) ?>" placeholder="Cari nama siswa / NIS..." autocomplete="off">
+      </div>
+      <a href="<?= e(modul_url('akun_siswa')) ?>" class="btn btn-primary pf-btn" title="Hapus semua filter">Reset</a>
+    </form>
+  </div>
 </div>
-
-<?php if ($bolehKelola && $jumlahBelumAktif > 0): ?>
-  <div class="d-flex flex-wrap gap-2 mb-3">
-    <form method="post" onsubmit="return confirm('Terbitkan kode aktivasi untuk semua siswa yang belum aktif<?= $kelas !== '' ? ' di kelas ' . e($kelas) : ' (seluruh sekolah)' ?>?\n\nKode lama yang belum dipakai akan diganti.')">
-      <?= csrf_field() ?><input type="hidden" name="aksi" value="kode_kelas"><input type="hidden" name="nonce" value="<?= e($nonce) ?>"><input type="hidden" name="kelas" value="<?= e($kelas) ?>"><input type="hidden" name="kembali" value="<?= e($kembali) ?>">
-      <button class="btn btn-primary"><i class="bi bi-key"></i> Terbitkan kode: semua yang belum aktif<?= $kelas !== '' ? ' di ' . e($kelas) : ' (seluruh sekolah)' ?></button>
-    </form>
-  </div>
-<?php endif; ?>
-
-<?php if ($bolehKelola && $perangkatF === 'belum' && $jumlahTanpaPerangkat > 0): ?>
-  <div class="d-flex flex-wrap gap-2 mb-3">
-    <form method="post" onsubmit="return confirm('Terbitkan kode perangkat untuk <?= $jumlahTanpaPerangkat ?> siswa yang akun portalnya sudah aktif tetapi belum mendaftarkan perangkat<?= $kelas !== '' ? ' di kelas ' . e($kelas) : ' di seluruh sekolah' ?>?\n\nAkun dan password siswa tidak akan diubah.')">
-      <?= csrf_field() ?><input type="hidden" name="aksi" value="kode_perangkat_kelas"><input type="hidden" name="nonce" value="<?= e($nonce) ?>"><input type="hidden" name="kelas" value="<?= e($kelas) ?>"><input type="hidden" name="kembali" value="<?= e($kembali) ?>">
-      <button class="btn btn-outline-primary"><i class="bi bi-phone-vibrate"></i> Terbitkan kode perangkat: semua yang Belum (<?= $jumlahTanpaPerangkat ?>)</button>
-    </form>
-  </div>
-<?php endif; ?>
 
 <div class="tbl-card">
   <div class="tbl-head">
     <h6>Daftar akun</h6>
     <div class="sub">Hanya siswa berstatus aktif. Siswa tanpa NISN (atau NISN ganda) tidak bisa dibuatkan akun.</div>
   </div>
-
-  <div class="tbl-tools">
-    <form method="get" data-live data-live-target="#hasil-live"><?= hidden_modul() ?>
-      <?= render_per_page_field($perPage, false) ?>
-      <div class="tbl-search">
-        <i class="bi bi-search"></i>
-        <input type="text" name="q" class="form-control" placeholder="Cari nama/NIS/NISN..." value="<?= e($q) ?>">
-      </div>
-      <select name="kelas" class="form-select">
-        <option value="">Semua Kelas</option>
-        <?php foreach ($kelasList as $k): ?><option value="<?= e($k) ?>" <?= $kelas === $k ? 'selected' : '' ?>><?= e($k) ?></option><?php endforeach; ?>
-      </select>
-      <select name="status" class="form-select">
-        <option value="">Semua Status</option>
-        <?php foreach ($daftarStatus as $k => $label): ?><option value="<?= e($k) ?>" <?= $statusF === $k ? 'selected' : '' ?>><?= e($label) ?></option><?php endforeach; ?>
-      </select>
-      <select name="perangkat" class="form-select">
-        <option value="">Semua Perangkat</option>
-        <?php foreach ($daftarPerangkat as $k => $label): ?><option value="<?= e($k) ?>" <?= $perangkatF === $k ? 'selected' : '' ?>><?= e($label) ?></option><?php endforeach; ?>
-      </select>
-      <a href="<?= e(modul_url('akun_siswa')) ?>" class="btn btn-light border" title="Hapus semua filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
-    </form>
-  </div>
-
-  <?php if ($bolehKelola): ?>
-    <form method="post" id="formPilih" class="px-3 pb-2 d-flex flex-wrap gap-2 align-items-center" onsubmit="return pilihAda()">
-      <?= csrf_field() ?><input type="hidden" name="aksi" value="kode_terpilih"><input type="hidden" name="nonce" value="<?= e($nonce) ?>"><input type="hidden" name="kembali" value="<?= e($kembali) ?>">
-      <button class="btn btn-sm btn-outline-primary"><i class="bi bi-key"></i> Terbitkan kode untuk yang dicentang</button>
-      <span class="small text-muted" id="infoPilih"></span>
-    </form>
-  <?php endif; ?>
 
   <div id="hasil-live">
     <div class="table-responsive">
