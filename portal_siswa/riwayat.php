@@ -1,5 +1,5 @@
 <?php
-// /portal/riwayat — riwayat absensi per bulan. Hanya status yang ada di data (tidak ada jam pulang, tidak ada hari "ditebak").
+// /portal/riwayat — riwayat absensi per bulan. Hanya status yang ada di data (jam pulang dari data, tidak ada hari "ditebak").
 $akun = portal_wajib_login();
 $sid = (int) $akun['siswa_id'];
 
@@ -35,6 +35,7 @@ portal_app_awal('Riwayat Absensi', $akun, 'riwayat', ['kembali' => '', 'aksi' =>
   <?php endforeach; ?>
 </div>
 
+<p class="pt-kosong">Pulang tercatat: <b><?= presensi_jumlah_pulang($sid, $bulan) ?></b> hari. Tidak mengurangi hitungan hadir.</p>
 <div class="pt-ringkas-baris" aria-label="Ringkasan <?= e(portal_bulan_teks($bulan)) ?>">
   <?php foreach (PORTAL_LABEL_STATUS as $k => $label): if ($rekap[$k] > 0): ?><span><?= e($label) ?> <b><?= (int) $rekap[$k] ?></b></span><?php endif; endforeach; ?>
   <?php if (array_sum($rekap) === 0): ?><span>Belum ada catatan pada bulan ini</span><?php endif; ?>
@@ -45,12 +46,12 @@ portal_app_awal('Riwayat Absensi', $akun, 'riwayat', ['kembali' => '', 'aksi' =>
   <?php foreach ($daftar as $r):
     $t = strtotime($r['tanggal']);
     $jam = substr((string) $r['jam_masuk'], 0, 5);
-    // Tampilan seperti desain: Hadir -> kolom Masuk & Pulang (Pulang "-" karena saat ini hanya absen masuk);
+    // Tampilan seperti desain: Hadir -> kolom Masuk & Pulang (Pulang dari data; kosong = belum tercatat);
     // Izin/Sakit -> judul "Izin" + Keterangan (Izin/Sakit); Alfa -> tanpa rincian.
     $judul = PORTAL_LABEL_STATUS[$r['status']] ?? $r['status'];
     $kolom = null; $rinci = null;
     if (in_array($r['status'], ['HADIR', 'TERLAMBAT'], true)) {
-        if ($r['metode'] !== 'PENGAJUAN' && $jam !== '' && $jam !== '00:00') $kolom = [['Masuk', $jam . ' ' . $zona], ['Pulang', '-']];
+        if ($r['metode'] !== 'PENGAJUAN' && $jam !== '' && $jam !== '00:00') $kolom = [['Masuk', $jam . ' ' . $zona], ['Pulang', !empty($r['jam_pulang']) ? substr($r['jam_pulang'], 0, 5) . ' ' . $zona : 'Belum tercatat']];
         else $rinci = ['Keterangan', $r['metode'] === 'PENGAJUAN' ? 'Pengajuan disetujui' : 'Dicatat petugas'];
     } elseif (in_array($r['status'], ['IZIN', 'SAKIT'], true)) {
         $judul = 'Izin';

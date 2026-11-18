@@ -374,3 +374,21 @@ server tanpa internet. Untuk memperbarui, cukup ganti file di folder `vendor/`.
   Permintaan API / AJAX dijawab JSON (`{"success":false,"code":"DB_UNAVAILABLE",...}`), dan popup formulir
   hanya menampilkan pesan singkat. Logikanya ada di `tampilkan_error_database()` di `config/database.php`.
 - Ganti password `admin` bawaan dan password database sebelum dipakai produksi.
+
+
+## Absen datang dan pulang
+
+Sesi otomatis mengikuti jam server saat konfirmasi: datang atau pulang. Pengaturan
+**Jam absensi** menyediakan jendela datang/pulang, batas terlambat opsional dan
+linimasa live. Pulang wajib sudah datang hari itu; tidak mengubah status/jam datang.
+Belum pulang tidak otomatis menjadi Alpa. Alpa tetap mengikuti **tutup datang**.
+
+**Instalasi existing: backup dan jalankan migrasi additive sebelum rilis kode:**
+`php database/migrate_absen_pulang.php` lalu `php database/migrate_absen_pulang.php --check`.
+Periksa jam datang existing, default pulang13:00–16:00 dan agenda per kelas di staging.
+Jangan import ulang dump untuk memperbarui database yang sudah berisi data.
+
+Aturan rinci, desain, langkah rilis/rollback dan keterbatasan:
+[`docs/absen-pulang.md`](docs/absen-pulang.md).
+Regresi MariaDB/PHP HTTP/browser:
+[`tests/pulang/README.md`](tests/pulang/README.md).

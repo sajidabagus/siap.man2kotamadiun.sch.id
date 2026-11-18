@@ -162,13 +162,15 @@ function jadwal_hari(?string $tanggal = null, ?string $kelas = null): array
     $tanggal = $tanggal ?: date('Y-m-d');
     $s = get_settings();
     $buka = agenda_waktu($s['jam_masuk'] ?? '', '');
-    $terlambat = agenda_waktu($s['batas_terlambat'] ?? '', '07:15:00');
+    $terlambat = !isset($s['terlambat_aktif']) || $s['terlambat_aktif'] ? agenda_waktu($s['batas_terlambat'] ?? '', '07:15:00') : '';
     $absen = agenda_waktu($s['batas_absen'] ?? '', '10:00:00');
 
     $hasil = [
         'efektif' => in_array((int) date('N', strtotime($tanggal)), get_hari_efektif(), true),
         'jenis' => 'normal', 'agenda' => null, 'judul' => '', 'ket' => '',
         'jam_buka' => $buka, 'batas_terlambat' => $terlambat, 'batas_absen' => $absen,
+        'pulang_buka' => agenda_waktu($s['pulang_buka'] ?? '', '13:00:00'),
+        'pulang_tutup' => agenda_waktu($s['pulang_tutup'] ?? '', '16:00:00'),
     ];
     if (!$hasil['efektif']) $hasil['jenis'] = 'mingguan';
 
@@ -185,7 +187,7 @@ function jadwal_hari(?string $tanggal = null, ?string $kelas = null): array
     }
     $hasil['efektif'] = true;                                         // ujian/kegiatan membuka presensi walau hari non-efektif
     $hasil['jam_buka'] = agenda_waktu($a['jam_buka'] ?? '', $buka);
-    $hasil['batas_terlambat'] = agenda_waktu($a['batas_terlambat'] ?? '', $terlambat);
+    $hasil['batas_terlambat'] = $terlambat === '' ? '' : agenda_waktu($a['batas_terlambat'] ?? '', $terlambat);
     $hasil['batas_absen'] = agenda_waktu($a['batas_absen'] ?? '', $absen);
     return $hasil;
 }

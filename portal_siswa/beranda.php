@@ -22,7 +22,7 @@ $zona = portal_zona_label();
 $kata = preg_split('/\s+/', trim((string) $akun['nama']));
 $namaDepan = mb_convert_case(mb_strtolower($kata[0] ?? ''), MB_CASE_TITLE, 'UTF-8');
 
-// Status hari ini (hanya yang ada di data; tidak ada jam pulang)
+// Status hari ini (hanya yang ada di data; jam pulang dari data)
 $kunciStatus = $p['status'] ?? 'BELUM';
 $ikonStatus = ['HADIR' => 'check-lg', 'TERLAMBAT' => 'clock-history', 'IZIN' => 'file-earmark-text-fill', 'SAKIT' => 'heart-pulse-fill', 'ALPA' => 'x-lg', 'BELUM' => 'hourglass-split'][$kunciStatus];
 $judulStatus = $p ? (PORTAL_LABEL_STATUS[$p['status']] ?? $p['status']) : 'Belum absen';
@@ -30,7 +30,7 @@ if (!$p) {
     $jdKelas = jadwal_hari(null, (string) ($akun['kelas'] ?? ''));
     $subStatus = $jdKelas['jenis'] === 'libur' ? $jdKelas['ket'] . ' — presensi ditutup, tidak dicatat Alpa.' : (absen_sudah_ditutup(null, null, (string) ($akun['kelas'] ?? '')) && $jdKelas['efektif'] ? 'Absen masuk sudah ditutup pukul ' . substr($jdKelas['batas_absen'], 0, 5) . '.' : ($jdKelas['agenda'] ? $jdKelas['ket'] . ' · absen s.d. ' . substr($jdKelas['batas_absen'], 0, 5) . '.' : 'Scan QR absen saat tiba di sekolah.'));
 } elseif (in_array($p['status'], ['HADIR', 'TERLAMBAT'], true) && $p['metode'] !== 'PENGAJUAN' && substr((string) $p['jam_masuk'], 0, 5) !== '00:00') {
-    $subStatus = 'Masuk: ' . substr((string) $p['jam_masuk'], 0, 5) . ' ' . $zona;
+    $subStatus = 'Datang: ' . substr((string) $p['jam_masuk'], 0, 5) . ' · Pulang: ' . (!empty($p['jam_pulang']) ? substr($p['jam_pulang'], 0, 5) : 'Belum tercatat') . ' ' . $zona;
 } else {
     $subStatus = $p['metode'] === 'PENGAJUAN' ? 'Pengajuan disetujui' : ($p['metode'] === 'OTOMATIS' ? 'Tidak absen sampai batas ' . substr(batas_absen(null, (string) ($akun['kelas'] ?? '')), 0, 5) : 'Dicatat petugas');
 }
@@ -92,6 +92,7 @@ if ($galatFlash !== '') portal_alert('err', $galatFlash);
 <?php foreach (dispensasi_daftar_hari($hariIni, $hariIni, $sid) as $disp): ?>
 <a class="pt-peringatan" href="<?= e(portal_url('izin/' . $disp['id'])) ?>"><i class="bi bi-person-workspace"></i><span><b>Dispensasi disetujui</b><br><?= e(dispensasi_teks_durasi($disp)) ?> · <?= e($disp['alasan']) ?></span></a>
 <?php endforeach; ?>
+<p class="pt-kosong">Pulang tercatat bulan ini: <b><?= presensi_jumlah_pulang($sid, $bulanIni) ?></b> hari.</p>
 <div class="pt-sec"><h2>Ringkasan Bulan Ini</h2><a href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni])) ?>">Lihat Semua <i class="bi bi-chevron-right sd-ik"></i></a></div>
 <div class="pt-ringkas">
   <a class="h" href="<?= e(portal_url('riwayat', ['bulan' => $bulanIni])) ?>"><em class="sd-bul"><i class="bi bi-check-lg"></i></em><b><?= $hadir ?></b><span>Hadir</span><?php if ($rekap['TERLAMBAT'] > 0): ?><small><?= $rekap['TERLAMBAT'] ?> terlambat</small><?php else: ?><small class="sd-only">Tepat waktu</small><?php endif; ?><i class="bi bi-calendar-check"></i><s class="sd-ch bi bi-chevron-right"></s></a>

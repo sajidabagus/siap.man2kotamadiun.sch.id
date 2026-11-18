@@ -49,9 +49,9 @@ if ($mode === 'device') {
             : 'Presensi ditutup hari ini (bukan hari efektif).']);
     }
 
-    // Sudah presensi hari ini -> jangan lanjut ke konfirmasi
+    // Pulang memerlukan catatan datang; keputusan akhir diperiksa lagi saat simpan.
     $sudahHariIni = sudah_presensi_hari_ini((int) $siswa['id']);
-    if ($sudahHariIni) {
+    if ($sudahHariIni && presensi_sesi($jdKelas) !== 'pulang') {
         json_response(['success' => true, 'code' => 'ALREADY_PRESENT', 'message' => 'Anda sudah presensi hari ini.', 'data' => [
             'jam' => $sudahHariIni['jam_masuk'], 'status' => $sudahHariIni['status'],
         ]]);
@@ -88,7 +88,7 @@ if ($mode === 'preview') {
     if (!$siswa) json_response(['success' => false, 'code' => 'NOT_FOUND', 'message' => 'Siswa tidak ditemukan.']);
 
     $sudah = sudah_presensi_hari_ini($siswaId);
-    if ($sudah) {
+    if ($sudah && presensi_sesi(jadwal_hari(null, (string) $siswa['kelas'])) !== 'pulang') {
         json_response(['success' => true, 'code' => 'ALREADY_PRESENT', 'data' => [
             'nama' => $siswa['nama'], 'jam' => $sudah['jam_masuk'], 'status' => $sudah['status'],
         ]]);

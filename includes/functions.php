@@ -637,6 +637,7 @@ function get_hari_efektif(): array
 }
 
 require_once __DIR__ . '/agenda.php';
+require_once __DIR__ . '/pulang.php';
 
 /**
  * Apakah tanggal (Y-m-d, default hari ini) termasuk hari efektif presensi?
@@ -1039,7 +1040,7 @@ function jalankan_alpa_otomatis(): void
 // ---------------------------------------------------------------------
 function tentukan_status_presensi(string $jamSekarangHms, ?string $tanggal = null, ?string $kelas = null): string
 {
-    return ($jamSekarangHms <= jadwal_hari($tanggal, $kelas)['batas_terlambat']) ? 'HADIR' : 'TERLAMBAT';
+    return presensi_status_datang(jadwal_hari($tanggal, $kelas), $jamSekarangHms);
 }
 
 // ---------------------------------------------------------------------

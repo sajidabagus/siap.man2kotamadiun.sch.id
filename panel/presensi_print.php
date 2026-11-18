@@ -48,7 +48,7 @@ $stmt = $db->prepare(
         s.nama,
         s.jurusan,
         p.kelas_saat_presensi AS kelas,
-        p.jam_masuk,
+        p.jam_masuk, p.jam_pulang,
         p.status,
         p.metode
      FROM presensi p
@@ -652,7 +652,7 @@ $namaKementerian = 'KEMENTERIAN AGAMA REPUBLIK INDONESIA';
           <th>NISN</th>
           <th>Nama</th>
           <th>Kelas</th>
-          <th>Jam</th>
+          <th>Datang</th><th>Pulang</th>
           <th>Status</th>
           <th>Metode</th>
         </tr>
@@ -694,7 +694,8 @@ $namaKementerian = 'KEMENTERIAN AGAMA REPUBLIK INDONESIA';
 
             </td>
 
-            <td class="c">
+            <td class="c"><?= !empty($r['jam_pulang']) && in_array($r['status'], ['HADIR','TERLAMBAT'], true) ? e(substr($r['jam_pulang'],0,5)) : '—' ?></td>
+              <td class="c">
               <?= e($r['status']) ?>
             </td>
 
@@ -710,7 +711,7 @@ $namaKementerian = 'KEMENTERIAN AGAMA REPUBLIK INDONESIA';
         <?php if (!$data): ?>
 
           <tr>
-            <td colspan="7" class="kosong">
+            <td colspan="8" class="kosong">
               Tidak ada data.
             </td>
           </tr>

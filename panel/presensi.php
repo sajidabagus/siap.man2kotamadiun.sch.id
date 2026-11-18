@@ -159,7 +159,7 @@ $extraParams = compact('tanggal', 'kelas', 'jurusan', 'status') + ['limit' => $p
           <th>Nama</th>
           <th>Kelas</th>
           <th>Tanggal</th>
-          <th>Jam</th>
+          <th>Datang</th><th>Pulang</th>
           <th>Status</th>
           <th>Metode</th>
           <?php if ($bolehUbah): ?><th class="no-print" style="width:1%"></th><?php endif; ?>
@@ -174,6 +174,7 @@ $extraParams = compact('tanggal', 'kelas', 'jurusan', 'status') + ['limit' => $p
             <td><?= e($r['kelas']) ?></td>
             <td><?= e($r['tanggal']) ?></td>
             <td><?= (in_array($r['metode'], ['PENGAJUAN', 'OTOMATIS'], true) || $r['jam_masuk'] === '00:00:00') ? '—' : e($r['jam_masuk']) ?></td>
+            <td><?= in_array($r['status'], ['HADIR','TERLAMBAT'], true) && !empty($r['jam_pulang']) ? e(substr($r['jam_pulang'], 0, 5)) : '—' ?></td>
             <td><span class="badge bg-<?= $r['status'] === 'HADIR' ? 'success' : ($r['status'] === 'TERLAMBAT' ? 'warning' : 'secondary') ?>"><?= e($r['status']) ?></span></td>
             <td><?= e($r['metode']) ?><?= $r['metode'] === 'MANUAL' ? ' <i class="bi bi-pencil-square text-primary" title="Diubah/ditambah manual oleh petugas (lihat Log Aktivitas)"></i>' : '' ?></td>
             <?php if ($bolehUbah): ?>
@@ -184,7 +185,7 @@ $extraParams = compact('tanggal', 'kelas', 'jurusan', 'status') + ['limit' => $p
           </tr>
         <?php endforeach; ?>
         <?php if (!$data): ?><tr>
-            <td colspan="<?= $bolehUbah ? 9 : 8 ?>" class="text-center text-muted py-4">Tidak ada data.</td>
+            <td colspan="<?= $bolehUbah ? 10 : 9 ?>" class="text-center text-muted py-4">Tidak ada data.</td>
           </tr><?php endif; ?>
       </tbody>
     </table>
