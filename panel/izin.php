@@ -143,54 +143,194 @@ $tunggu = function (int $jam): string {
   <h4 class="mb-0"><i class="bi bi-envelope-paper"></i> Pengajuan Izin, Sakit &amp; Dispensasi</h4>
 </div>
 
-<div class="row g-2 mb-3">
-  <?php foreach ([['menunggu', 'warning', 'Menunggu persetujuan', $ringkas['menunggu']], ['disetujui', 'success', 'Disetujui bulan ini', $ringkas['disetujui']], ['ditolak', 'danger', 'Ditolak bulan ini', $ringkas['ditolak']]] as [$k, $w, $l, $n]): ?>
+<style>
+  /* Kotak ringkasan: bersih, tanpa warna, dengan ikon */
+  .iz-stat {
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    height: 100%;
+    padding: .9rem 1.1rem;
+    border-radius: 14px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    color: #212529;
+    text-decoration: none;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, .06);
+    transition: box-shadow .15s ease, border-color .15s ease;
+  }
+
+  a.iz-stat:hover {
+    color: #212529;
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, .1);
+  }
+
+  .iz-stat.iz-active {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, .15);
+  }
+
+  .iz-stat .iz-icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: #f1f3f5;
+    color: #495057;
+    font-size: 1.35rem;
+  }
+
+  .iz-stat .iz-num {
+    font-size: 1.75rem;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  .iz-stat .iz-label {
+    font-size: .85rem;
+    color: #6c757d;
+    margin-top: .15rem;
+  }
+
+  /* Bar filter: sama dengan halaman Data Presensi */
+  .pf-filter {
+    display: grid !important;
+    grid-template-columns: auto auto auto auto auto auto minmax(200px, 1fr) auto;
+    align-items: center;
+    gap: .75rem !important;
+    width: 100%;
+  }
+
+  .pf-filter>* {
+    margin: 0 !important;
+    min-width: 0;
+  }
+
+  .pf-filter .form-select,
+  .pf-filter .form-control {
+    width: 100% !important;
+    flex: none !important;
+    max-width: none !important;
+  }
+
+  .pf-filter .pf-pp {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    white-space: nowrap;
+  }
+
+  .pf-filter .pf-pp .form-select {
+    width: auto !important;
+  }
+
+  .pf-filter .pf-sel {
+    min-width: 140px;
+  }
+
+  .pf-filter .pf-tgl {
+    min-width: 140px;
+  }
+
+  .pf-filter .pf-btn {
+    white-space: nowrap;
+  }
+
+  .pf-filter .pf-search {
+    position: relative;
+  }
+
+  .pf-filter .pf-search .bi-search {
+    position: absolute;
+    top: 50%;
+    left: .85rem;
+    transform: translateY(-50%);
+    color: #6c757d;
+    pointer-events: none;
+  }
+
+  .pf-filter .pf-search .form-control {
+    padding-left: 2.4rem;
+  }
+
+  @media (max-width: 1399.98px) {
+    .pf-filter {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .pf-filter .pf-pp,
+    .pf-filter .pf-search {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 575.98px) {
+    .pf-filter {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+</style>
+
+<div class="row g-3 mb-3">
+  <?php foreach ([['menunggu', '', 'Menunggu persetujuan', $ringkas['menunggu'], 'bi-hourglass-split'], ['disetujui', '', 'Disetujui bulan ini', $ringkas['disetujui'], 'bi-check-circle'], ['ditolak', '', 'Ditolak bulan ini', $ringkas['ditolak'], 'bi-x-circle']] as [$k, $warna, $l, $n, $ikon]): ?>
     <div class="col-6 col-md-3">
-      <a class="card text-decoration-none h-100 <?= $statusF === $k ? 'border-primary' : '' ?>" href="<?= e(modul_url('izin', ['status' => $k])) ?>">
-        <div class="card-body py-2 px-3">
-          <div class="fs-4 fw-bold text-<?= $w ?>"><?= $n ?></div>
-          <div class="small text-muted"><?= e($l) ?></div>
+      <a class="iz-stat <?= $statusF === $k ? 'iz-active' : '' ?>" href="<?= e(modul_url('izin', ['status' => $k])) ?>">
+        <span class="iz-icon"><i class="bi <?= $ikon ?>"></i></span>
+        <div>
+          <div class="iz-num"><?= $n ?></div>
+          <div class="iz-label"><?= e($l) ?></div>
         </div>
       </a>
     </div>
   <?php endforeach; ?>
   <div class="col-6 col-md-3">
-    <div class="card h-100">
-      <div class="card-body py-2 px-3">
-        <div class="fs-4 fw-bold text-secondary"><?= $ringkas['lampiran'] ?></div>
-        <div class="small text-muted">Lampiran tersimpan</div>
+    <div class="iz-stat">
+      <span class="iz-icon"><i class="bi bi-paperclip"></i></span>
+      <div>
+        <div class="iz-num"><?= $ringkas['lampiran'] ?></div>
+        <div class="iz-label">Lampiran tersimpan</div>
       </div>
     </div>
   </div>
 </div>
 
-<div class="tbl-card">
-  <div class="tbl-tools">
-    <form method="get" data-live data-live-target="#hasil-live"><?= hidden_modul() ?>
-      <?= render_per_page_field($perPage, false) ?>
-      <div class="tbl-search"><i class="bi bi-search"></i><input type="text" name="q" class="form-control" placeholder="Cari nama/NIS/NISN..." value="<?= e($q) ?>"></div>
-      <select name="status" class="form-select">
+<!-- Kartu filter -->
+<div class="tbl-card mb-3">
+  <div class="p-3">
+    <form method="get" data-live data-live-target="#hasil-live" id="formFilter" class="pf-filter"><?= hidden_modul() ?>
+      <div class="pf-pp"><?= render_per_page_field($perPage, false) ?></div>
+      <select name="status" class="form-select pf-sel">
         <?php foreach (['menunggu' => 'Menunggu', 'disetujui' => 'Disetujui', 'ditolak' => 'Ditolak', 'dibatalkan' => 'Dibatalkan siswa', 'dicabut' => 'Dicabut', 'semua' => 'Semua status'] as $k => $l): ?>
           <option value="<?= $k ?>" <?= $statusF === $k ? 'selected' : '' ?>><?= e($l) ?></option><?php endforeach; ?>
       </select>
-      <select name="jenis" class="form-select">
+      <select name="jenis" class="form-select pf-sel">
         <option value="">Semua jenis pengajuan</option>
         <option value="izin" <?= $jenisF === 'izin' ? 'selected' : '' ?>>Izin</option>
         <option value="dispensasi" <?= $jenisF === 'dispensasi' ? 'selected' : '' ?>>Dispensasi</option>
         <option value="sakit" <?= $jenisF === 'sakit' ? 'selected' : '' ?>>Sakit</option>
       </select>
-      <select name="kelas" class="form-select">
+      <select name="kelas" class="form-select pf-sel">
         <option value="">Semua Kelas</option>
         <?php foreach ($kelasList as $k): ?><option value="<?= e($k) ?>" <?= $kelas === $k ? 'selected' : '' ?>><?= e($k) ?></option><?php endforeach; ?>
       </select>
-      <input type="date" name="dari" class="form-control" value="<?= e($dari) ?>" title="Tanggal izin dari" style="max-width:150px">
-      <input type="date" name="sampai" class="form-control" value="<?= e($sampai) ?>" title="Tanggal izin sampai" style="max-width:150px">
-      <a href="<?= e(modul_url('izin')) ?>" class="btn btn-light border" title="Hapus filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
+      <input type="date" name="dari" class="form-control pf-tgl" value="<?= e($dari) ?>" title="Tanggal izin dari" aria-label="Tanggal izin dari">
+      <input type="date" name="sampai" class="form-control pf-tgl" value="<?= e($sampai) ?>" title="Tanggal izin sampai" aria-label="Tanggal izin sampai">
+      <div class="pf-search">
+        <i class="bi bi-search"></i>
+        <input type="search" name="q" class="form-control" value="<?= e($q) ?>" placeholder="Cari nama siswa / NIS..." autocomplete="off">
+      </div>
+      <a href="<?= e(modul_url('izin')) ?>" class="btn btn-primary pf-btn" title="Hapus semua filter">Reset</a>
     </form>
   </div>
+</div>
 
+<div class="tbl-card">
   <?php if ($bolehProses && $statusF === 'menunggu' && $daftar): ?>
-    <form method="post" id="formPilih" class="px-3 pb-2 d-flex flex-wrap gap-2 align-items-center" onsubmit="return pilihAda()">
+    <form method="post" id="formPilih" class="px-3 pt-3 pb-2 d-flex flex-wrap gap-2 align-items-center" onsubmit="return pilihAda()">
       <?= csrf_field() ?><input type="hidden" name="aksi" value="setujui_terpilih"><input type="hidden" name="kembali" value="<?= e($kembali) ?>">
       <button class="btn btn-sm btn-success"><i class="bi bi-check2-all"></i> Setujui yang dicentang</button>
       <span class="small text-muted" id="infoPilih">Untuk menolak atau memberi catatan, buka <b>Tinjau</b>.</span>

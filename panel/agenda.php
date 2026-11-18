@@ -80,6 +80,7 @@ $tampil = (string) ($_GET['tampil'] ?? 'aktif');
 if (!in_array($tampil, ['aktif', 'lewat', 'semua'], true)) $tampil = 'aktif';
 $jenisF = (string) ($_GET['jenis'] ?? '');
 if ($jenisF !== '' && !isset(AGENDA_JENIS[$jenisF])) $jenisF = '';
+$q = clean($_GET['q'] ?? '');
 $hariIni = date('Y-m-d');
 
 $where = ['aktif = 1'];
@@ -95,6 +96,11 @@ if ($tampil === 'lewat') {
 if ($jenisF !== '') {
   $where[] = 'jenis = :j';
   $par[':j'] = $jenisF;
+}
+if ($q !== '') {
+  $where[] = '(judul LIKE :q1 OR catatan LIKE :q2)';
+  $par[':q1'] = "%$q%";
+  $par[':q2'] = "%$q%";
 }
 $urut = $tampil === 'lewat' ? 'tanggal_mulai DESC, id DESC' : 'tanggal_mulai ASC, id ASC';
 $st = $db->prepare('SELECT * FROM agenda_sekolah WHERE ' . implode(' AND ', $where) . " ORDER BY $urut LIMIT 300");
@@ -148,43 +154,93 @@ $mendatang = agenda_mendatang(60, 1);
   <?php endif; ?>
 </div>
 
-<div class="alert alert-<?= $jdHariIni['agenda'] ? ($jdHariIni['jenis'] === 'libur' ? 'danger' : 'primary') : 'light border' ?> d-flex align-items-center gap-2 py-2">
-  <i class="bi bi-<?= $jdHariIni['agenda'] ? AGENDA_JENIS[$jdHariIni['jenis']]['ikon'] : 'calendar-check' ?> fs-5"></i>
-  <div class="small">
-    <b>Hari ini (<?= e(NAMA_HARI[(int) date('N')] . ', ' . agenda_label_tanggal($hariIni, $hariIni)) ?>):</b>
-    <?php if ($jdHariIni['agenda']): ?>
-      <?= e($jdHariIni['ket']) ?> — <?= e(AGENDA_JENIS[$jdHariIni['jenis']]['efek']) ?><?php if ($jdHariIni['jenis'] !== 'libur'): ?>
-      (presensi <?= e(substr($jdHariIni['jam_buka'], 0, 5)) ?>, terlambat setelah <?= e(substr($jdHariIni['batas_terlambat'], 0, 5)) ?>, ditutup <?= e(substr($jdHariIni['batas_absen'], 0, 5)) ?>)<?php endif; ?>.
-    <?php elseif (!$jdHariIni['efektif']): ?>
-      bukan hari efektif (<?= e(NAMA_HARI[(int) date('N')]) ?>); presensi ditutup.
-    <?php else: ?>
-      hari efektif biasa — presensi <?= e($bawaan['buka']) ?>, terlambat setelah <?= e($bawaan['terlambat']) ?>, ditutup <?= e($bawaan['absen']) ?>.
-    <?php endif; ?>
-  </div>
-</div>
-
 <style>
   #hasil-live .tbl th,
   #hasil-live .tbl td {
     padding-left: 14px;
     padding-right: 14px;
   }
+
+  /* Bar filter: sama dengan halaman Data Presensi */
+  .pf-filter {
+    display: grid !important;
+    grid-template-columns: auto auto minmax(200px, 1fr) auto;
+    align-items: center;
+    gap: .75rem !important;
+    width: 100%;
+  }
+
+  .pf-filter>* {
+    margin: 0 !important;
+    min-width: 0;
+  }
+
+  .pf-filter .form-select,
+  .pf-filter .form-control {
+    width: 100% !important;
+    flex: none !important;
+    max-width: none !important;
+  }
+
+  .pf-filter .pf-sel {
+    min-width: 170px;
+  }
+
+  .pf-filter .pf-btn {
+    white-space: nowrap;
+  }
+
+  .pf-filter .pf-search {
+    position: relative;
+  }
+
+  .pf-filter .pf-search .bi-search {
+    position: absolute;
+    top: 50%;
+    left: .85rem;
+    transform: translateY(-50%);
+    color: #6c757d;
+    pointer-events: none;
+  }
+
+  .pf-filter .pf-search .form-control {
+    padding-left: 2.4rem;
+  }
+
+  @media (max-width: 767.98px) {
+    .pf-filter {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .pf-filter .pf-search {
+      grid-column: 1 / -1;
+    }
+  }
 </style>
-<div class="tbl-card">
-  <div class="tbl-tools">
-    <form method="get" data-live data-live-target="#hasil-live"><?= hidden_modul() ?>
-      <select name="tampil" class="form-select">
+
+<!-- Kartu filter -->
+<div class="tbl-card mb-3">
+  <div class="p-3">
+    <form method="get" data-live data-live-target="#hasil-live" id="formFilter" class="pf-filter"><?= hidden_modul() ?>
+      <select name="tampil" class="form-select pf-sel">
         <option value="aktif" <?= $tampil === 'aktif' ? 'selected' : '' ?>>Berlangsung &amp; mendatang</option>
         <option value="lewat" <?= $tampil === 'lewat' ? 'selected' : '' ?>>Sudah lewat</option>
         <option value="semua" <?= $tampil === 'semua' ? 'selected' : '' ?>>Semua</option>
       </select>
-      <select name="jenis" class="form-select">
+      <select name="jenis" class="form-select pf-sel">
         <option value="">Semua jenis</option>
         <?php foreach (AGENDA_JENIS as $kode => $j): ?><option value="<?= $kode ?>" <?= $jenisF === $kode ? 'selected' : '' ?>><?= e($j['singkat']) ?></option><?php endforeach; ?>
       </select>
-      <a href="<?= e(modul_url('agenda')) ?>" class="btn btn-light border" title="Hapus filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
+      <div class="pf-search">
+        <i class="bi bi-search"></i>
+        <input type="search" name="q" class="form-control" value="<?= e($q) ?>" placeholder="Cari nama agenda / catatan..." autocomplete="off">
+      </div>
+      <a href="<?= e(modul_url('agenda')) ?>" class="btn btn-primary pf-btn" title="Hapus semua filter">Reset</a>
     </form>
   </div>
+</div>
+
+<div class="tbl-card">
   <div id="hasil-live">
     <div class="table-responsive">
       <table class="table tbl align-middle">

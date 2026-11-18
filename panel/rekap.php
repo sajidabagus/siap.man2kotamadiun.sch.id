@@ -5,13 +5,14 @@ require_once __DIR__ . '/../includes/header.php';
 $bulan = (int) ($_GET['bulan'] ?? date('n'));
 $tahun = (int) ($_GET['tahun'] ?? date('Y'));
 $kelas = clean($_GET['kelas'] ?? '');
+$q = clean($_GET['q'] ?? '');
 
 $db = getDB();
 // Daftar kelas utk dropdown filter: gabungan kelas yang ADA SEKARANG +
 // kelas yang PERNAH tercatat di presensi (supaya kelas lama yang siswanya
 // sudah semua naik/lulus tetap bisa dipilih utk lihat riwayatnya).
 $kelasList = $db->query(
-    'SELECT kelas FROM siswa
+  'SELECT kelas FROM siswa
      UNION
      SELECT kelas_saat_presensi FROM presensi
      ORDER BY kelas'
@@ -29,10 +30,18 @@ $whereSql = implode(' AND ', $where);
 $perPage = get_page_size();
 $page = get_current_page();
 
+// Pencarian nama / NIS / NISN (hanya memengaruhi rekap per siswa)
+$cariSql = '';
+$cariParams = [];
+if ($q !== '') {
+  $cariSql = ' AND (s.nama LIKE :q1 OR s.nis LIKE :q2 OR s.nisn LIKE :q3)';
+  $cariParams = [':q1' => "%$q%", ':q2' => "%$q%", ':q3' => "%$q%"];
+}
+
 $stmtCount = $db->prepare(
-  "SELECT COUNT(*) c FROM siswa s WHERE s.status='aktif'" . ($kelas !== '' ? ' AND s.kelas = :kelas' : '')
+  "SELECT COUNT(*) c FROM siswa s WHERE s.status='aktif'" . ($kelas !== '' ? ' AND s.kelas = :kelas' : '') . $cariSql
 );
-$stmtCount->execute($kelas !== '' ? [':kelas' => $kelas] : []);
+$stmtCount->execute(($kelas !== '' ? [':kelas' => $kelas] : []) + $cariParams);
 $totalData = (int) $stmtCount->fetch()['c'];
 $totalPages = max(1, (int) ceil($totalData / $perPage));
 $page = min($page, $totalPages);
@@ -55,11 +64,11 @@ $sql = "SELECT s.id, s.nisn, s.nama, s.kelas,
         SUM(p.status='IZIN') izin, SUM(p.status='SAKIT') sakit, SUM(p.status='ALPA') alpa, SUM(p.jam_pulang IS NOT NULL AND p.status IN ('HADIR','TERLAMBAT')) pulang,
         COUNT(p.id) total_masuk
         FROM siswa s LEFT JOIN presensi p ON p.siswa_id = s.id AND MONTH(p.tanggal)=:bulan AND YEAR(p.tanggal)=:tahun
-        WHERE s.status='aktif'" . ($kelas !== '' ? ' AND s.kelas = :kelas' : '') . "
+        WHERE s.status='aktif'" . ($kelas !== '' ? ' AND s.kelas = :kelas' : '') . $cariSql . "
         GROUP BY s.id ORDER BY s.kelas, s.nama
         LIMIT " . $perPage . " OFFSET $offset";
 $stmt = $db->prepare($sql);
-$stmt->execute($params + [':bulan2' => $bulan, ':tahun2' => $tahun]);
+$stmt->execute($params + $cariParams + [':bulan2' => $bulan, ':tahun2' => $tahun]);
 $rekapSiswa = $stmt->fetchAll();
 
 // Rekap ringkas per kelas -- dihitung dari SNAPSHOT kelas_saat_presensi
@@ -78,99 +87,186 @@ $stmtK->execute([':bulan' => $bulan, ':tahun' => $tahun]);
 $rekapKelas = $stmtK->fetchAll();
 
 $namaBulan = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-$extraParams = ['bulan' => $bulan, 'tahun' => $tahun, 'kelas' => $kelas, 'limit' => $perPage];
+$extraParams = ['bulan' => $bulan, 'tahun' => $tahun, 'kelas' => $kelas, 'q' => $q, 'limit' => $perPage];
 ?>
 <h4 class="mb-3"><i class="bi bi-bar-chart"></i> Rekap Kehadiran Bulanan</h4>
+
+<style>
+  /* Bar filter: sama dengan halaman Data Presensi */
+  .pf-filter {
+    display: grid !important;
+    grid-template-columns: auto auto auto auto minmax(200px, 1fr) auto auto;
+    align-items: center;
+    gap: .75rem !important;
+    width: 100%;
+  }
+
+  .pf-filter>* {
+    margin: 0 !important;
+    min-width: 0;
+  }
+
+  .pf-filter .form-select,
+  .pf-filter .form-control {
+    width: 100% !important;
+    flex: none !important;
+    max-width: none !important;
+  }
+
+  .pf-filter .pf-pp {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    white-space: nowrap;
+  }
+
+  .pf-filter .pf-pp .form-select {
+    width: auto !important;
+  }
+
+  .pf-filter .pf-sel {
+    min-width: 140px;
+  }
+
+  .pf-filter .pf-tahun {
+    min-width: 100px;
+  }
+
+  .pf-filter .pf-btn {
+    white-space: nowrap;
+  }
+
+  .pf-filter .pf-search {
+    position: relative;
+  }
+
+  .pf-filter .pf-search .bi-search {
+    position: absolute;
+    top: 50%;
+    left: .85rem;
+    transform: translateY(-50%);
+    color: #6c757d;
+    pointer-events: none;
+  }
+
+  .pf-filter .pf-search .form-control {
+    padding-left: 2.4rem;
+  }
+
+  @media (max-width: 1199.98px) {
+    .pf-filter {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .pf-filter .pf-pp,
+    .pf-filter .pf-search {
+      grid-column: 1 / -1;
+    }
+  }
+</style>
+
+<!-- Kartu filter -->
+<div class="tbl-card mb-3">
+  <div class="p-3">
+    <form method="get" id="formRekap" data-live data-live-target="#hasil-live" class="pf-filter"><?= hidden_modul() ?>
+      <div class="pf-pp"><?= render_per_page_field($perPage, false) ?></div>
+      <select name="bulan" class="form-select pf-sel">
+        <?php for ($m = 1; $m <= 12; $m++): ?><option value="<?= $m ?>" <?= $m === $bulan ? 'selected' : '' ?>><?= $namaBulan[$m] ?></option><?php endfor; ?>
+      </select>
+      <input type="number" name="tahun" class="form-control pf-tahun" value="<?= $tahun ?>" aria-label="Tahun">
+      <select name="kelas" class="form-select pf-sel">
+        <option value="">Semua Kelas</option>
+        <?php foreach ($kelasList as $k): ?><option value="<?= e($k) ?>" <?= $kelas === $k ? 'selected' : '' ?>><?= e($k) ?></option><?php endforeach; ?>
+      </select>
+      <div class="pf-search">
+        <i class="bi bi-search"></i>
+        <input type="search" name="q" class="form-control" value="<?= e($q) ?>" placeholder="Cari nama siswa / NIS..." autocomplete="off">
+      </div>
+      <a href="<?= e(modul_url('rekap')) ?>" class="btn btn-primary pf-btn" title="Hapus semua filter">Reset</a>
+      <?php if (can('rekap.cetak')): ?>
+        <button type="button" class="btn btn-outline-secondary pf-btn" data-open-form="<?= modul_url('rekap_print') ?>" title="Cetak rekap bulan ini (semua siswa)"><i class="bi bi-printer"></i> Cetak</button>
+      <?php endif; ?>
+    </form>
+  </div>
+</div>
 
 <div class="tbl-card">
   <div class="tbl-head">
     <h6>Rekap kehadiran bulanan</h6>
     <div class="sub">Ringkasan per kelas dan rekap per siswa pada bulan terpilih (terlambat dihitung hadir).</div>
   </div>
-  <div class="tbl-tools">
-    <form method="get" id="formRekap" data-live data-live-target="#hasil-live"><?= hidden_modul() ?>
-      <?= render_per_page_field($perPage, false) ?>
-      <select name="bulan" class="form-select">
-        <?php for ($m = 1; $m <= 12; $m++): ?><option value="<?= $m ?>" <?= $m === $bulan ? 'selected' : '' ?>><?= $namaBulan[$m] ?></option><?php endfor; ?>
-      </select>
-      <input type="number" name="tahun" class="form-control" value="<?= $tahun ?>" aria-label="Tahun">
-      <select name="kelas" class="form-select">
-        <option value="">Semua Kelas</option>
-        <?php foreach ($kelasList as $k): ?><option value="<?= e($k) ?>" <?= $kelas === $k ? 'selected' : '' ?>><?= e($k) ?></option><?php endforeach; ?>
-      </select>
-      <?php if (can('rekap.cetak')): ?>
-      <button type="button" class="btn btn-light border" data-open-form="<?= modul_url('rekap_print') ?>" title="Cetak rekap bulan ini (semua siswa)"><i class="bi bi-printer"></i> Cetak</button>
-      <?php endif; ?>
-    </form>
-  </div>
   <div id="hasil-live">
     <div class="tbl-subhead">Ringkasan Per Kelas — <?= $namaBulan[$bulan] ?> <?= $tahun ?><span class="sub">Dihitung dari kelas siswa <strong>saat presensi terjadi</strong> bulan ini — tetap akurat walau siswa sudah naik/pindah kelas setelahnya.</span></div>
     <div class="table-responsive">
-    <table class="table tbl align-middle">
-      <thead>
-        <tr>
-          <th>Kelas</th>
-          <th>Jumlah Siswa</th>
-          <th>Hadir<br><small class="fw-normal text-muted">(incl. terlambat)</small></th>
-          <th>Terlambat<br><small class="fw-normal text-muted">(bagian dari hadir)</small></th>
-          <th>Alpa</th><th>Pulang</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach ($rekapKelas as $k): ?>
+      <table class="table tbl align-middle">
+        <thead>
           <tr>
-            <td><?= e($k['kelas']) ?></td>
-            <td><?= (int)$k['total_siswa'] ?></td>
-            <td><?= (int)$k['hadir'] ?></td>
-            <td><?= (int)$k['terlambat'] ?></td>
-            <td><?= (int)$k['alpa'] ?></td><td><?= (int) $k['pulang'] ?></td>
+            <th>Kelas</th>
+            <th>Jumlah Siswa</th>
+            <th>Hadir<br><small class="fw-normal text-muted">(incl. terlambat)</small></th>
+            <th>Terlambat<br><small class="fw-normal text-muted">(bagian dari hadir)</small></th>
+            <th>Alpa</th>
+            <th>Pulang</th>
           </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <?php foreach ($rekapKelas as $k): ?>
+            <tr>
+              <td><?= e($k['kelas']) ?></td>
+              <td><?= (int)$k['total_siswa'] ?></td>
+              <td><?= (int)$k['hadir'] ?></td>
+              <td><?= (int)$k['terlambat'] ?></td>
+              <td><?= (int)$k['alpa'] ?></td>
+              <td><?= (int) $k['pulang'] ?></td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
     </div>
     <div class="tbl-subhead">Rekap per siswa</div>
     <div class="table-responsive">
-    <table class="table tbl align-middle">
-      <thead>
-        <tr>
-          <th>No</th>
-          <th>NISN</th>
-          <th>Nama</th>
-          <th>Kelas</th>
-          <th>Hadir<br><small class="fw-normal text-muted">(incl. terlambat)</small></th>
-          <th>Terlambat<br><small class="fw-normal text-muted">(bagian dari hadir)</small></th>
-          <th>Izin</th>
-          <th>Sakit</th>
-          <th>Alpa</th><th>Pulang</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach ($rekapSiswa as $i => $r): ?>
+      <table class="table tbl align-middle">
+        <thead>
           <tr>
-            <td><?= $offset + $i + 1 ?></td>
-            <td><?= e($r['nisn'] ?: '-') ?></td>
-            <td><?= e($r['nama']) ?></td>
-            <td><?= e($r['kelas_bulan_ini']) ?></td>
-            <td><?= (int)$r['hadir'] ?></td>
-            <td><?= (int)$r['terlambat'] ?></td>
-            <td><?= (int)$r['izin'] ?></td>
-            <td><?= (int)$r['sakit'] ?></td>
-            <td><?= (int)$r['alpa'] ?></td><td><?= (int) $r['pulang'] ?></td>
+            <th>No</th>
+            <th>NISN</th>
+            <th>Nama</th>
+            <th>Kelas</th>
+            <th>Hadir<br><small class="fw-normal text-muted">(incl. terlambat)</small></th>
+            <th>Terlambat<br><small class="fw-normal text-muted">(bagian dari hadir)</small></th>
+            <th>Izin</th>
+            <th>Sakit</th>
+            <th>Alpa</th>
+            <th>Pulang</th>
           </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <?php foreach ($rekapSiswa as $i => $r): ?>
+            <tr>
+              <td><?= $offset + $i + 1 ?></td>
+              <td><?= e($r['nisn'] ?: '-') ?></td>
+              <td><?= e($r['nama']) ?></td>
+              <td><?= e($r['kelas_bulan_ini']) ?></td>
+              <td><?= (int)$r['hadir'] ?></td>
+              <td><?= (int)$r['terlambat'] ?></td>
+              <td><?= (int)$r['izin'] ?></td>
+              <td><?= (int)$r['sakit'] ?></td>
+              <td><?= (int)$r['alpa'] ?></td>
+              <td><?= (int) $r['pulang'] ?></td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
     </div>
-  <?php if ($totalPages > 1): ?>
-    <div class="tbl-foot">
-      <span class="text-muted small">Menampilkan <?= count($rekapSiswa) ?> dari <?= $totalData ?> siswa (halaman <?= $page ?> dari <?= $totalPages ?>)</span>
-      <?= render_pagination($page, $totalPages, $extraParams) ?>
-    </div>
-  <?php endif; ?>
+    <?php if ($totalPages > 1): ?>
+      <div class="tbl-foot">
+        <span class="text-muted small">Menampilkan <?= count($rekapSiswa) ?> dari <?= $totalData ?> siswa (halaman <?= $page ?> dari <?= $totalPages ?>)</span>
+        <?= render_pagination($page, $totalPages, $extraParams) ?>
+      </div>
+    <?php endif; ?>
   </div>
 </div>
 
 <?php $awalDisp = sprintf('%04d-%02d-01', max(2000, min(2100, $tahun)), max(1, min(12, $bulan)));
- dispensasi_tabel_laporan(dispensasi_daftar_hari($awalDisp, date('Y-m-t', strtotime($awalDisp)), 0, $kelas)); ?>
+dispensasi_tabel_laporan(dispensasi_daftar_hari($awalDisp, date('Y-m-t', strtotime($awalDisp)), 0, $kelas)); ?>
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

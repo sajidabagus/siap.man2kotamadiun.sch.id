@@ -39,7 +39,13 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   <link href="<?= BASE_URL ?>/assets/css/siswa-desktop.css?v=<?= @filemtime(__DIR__ . '/assets/css/siswa-desktop.css') ?: time() ?>" rel="stylesheet">
   <link href="<?= BASE_URL ?>/assets/css/siswa-app.css?v=<?= @filemtime(__DIR__ . '/assets/css/siswa-app.css') ?: time() ?>" rel="stylesheet">
   <style>
-    .ap-pulang { font-size:13px; color:var(--abu); line-height:1.6; margin:8px 4px 18px; }
+    .ap-pulang {
+      font-size: 13px;
+      color: var(--abu);
+      line-height: 1.6;
+      margin: 8px 4px 18px;
+    }
+
     :root {
       --biru: #0d6efd;
       --navy: #14213d;
@@ -1236,7 +1242,10 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
         b.disabled = mati;
         var sp = b.querySelector('span');
         if (sp) sp.textContent = alpa ? 'Absen ditutup (Alfa)' : sudah ? 'Sudah Absen Masuk' : (!d.efektif ? 'Presensi ditutup hari ini' : (izin ? (s.izin === 'SAKIT' ? 'Sakit disetujui hari ini' : 'Izin disetujui hari ini') : 'Absen Masuk'));
-        if (s.scan) { var label = s.scan.aktif ? (s.scan.sesi === 'pulang' ? 'Absen Pulang' : 'Absen Datang') : (s.jam_pulang ? 'Sudah Absen Pulang' : 'Scan belum tersedia'); b.querySelector('span').textContent = label; }
+        if (s.scan) {
+          var label = s.scan.aktif ? (s.scan.sesi === 'pulang' ? 'Absen Pulang' : 'Absen Datang') : (s.jam_pulang ? 'Sudah Absen Pulang' : 'Scan belum tersedia');
+          b.querySelector('span').textContent = label;
+        }
       }
       var n = document.getElementById('apNavScan');
       if (n) {
@@ -1412,457 +1421,468 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
 
   <script src="<?= BASE_URL ?>/assets/js/device.js?v=<?= @filemtime(__DIR__ . '/assets/js/device.js') ?: 0 ?>"></script>
   <script>
-(async function () {
-  guardDeviceIdentityForms();
-  try {
-    await prepareDeviceIdentity();
+    (async function() {
+      guardDeviceIdentityForms();
+      try {
+        await prepareDeviceIdentity();
 
-    (function() {
-      var BASE = <?= json_encode(BASE_URL) ?>;
-      var $ = function(id) {
-        return document.getElementById(id);
-      };
-      var HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-      var BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-      var WARNA = ['#20b2a0', '#4a9be8', '#a855c8', '#f59f0b', '#e5484d', '#2fb344', '#1d6fd8', '#8b5cf6'];
-      var C = 2 * Math.PI * 80;
-      var uuid = getOrCreateDeviceUuid();
-      var statusHp = null; // hasil cek perangkat
-      var sudahAda = null;
-
-      /* ---------- jam ---------- */
-      function tick() {
-        var d = new Date(),
-          p = function(n) {
-            return String(n).padStart(2, '0');
+        (function() {
+          var BASE = <?= json_encode(BASE_URL) ?>;
+          var $ = function(id) {
+            return document.getElementById(id);
           };
-        $('jam').textContent = p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
-        $('tgl').textContent = HARI[d.getDay()] + ', ' + d.getDate() + ' ' + BULAN[d.getMonth()] + ' ' + d.getFullYear();
-      }
-      tick();
-      setInterval(tick, 1000);
+          var HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+          var BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+          var WARNA = ['#20b2a0', '#4a9be8', '#a855c8', '#f59f0b', '#e5484d', '#2fb344', '#1d6fd8', '#8b5cf6'];
+          var C = 2 * Math.PI * 80;
+          var uuid = getOrCreateDeviceUuid();
+          var statusHp = null; // hasil cek perangkat
+          var sudahAda = null;
 
-      /* ---------- data kehadiran ---------- */
-      function hash(s) {
-        var h = 0;
-        for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-        return h;
-      }
-
-      function pct(n, t) {
-        return t ? Math.round(n / t * 100) : 0;
-      }
-
-      function gambarDonut(d) {
-        var svg = $('svgDonut');
-        svg.textContent = '';
-        var seg = [{
-            n: d.tepat,
-            c: '#2fb344'
-          }, {
-            n: d.terlambat,
-            c: '#f08c1a'
-          },
-          {
-            n: d.tidak_hadir,
-            c: '#e03e4a'
-          }, {
-            n: d.belum,
-            c: '#cbd3e1'
+          /* ---------- jam ---------- */
+          function tick() {
+            var d = new Date(),
+              p = function(n) {
+                return String(n).padStart(2, '0');
+              };
+            $('jam').textContent = p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+            $('tgl').textContent = HARI[d.getDay()] + ', ' + d.getDate() + ' ' + BULAN[d.getMonth()] + ' ' + d.getFullYear();
           }
-        ];
-        var total = d.total || 0,
-          mulai = 0,
-          ns = 'http://www.w3.org/2000/svg';
-        if (!total) seg = [{
-          n: 1,
-          c: '#e9edf3'
-        }], total = 1;
-        seg.forEach(function(s) {
-          if (s.n <= 0) return;
-          var len = s.n / total * C;
-          var c = document.createElementNS(ns, 'circle');
-          c.setAttribute('cx', 100);
-          c.setAttribute('cy', 100);
-          c.setAttribute('r', 80);
-          c.setAttribute('stroke', s.c);
-          c.style.strokeDasharray = len + ' ' + (C - len);
-          c.style.strokeDashoffset = -mulai;
-          svg.appendChild(c);
-          mulai += len;
-        });
-      }
+          tick();
+          setInterval(tick, 1000);
 
-      function gambarFeed(d) {
-        var feed = $('feed'),
-          posisi = feed.scrollTop; // jaga posisi scroll agar tidak melompat tiap pembaruan (8 dtk)
-        feed.textContent = '';
-        feed.classList.toggle('kelas', d.mode === 'kelas');
-        if (!d.terbaru.length) {
-          var k = document.createElement('div');
-          k.className = 'kosong';
-          k.textContent = d.efektif ? 'Belum ada siswa yang presensi hari ini.' : 'Hari ini bukan hari efektif presensi.';
-          feed.appendChild(k);
-        }
-        var set = {};
-        d.terbaru.forEach(function(x) {
-          set[x.id] = true;
-          var it = document.createElement('div');
-          it.className = 'fi' + (sudahAda !== null && !sudahAda[x.id] ? ' baru' : '');
-          var kata = x.nama.split(' ');
-          var av = document.createElement('span');
-          av.className = 'av';
-          av.style.background = WARNA[hash(x.nama) % WARNA.length];
-          av.textContent = ((kata[0] || '')[0] || '') + ((kata[1] || '')[0] || '');
-          var info = document.createElement('div');
-          var n = document.createElement('div');
-          n.className = 'nm';
-          n.textContent = x.nama;
-          var kl = document.createElement('div');
-          kl.className = 'kl';
-          kl.textContent = 'Kelas ' + x.kelas;
-          info.appendChild(n);
-          info.appendChild(kl);
-          var wk = document.createElement('div');
-          wk.className = 'wk';
-          wk.textContent = x.jam;
-          var sm = document.createElement('small');
-          sm.className = x.status === 'TERLAMBAT' ? 't' : 'h';
-          sm.textContent = x.status === 'TERLAMBAT' ? 'Terlambat' : 'Tepat waktu';
-          wk.appendChild(sm);
-          it.appendChild(av);
-          it.appendChild(info);
-          it.appendChild(wk);
-          feed.appendChild(it);
-        });
-        sudahAda = set;
-        feed.scrollTop = posisi;
-      }
-
-      function render(d) {
-        try {
-          localStorage.setItem('siapBerandaV1', JSON.stringify({
-            hari: new Date().toDateString(),
-            d: d
-          }));
-        } catch (e) {}
-        $('persen').textContent = d.persen;
-        var modeKelas = d.mode === 'kelas';
-        $('jdlDonut').textContent = modeKelas ? 'Kehadiran Kelas ' + d.kelas : 'Kehadiran Hari Ini';
-        $('jdlFeed').textContent = modeKelas ? 'Absensi Kelas ' + d.kelas : 'Absensi Terbaru';
-        $('ketDonut').textContent = modeKelas ? 'hari ini, dari ' + d.total + ' siswa kelas ' + d.kelas : 'dari ' + d.total + ' siswa aktif';
-        var cs = $('chipSaya');
-        if (modeKelas && d.saya) {
-          cs.style.display = '';
-          cs.className = 'chip ' + (d.saya.status ? (d.saya.status === 'TERLAMBAT' ? 'warn' : 'ok') : '');
-          cs.textContent = d.saya.nama + ' · ' + (d.saya.status ? 'sudah presensi ' + d.saya.jam + (d.saya.status === 'TERLAMBAT' ? ' (terlambat)' : '') : (d.saya.izin ? (d.saya.izin === 'SAKIT' ? 'sakit' : 'izin') + ' disetujui hari ini' : 'belum presensi hari ini'));
-        } else {
-          cs.style.display = 'none';
-        }
-        [
-          ['Tepat', d.tepat],
-          ['Terlambat', d.terlambat],
-          ['Tidak', d.tidak_hadir],
-          ['Belum', d.belum]
-        ].forEach(function(r) {
-          $('n' + r[0]).textContent = r[1];
-          $('p' + r[0]).textContent = pct(r[1], d.total) + '%';
-        });
-        gambarDonut(d);
-        gambarFeed(d);
-        renderSiswa(d);
-        aturTombolScan(d);
-        var cb = $('chipBuka');
-        var tutupJam = d.efektif && d.ditutup;
-        cb.className = 'chip ' + (d.efektif && !tutupJam ? 'ok' : 'tutup');
-        var ag = d.agenda;
-        if (!d.efektif) cb.textContent = ag && ag.jenis === 'libur' ? ag.label + ': ' + ag.judul + ' — presensi ditutup' : 'Hari ini libur — presensi ditutup';
-        else if (tutupJam) cb.textContent = (ag ? ag.label + ': ' + ag.judul + ' · ' : '') + 'Absen masuk ditutup pukul ' + d.batas_absen;
-        else cb.textContent = (ag ? ag.label + ': ' + ag.judul + ' · ' : '') + 'Presensi dibuka hari ini' + (d.batas_absen ? ' s.d. ' + d.batas_absen : '');
-        if (d.jam_masuk) {
-          var cj = $('chipJam');
-          cj.style.display = '';
-          cj.textContent = 'Masuk ' + d.jam_masuk + (d.batas_terlambat ? ' · terlambat setelah ' + d.batas_terlambat : '') + ' · Pulang ' + d.pulang_buka + '–' + d.pulang_tutup;
-        }
-        $('waktuUpdate').textContent = (modeKelas ? d.terbaru.length + ' siswa sudah presensi' + (d.terbaru.length > 5 ? ' · gulir untuk melihat semua' : '') + ' · ' : '') + 'Diperbarui ' + d.waktu;
-        $('liveBadge').classList.remove('putus');
-        $('liveBadge').textContent = 'LIVE';
-      }
-
-      /* ---------- tombol scan: nonaktif saat hari non-efektif, atau siswa (perangkat terdaftar) sudah presensi/izin hari ini ---------- */
-      function aturTombolScan(d) {
-        var alpa = !!(d.mode === 'kelas' && d.saya && d.saya.status === 'ALPA');
-        var sudah = !!(d.mode === 'kelas' && d.saya && (d.saya.status || d.saya.izin)); // sudah presensi, izin/sakit disetujui, atau Alfa
-        var mati = d.mode === 'kelas' && d.saya && d.saya.scan ? !d.saya.scan.aktif : !d.efektif;
-        var alasan = d.saya && d.saya.scan ? d.saya.scan.alasan : (!d.efektif ? 'Presensi ditutup hari ini (bukan hari efektif)' : '');
-        var hero = $('btnScan');
-        hero.disabled = mati;
-        hero.title = alasan;
-        var nav = $('apNavScan');
-        nav.classList.toggle('mati', mati);
-        nav.setAttribute('aria-disabled', mati ? 'true' : 'false');
-        nav.title = alasan;
-        // Menu "Scan QR Absen" di sidebar desktop ikut nonaktif
-        var sm = document.querySelector('.sd-menu a[href$="/presensi/"]');
-        if (sm) {
-          sm.classList.toggle('mati', mati);
-          sm.setAttribute('aria-disabled', mati ? 'true' : 'false');
-          sm.title = alasan;
-          if (mati) sm.setAttribute('tabindex', '-1');
-          else sm.removeAttribute('tabindex');
-        }
-      }
-
-      /* ---------- tampilan siswa (perangkat terdaftar & aktif) ---------- */
-      var lokasiDicek = false;
-
-      function renderSiswa(d) {
-        var aktif = d.mode === 'kelas' && !!d.saya;
-        document.body.classList.toggle('mode-siswa', aktif);
-        if (!aktif) return;
-        var s = d.saya,
-          kata = String(s.nama || '').trim().split(/\s+/)[0] || '';
-        $('apNama').textContent = kata.charAt(0).toUpperCase() + kata.slice(1).toLowerCase();
-        if ($('apTopNama')) $('apTopNama').textContent = $('apNama').textContent || 'Siswa';
-        var STATUS = {
-          HADIR: ['Hadir', '#2fb344', 'check-lg'],
-          TERLAMBAT: ['Hadir (Terlambat)', '#f08c1a', 'clock-history'],
-          IZIN: ['Izin', '#e0a100', 'file-earmark-text-fill'],
-          SAKIT: ['Izin (Sakit)', '#e0a100', 'file-earmark-medical-fill'],
-          ALPA: ['Alfa', '#e03e4a', 'x-lg'],
-          BELUM: ['Belum absen', '#8a94a6', 'hourglass-split']
-        };
-        var dispBox = $('apDispensasi');
-        dispBox.textContent = '';
-        (s.dispensasi || []).forEach(function (x) {
-          var el = document.createElement('a'); el.className = 'ap-dispensasi';
-          el.href = BASE + '/portal/izin/' + encodeURIComponent(x.id);
-          el.textContent = 'Dispensasi disetujui · ' + x.durasi + ' · ' + x.kegiatan;
-          dispBox.appendChild(el);
-        });
-        var kunci = s.status || s.izin || 'BELUM',
-          st = STATUS[kunci] || STATUS.BELUM;
-        $('apStatus').style.setProperty('--c', st[1]);
-        $('apStJudul').textContent = st[0];
-        $('apStIkon').className = 'bi bi-' + st[2];
-        $('apStMasuk').textContent = 'Masuk: ' + (s.jam && s.jam !== '00:00' ? s.jam + ' WIB' : '-');
-        $('apStPulang').textContent = 'Pulang: ' + (s.jam_pulang ? s.jam_pulang + ' WIB' : 'Belum tercatat');
-        if (!$('apPulangBulan')) { var el = document.createElement('p'); el.id = 'apPulangBulan'; el.className = 'ap-pulang'; $('apDispensasi').after(el); }
-        $('apPulangBulan').textContent = 'Pulang tercatat bulan ini: ' + (+s.pulang_bulan || 0) + ' hari · Jendela pulang ' + d.pulang_buka + '–' + d.pulang_tutup;
-        var alpa = s.status === 'ALPA';
-        var sudah = !!s.status && !alpa;
-        var izinHariIni = !!s.izin && !sudah && !alpa;
-        var b = $('apAbsen');
-        b.disabled = !s.scan || !s.scan.aktif;
-        b.querySelector('span').textContent = alpa ? 'Absen ditutup (Alfa)' : sudah ? 'Sudah Absen Masuk' : (!d.efektif ? 'Presensi ditutup hari ini' : (izinHariIni ? (s.izin === 'SAKIT' ? 'Sakit disetujui hari ini' : 'Izin disetujui hari ini') : 'Absen Masuk'));
-        if (s.scan) { var label = s.scan.aktif ? (s.scan.sesi === 'pulang' ? 'Absen Pulang' : 'Absen Datang') : (s.jam_pulang ? 'Sudah Absen Pulang' : 'Scan belum tersedia'); b.querySelector('span').textContent = label; }
-        if (s.bulan) {
-          $('apHadir').textContent = s.bulan.hadir;
-          $('apIzin').textContent = s.bulan.izin;
-          $('apAlfa').textContent = s.bulan.alfa;
-          if ($('apAlfaSub')) $('apAlfaSub').textContent = +s.bulan.alfa > 0 ? s.bulan.alfa + ' hari' : 'Tidak ada';
-        }
-        if (!lokasiDicek) {
-          lokasiDicek = true;
-          cekLokasi(!!d.gps_aktif);
-        }
-      }
-
-      function cekLokasi(wajib) {
-        var el = $('apLok').querySelector('span');
-        if (!navigator.geolocation) {
-          el.textContent = wajib ? 'Lokasi tidak didukung perangkat' : 'Lokasi tidak diwajibkan';
-          return;
-        }
-        navigator.geolocation.getCurrentPosition(
-          function() {
-            el.textContent = 'Lokasi aktif terdeteksi';
-          },
-          function() {
-            el.textContent = wajib ? 'Aktifkan lokasi (GPS) untuk absen' : 'Lokasi tidak aktif';
-          }, {
-            enableHighAccuracy: false,
-            timeout: 10000,
-            maximumAge: 60000
+          /* ---------- data kehadiran ---------- */
+          function hash(s) {
+            var h = 0;
+            for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+            return h;
           }
-        );
-      }
 
-      function jamSiswa() {
-        var d = new Date();
-        try {
-          d = new Date(d.toLocaleString('en-US', {
-            timeZone: 'Asia/Jakarta'
-          }));
-        } catch (e) {}
-        var h = d.getHours(),
-          m = d.getMinutes(),
-          sd = d.getSeconds(),
-          p = function(n) {
-            return String(n).padStart(2, '0');
-          };
-        $('apJam').textContent = p(h) + ':' + p(m);
-        $('apTgl').textContent = HARI[d.getDay()] + ', ' + d.getDate() + ' ' + BULAN[d.getMonth()] + ' ' + d.getFullYear();
-        if ($('apTgl2')) $('apTgl2').textContent = $('apTgl').textContent;
-        $('apJarumJam').setAttribute('transform', 'rotate(' + ((h % 12) * 30 + m * 0.5) + ' 60 60)');
-        $('apJarumMenit').setAttribute('transform', 'rotate(' + (m * 6 + sd * 0.1) + ' 60 60)');
-        $('apDetik').textContent = ':' + p(sd);
-        $('apJarumDetik').setAttribute('transform', 'rotate(' + (sd * 6) + ' 60 60)');
-      }
-      jamSiswa();
-      setInterval(jamSiswa, 1000);
-      $('apAbsen').addEventListener('click', function() {
-        $('btnScan').click();
-      });
-      $('apNavScan').addEventListener('click', function() {
-        if (!$('btnScan').disabled) $('btnScan').click();
-      });
+          function pct(n, t) {
+            return t ? Math.round(n / t * 100) : 0;
+          }
 
-      var memuat = false;
+          function gambarDonut(d) {
+            var svg = $('svgDonut');
+            svg.textContent = '';
+            var seg = [{
+                n: d.tepat,
+                c: '#2fb344'
+              }, {
+                n: d.terlambat,
+                c: '#f08c1a'
+              },
+              {
+                n: d.tidak_hadir,
+                c: '#e03e4a'
+              }, {
+                n: d.belum,
+                c: '#cbd3e1'
+              }
+            ];
+            var total = d.total || 0,
+              mulai = 0,
+              ns = 'http://www.w3.org/2000/svg';
+            if (!total) seg = [{
+              n: 1,
+              c: '#e9edf3'
+            }], total = 1;
+            seg.forEach(function(s) {
+              if (s.n <= 0) return;
+              var len = s.n / total * C;
+              var c = document.createElementNS(ns, 'circle');
+              c.setAttribute('cx', 100);
+              c.setAttribute('cy', 100);
+              c.setAttribute('r', 80);
+              c.setAttribute('stroke', s.c);
+              c.style.strokeDasharray = len + ' ' + (C - len);
+              c.style.strokeDashoffset = -mulai;
+              svg.appendChild(c);
+              mulai += len;
+            });
+          }
 
-      function muat() {
-        if (memuat || document.hidden) return;
-        memuat = true;
-        fetch(BASE + '/api/beranda.php', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              device_uuid: uuid
-            }),
-            cache: 'no-store'
-          })
-          .then(function(r) {
-            if (!r.ok) throw new Error(r.status);
-            return r.json();
-          })
-          .then(function(d) {
-            if (d.success) render(d);
-          })
-          .catch(function() {
-            $('liveBadge').classList.add('putus');
-            $('liveBadge').textContent = 'TERPUTUS';
-          })
-          .then(function() {
-            memuat = false;
+          function gambarFeed(d) {
+            var feed = $('feed'),
+              posisi = feed.scrollTop; // jaga posisi scroll agar tidak melompat tiap pembaruan (8 dtk)
+            feed.textContent = '';
+            feed.classList.toggle('kelas', d.mode === 'kelas');
+            if (!d.terbaru.length) {
+              var k = document.createElement('div');
+              k.className = 'kosong';
+              k.textContent = d.efektif ? 'Belum ada siswa yang presensi hari ini.' : 'Hari ini bukan hari efektif presensi.';
+              feed.appendChild(k);
+            }
+            var set = {};
+            d.terbaru.forEach(function(x) {
+              set[x.id] = true;
+              var it = document.createElement('div');
+              it.className = 'fi' + (sudahAda !== null && !sudahAda[x.id] ? ' baru' : '');
+              var kata = x.nama.split(' ');
+              var av = document.createElement('span');
+              av.className = 'av';
+              av.style.background = WARNA[hash(x.nama) % WARNA.length];
+              av.textContent = ((kata[0] || '')[0] || '') + ((kata[1] || '')[0] || '');
+              var info = document.createElement('div');
+              var n = document.createElement('div');
+              n.className = 'nm';
+              n.textContent = x.nama;
+              var kl = document.createElement('div');
+              kl.className = 'kl';
+              kl.textContent = 'Kelas ' + x.kelas;
+              info.appendChild(n);
+              info.appendChild(kl);
+              var wk = document.createElement('div');
+              wk.className = 'wk';
+              wk.textContent = x.jam;
+              var sm = document.createElement('small');
+              sm.className = x.status === 'TERLAMBAT' ? 't' : 'h';
+              sm.textContent = x.status === 'TERLAMBAT' ? 'Terlambat' : 'Tepat waktu';
+              wk.appendChild(sm);
+              it.appendChild(av);
+              it.appendChild(info);
+              it.appendChild(wk);
+              feed.appendChild(it);
+            });
+            sudahAda = set;
+            feed.scrollTop = posisi;
+          }
+
+          function render(d) {
+            try {
+              localStorage.setItem('siapBerandaV1', JSON.stringify({
+                hari: new Date().toDateString(),
+                d: d
+              }));
+            } catch (e) {}
+            $('persen').textContent = d.persen;
+            var modeKelas = d.mode === 'kelas';
+            $('jdlDonut').textContent = modeKelas ? 'Kehadiran Kelas ' + d.kelas : 'Kehadiran Hari Ini';
+            $('jdlFeed').textContent = modeKelas ? 'Absensi Kelas ' + d.kelas : 'Absensi Terbaru';
+            $('ketDonut').textContent = modeKelas ? 'hari ini, dari ' + d.total + ' siswa kelas ' + d.kelas : 'dari ' + d.total + ' siswa aktif';
+            var cs = $('chipSaya');
+            if (modeKelas && d.saya) {
+              cs.style.display = '';
+              cs.className = 'chip ' + (d.saya.status ? (d.saya.status === 'TERLAMBAT' ? 'warn' : 'ok') : '');
+              cs.textContent = d.saya.nama + ' · ' + (d.saya.status ? 'sudah presensi ' + d.saya.jam + (d.saya.status === 'TERLAMBAT' ? ' (terlambat)' : '') : (d.saya.izin ? (d.saya.izin === 'SAKIT' ? 'sakit' : 'izin') + ' disetujui hari ini' : 'belum presensi hari ini'));
+            } else {
+              cs.style.display = 'none';
+            }
+            [
+              ['Tepat', d.tepat],
+              ['Terlambat', d.terlambat],
+              ['Tidak', d.tidak_hadir],
+              ['Belum', d.belum]
+            ].forEach(function(r) {
+              $('n' + r[0]).textContent = r[1];
+              $('p' + r[0]).textContent = pct(r[1], d.total) + '%';
+            });
+            gambarDonut(d);
+            gambarFeed(d);
+            renderSiswa(d);
+            aturTombolScan(d);
+            var cb = $('chipBuka');
+            var tutupJam = d.efektif && d.ditutup;
+            cb.className = 'chip ' + (d.efektif && !tutupJam ? 'ok' : 'tutup');
+            var ag = d.agenda;
+            if (!d.efektif) cb.textContent = ag && ag.jenis === 'libur' ? ag.label + ': ' + ag.judul + ' — presensi ditutup' : 'Hari ini libur — presensi ditutup';
+            else if (tutupJam) cb.textContent = (ag ? ag.label + ': ' + ag.judul + ' · ' : '') + 'Absen masuk ditutup pukul ' + d.batas_absen;
+            else cb.textContent = (ag ? ag.label + ': ' + ag.judul + ' · ' : '') + 'Presensi dibuka hari ini' + (d.batas_absen ? ' s.d. ' + d.batas_absen : '');
+            if (d.jam_masuk) {
+              var cj = $('chipJam');
+              cj.style.display = '';
+              cj.textContent = 'Masuk ' + d.jam_masuk + (d.batas_terlambat ? ' · terlambat setelah ' + d.batas_terlambat : '') + ' · Pulang ' + d.pulang_buka + '–' + d.pulang_tutup;
+            }
+            $('waktuUpdate').textContent = (modeKelas ? d.terbaru.length + ' siswa sudah presensi' + (d.terbaru.length > 5 ? ' · gulir untuk melihat semua' : '') + ' · ' : '') + 'Diperbarui ' + d.waktu;
+            $('liveBadge').classList.remove('putus');
+            $('liveBadge').textContent = 'LIVE';
+          }
+
+          /* ---------- tombol scan: nonaktif saat hari non-efektif, atau siswa (perangkat terdaftar) sudah presensi/izin hari ini ---------- */
+          function aturTombolScan(d) {
+            var alpa = !!(d.mode === 'kelas' && d.saya && d.saya.status === 'ALPA');
+            var sudah = !!(d.mode === 'kelas' && d.saya && (d.saya.status || d.saya.izin)); // sudah presensi, izin/sakit disetujui, atau Alfa
+            var mati = d.mode === 'kelas' && d.saya && d.saya.scan ? !d.saya.scan.aktif : !d.efektif;
+            var alasan = d.saya && d.saya.scan ? d.saya.scan.alasan : (!d.efektif ? 'Presensi ditutup hari ini (bukan hari efektif)' : '');
+            var hero = $('btnScan');
+            hero.disabled = mati;
+            hero.title = alasan;
+            var nav = $('apNavScan');
+            nav.classList.toggle('mati', mati);
+            nav.setAttribute('aria-disabled', mati ? 'true' : 'false');
+            nav.title = alasan;
+            // Menu "Scan QR Absen" di sidebar desktop ikut nonaktif
+            var sm = document.querySelector('.sd-menu a[href$="/presensi/"]');
+            if (sm) {
+              sm.classList.toggle('mati', mati);
+              sm.setAttribute('aria-disabled', mati ? 'true' : 'false');
+              sm.title = alasan;
+              if (mati) sm.setAttribute('tabindex', '-1');
+              else sm.removeAttribute('tabindex');
+            }
+          }
+
+          /* ---------- tampilan siswa (perangkat terdaftar & aktif) ---------- */
+          var lokasiDicek = false;
+
+          function renderSiswa(d) {
+            var aktif = d.mode === 'kelas' && !!d.saya;
+            document.body.classList.toggle('mode-siswa', aktif);
+            if (!aktif) return;
+            var s = d.saya,
+              kata = String(s.nama || '').trim().split(/\s+/)[0] || '';
+            $('apNama').textContent = kata.charAt(0).toUpperCase() + kata.slice(1).toLowerCase();
+            if ($('apTopNama')) $('apTopNama').textContent = $('apNama').textContent || 'Siswa';
+            var STATUS = {
+              HADIR: ['Hadir', '#2fb344', 'check-lg'],
+              TERLAMBAT: ['Hadir (Terlambat)', '#f08c1a', 'clock-history'],
+              IZIN: ['Izin', '#e0a100', 'file-earmark-text-fill'],
+              SAKIT: ['Izin (Sakit)', '#e0a100', 'file-earmark-medical-fill'],
+              ALPA: ['Alfa', '#e03e4a', 'x-lg'],
+              BELUM: ['Belum absen', '#8a94a6', 'hourglass-split']
+            };
+            var dispBox = $('apDispensasi');
+            dispBox.textContent = '';
+            (s.dispensasi || []).forEach(function(x) {
+              var el = document.createElement('a');
+              el.className = 'ap-dispensasi';
+              el.href = BASE + '/portal/izin/' + encodeURIComponent(x.id);
+              el.textContent = 'Dispensasi disetujui · ' + x.durasi + ' · ' + x.kegiatan;
+              dispBox.appendChild(el);
+            });
+            var kunci = s.status || s.izin || 'BELUM',
+              st = STATUS[kunci] || STATUS.BELUM;
+            $('apStatus').style.setProperty('--c', st[1]);
+            $('apStJudul').textContent = st[0];
+            $('apStIkon').className = 'bi bi-' + st[2];
+            $('apStMasuk').textContent = 'Masuk: ' + (s.jam && s.jam !== '00:00' ? s.jam + ' WIB' : '-');
+            $('apStPulang').textContent = 'Pulang: ' + (s.jam_pulang ? s.jam_pulang + ' WIB' : 'Belum tercatat');
+            if (!$('apPulangBulan')) {
+              var el = document.createElement('p');
+              el.id = 'apPulangBulan';
+              el.className = 'ap-pulang';
+              $('apDispensasi').after(el);
+            }
+            $('apPulangBulan').textContent = 'Pulang tercatat bulan ini: ' + (+s.pulang_bulan || 0) + ' hari · Jendela pulang ' + d.pulang_buka + '–' + d.pulang_tutup;
+            var alpa = s.status === 'ALPA';
+            var sudah = !!s.status && !alpa;
+            var izinHariIni = !!s.izin && !sudah && !alpa;
+            var b = $('apAbsen');
+            b.disabled = !s.scan || !s.scan.aktif;
+            b.querySelector('span').textContent = alpa ? 'Absen ditutup (Alfa)' : sudah ? 'Sudah Absen Masuk' : (!d.efektif ? 'Presensi ditutup hari ini' : (izinHariIni ? (s.izin === 'SAKIT' ? 'Sakit disetujui hari ini' : 'Izin disetujui hari ini') : 'Absen Masuk'));
+            if (s.scan) {
+              var label = s.scan.aktif ? (s.scan.sesi === 'pulang' ? 'Absen Pulang' : 'Absen Datang') : (s.jam_pulang ? 'Sudah Absen Pulang' : 'Scan belum tersedia');
+              b.querySelector('span').textContent = label;
+            }
+            if (s.bulan) {
+              $('apHadir').textContent = s.bulan.hadir;
+              $('apIzin').textContent = s.bulan.izin;
+              $('apAlfa').textContent = s.bulan.alfa;
+              if ($('apAlfaSub')) $('apAlfaSub').textContent = +s.bulan.alfa > 0 ? s.bulan.alfa + ' hari' : 'Tidak ada';
+            }
+            if (!lokasiDicek) {
+              lokasiDicek = true;
+              cekLokasi(!!d.gps_aktif);
+            }
+          }
+
+          function cekLokasi(wajib) {
+            var el = $('apLok').querySelector('span');
+            if (!navigator.geolocation) {
+              el.textContent = wajib ? 'Lokasi tidak didukung perangkat' : 'Lokasi tidak diwajibkan';
+              return;
+            }
+            navigator.geolocation.getCurrentPosition(
+              function() {
+                el.textContent = 'Lokasi aktif terdeteksi';
+              },
+              function() {
+                el.textContent = wajib ? 'Aktifkan lokasi (GPS) untuk absen' : 'Lokasi tidak aktif';
+              }, {
+                enableHighAccuracy: false,
+                timeout: 10000,
+                maximumAge: 60000
+              }
+            );
+          }
+
+          function jamSiswa() {
+            var d = new Date();
+            try {
+              d = new Date(d.toLocaleString('en-US', {
+                timeZone: 'Asia/Jakarta'
+              }));
+            } catch (e) {}
+            var h = d.getHours(),
+              m = d.getMinutes(),
+              sd = d.getSeconds(),
+              p = function(n) {
+                return String(n).padStart(2, '0');
+              };
+            $('apJam').textContent = p(h) + ':' + p(m);
+            $('apTgl').textContent = HARI[d.getDay()] + ', ' + d.getDate() + ' ' + BULAN[d.getMonth()] + ' ' + d.getFullYear();
+            if ($('apTgl2')) $('apTgl2').textContent = $('apTgl').textContent;
+            $('apJarumJam').setAttribute('transform', 'rotate(' + ((h % 12) * 30 + m * 0.5) + ' 60 60)');
+            $('apJarumMenit').setAttribute('transform', 'rotate(' + (m * 6 + sd * 0.1) + ' 60 60)');
+            $('apDetik').textContent = ':' + p(sd);
+            $('apJarumDetik').setAttribute('transform', 'rotate(' + (sd * 6) + ' 60 60)');
+          }
+          jamSiswa();
+          setInterval(jamSiswa, 1000);
+          $('apAbsen').addEventListener('click', function() {
+            $('btnScan').click();
           });
-      }
-      if (window.SIAP_SNAP) {
-        try {
-          render(window.SIAP_SNAP);
-        } catch (e) {}
-      }
-      muat();
-      setInterval(muat, 8000);
-      document.addEventListener('visibilitychange', function() {
-        if (!document.hidden) muat();
-      });
+          $('apNavScan').addEventListener('click', function() {
+            if (!$('btnScan').disabled) $('btnScan').click();
+          });
 
-      /* ---------- status perangkat ---------- */
-      function cekPerangkat() {
-        var el = $('statusHp');
-        el.className = 'status-hp';
-        el.innerHTML = '<i class="bi bi-hourglass-split"></i> Memeriksa perangkat…';
-        return fetch(BASE + '/api/cek_perangkat.php', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            device_uuid: uuid
-          })
-        }).then(function(r) {
-          return r.json();
-        }).then(function(d) {
-          statusHp = d;
-          // Tombol Daftarkan Perangkat hanya tampil bila perangkat BELUM terdaftar
-          $('btnDaftar').classList.toggle('hide', !(d.success && d.status === 'BELUM'));
-          if (!d.success) {
-            $('btnDaftar').classList.remove('hide');
-            el.className = 'status-hp no';
-            el.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Gagal memeriksa perangkat';
-            return;
+          var memuat = false;
+
+          function muat() {
+            if (memuat || document.hidden) return;
+            memuat = true;
+            fetch(BASE + '/api/beranda.php', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  device_uuid: uuid
+                }),
+                cache: 'no-store'
+              })
+              .then(function(r) {
+                if (!r.ok) throw new Error(r.status);
+                return r.json();
+              })
+              .then(function(d) {
+                if (d.success) render(d);
+              })
+              .catch(function() {
+                $('liveBadge').classList.add('putus');
+                $('liveBadge').textContent = 'TERPUTUS';
+              })
+              .then(function() {
+                memuat = false;
+              });
           }
-          if (d.status === 'TIDAK_WAJIB') {
-            el.className = 'status-hp ok';
-            el.innerHTML = '<i class="bi bi-check-circle-fill"></i> Pendaftaran perangkat tidak diwajibkan';
-          } else if (d.status === 'AKTIF') {
-            el.className = 'status-hp ok';
-            el.innerHTML = '<i class="bi bi-check-circle-fill"></i> Perangkat terdaftar';
-          } else if (d.status === 'DIBLOKIR') {
-            el.className = 'status-hp blok';
-            el.innerHTML = '<i class="bi bi-slash-circle-fill"></i> Perangkat ini diblokir admin';
-          } else {
-            el.className = 'status-hp no';
-            el.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> Perangkat belum terdaftar';
+          if (window.SIAP_SNAP) {
+            try {
+              render(window.SIAP_SNAP);
+            } catch (e) {}
           }
-        }).catch(function() {
-          statusHp = null;
-          $('btnDaftar').classList.remove('hide');
-          el.className = 'status-hp no';
-          el.innerHTML = '<i class="bi bi-wifi-off"></i> Tidak dapat memeriksa perangkat';
-        });
-      }
-      cekPerangkat();
+          muat();
+          setInterval(muat, 8000);
+          document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) muat();
+          });
 
-      /* ---------- dialog ---------- */
-      function buka(id) {
-        $(id).classList.add('buka');
-      }
-
-      function tutup(id) {
-        $(id).classList.remove('buka');
-      }
-      ['mdBelum', 'mdDaftar'].forEach(function(id) {
-        $(id).addEventListener('click', function(e) {
-          if (e.target === $(id) && id === 'mdBelum') tutup(id);
-        });
-      });
-
-      $('btnScan').addEventListener('click', function() {
-        var go = function() {
-          var d = statusHp;
-          if (d && d.success && d.status === 'DIBLOKIR') {
-            $('belumJudul').textContent = 'Perangkat Diblokir';
-            $('belumIsi').textContent = 'Perangkat ini diblokir oleh admin. Hubungi admin sekolah untuk membukanya.';
-            $('belumDaftar').classList.add('hide');
-            buka('mdBelum');
-            return;
+          /* ---------- status perangkat ---------- */
+          function cekPerangkat() {
+            var el = $('statusHp');
+            el.className = 'status-hp';
+            el.innerHTML = '<i class="bi bi-hourglass-split"></i> Memeriksa perangkat…';
+            return fetch(BASE + '/api/cek_perangkat.php', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                device_uuid: uuid
+              })
+            }).then(function(r) {
+              return r.json();
+            }).then(function(d) {
+              statusHp = d;
+              // Tombol Daftarkan Perangkat hanya tampil bila perangkat BELUM terdaftar
+              $('btnDaftar').classList.toggle('hide', !(d.success && d.status === 'BELUM'));
+              if (!d.success) {
+                $('btnDaftar').classList.remove('hide');
+                el.className = 'status-hp no';
+                el.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Gagal memeriksa perangkat';
+                return;
+              }
+              if (d.status === 'TIDAK_WAJIB') {
+                el.className = 'status-hp ok';
+                el.innerHTML = '<i class="bi bi-check-circle-fill"></i> Pendaftaran perangkat tidak diwajibkan';
+              } else if (d.status === 'AKTIF') {
+                el.className = 'status-hp ok';
+                el.innerHTML = '<i class="bi bi-check-circle-fill"></i> Perangkat terdaftar';
+              } else if (d.status === 'DIBLOKIR') {
+                el.className = 'status-hp blok';
+                el.innerHTML = '<i class="bi bi-slash-circle-fill"></i> Perangkat ini diblokir admin';
+              } else {
+                el.className = 'status-hp no';
+                el.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> Perangkat belum terdaftar';
+              }
+            }).catch(function() {
+              statusHp = null;
+              $('btnDaftar').classList.remove('hide');
+              el.className = 'status-hp no';
+              el.innerHTML = '<i class="bi bi-wifi-off"></i> Tidak dapat memeriksa perangkat';
+            });
           }
-          if (d && d.success && !d.terdaftar) {
-            $('belumJudul').textContent = 'Perangkat Belum Terdaftar';
-            $('belumIsi').textContent = 'Untuk absensi, perangkat ini harus terlebih dahulu dihubungkan dengan akun siswa.';
-            $('belumDaftar').classList.remove('hide');
-            buka('mdBelum');
-            return;
-          }
-          window.location.href = BASE + '/presensi/index.php'; // sudah terdaftar (atau tidak diwajibkan)
-        };
-        if (statusHp === null) cekPerangkat().then(go);
-        else go();
-      });
-      $('belumBatal').addEventListener('click', function() {
-        tutup('mdBelum');
-      });
-      $('belumDaftar').addEventListener('click', function() {
-        tutup('mdBelum');
-        bukaDaftar();
-      });
-      $('btnDaftar').addEventListener('click', bukaDaftar);
+          cekPerangkat();
 
-      /* ---------- pendaftaran perangkat: arahkan ke aktivasi akun ---------- */
-      function bukaDaftar() {
-        buka('mdDaftar');
+          /* ---------- dialog ---------- */
+          function buka(id) {
+            $(id).classList.add('buka');
+          }
+
+          function tutup(id) {
+            $(id).classList.remove('buka');
+          }
+          ['mdBelum', 'mdDaftar'].forEach(function(id) {
+            $(id).addEventListener('click', function(e) {
+              if (e.target === $(id) && id === 'mdBelum') tutup(id);
+            });
+          });
+
+          $('btnScan').addEventListener('click', function() {
+            var go = function() {
+              var d = statusHp;
+              if (d && d.success && d.status === 'DIBLOKIR') {
+                $('belumJudul').textContent = 'Perangkat Diblokir';
+                $('belumIsi').textContent = 'Perangkat ini diblokir oleh admin. Hubungi admin sekolah untuk membukanya.';
+                $('belumDaftar').classList.add('hide');
+                buka('mdBelum');
+                return;
+              }
+              if (d && d.success && !d.terdaftar) {
+                $('belumJudul').textContent = 'Perangkat Belum Terdaftar';
+                $('belumIsi').textContent = 'Untuk absensi, perangkat ini harus terlebih dahulu dihubungkan dengan akun siswa.';
+                $('belumDaftar').classList.remove('hide');
+                buka('mdBelum');
+                return;
+              }
+              window.location.href = BASE + '/presensi/index.php'; // sudah terdaftar (atau tidak diwajibkan)
+            };
+            if (statusHp === null) cekPerangkat().then(go);
+            else go();
+          });
+          $('belumBatal').addEventListener('click', function() {
+            tutup('mdBelum');
+          });
+          $('belumDaftar').addEventListener('click', function() {
+            tutup('mdBelum');
+            bukaDaftar();
+          });
+          $('btnDaftar').addEventListener('click', bukaDaftar);
+
+          /* ---------- pendaftaran perangkat: arahkan ke aktivasi akun ---------- */
+          function bukaDaftar() {
+            buka('mdDaftar');
+          }
+          $('dfTutup').addEventListener('click', function() {
+            tutup('mdDaftar');
+          });
+        })();
+
+      } catch (error) {
+        showDeviceIdentityError(error);
       }
-      $('dfTutup').addEventListener('click', function() {
-        tutup('mdDaftar');
-      });
     })();
-
-  } catch (error) { showDeviceIdentityError(error); }
-})();
-</script>
+  </script>
 </body>
 
 </html>
