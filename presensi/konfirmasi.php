@@ -137,6 +137,11 @@ $autoKonfirmasi = $infoGate && !empty($infoGate['kelas_target']);
 
 <script src="<?= BASE_URL ?>/assets/js/device.js?v=<?= @filemtime(__DIR__ . '/../assets/js/device.js') ?: 0 ?>"></script>
 <script>
+(async function () {
+  guardDeviceIdentityForms();
+  try {
+    await prepareDeviceIdentity();
+
 const deviceUuid = getOrCreateDeviceUuid();
 const autoKonfirmasi = <?= $autoKonfirmasi ? 'true' : 'false' ?>;
 const gpsAktif = <?= !empty($settings['gps_aktif']) ? 'true' : 'false' ?>;
@@ -230,6 +235,9 @@ document.getElementById('btnConfirm').addEventListener('click', function () {
     submitPresensi(null, null);
   }
 });
+
+  } catch (error) { showDeviceIdentityError(error); }
+})();
 </script>
 </body>
 </html>

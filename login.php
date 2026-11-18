@@ -969,6 +969,10 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
         <div class="lg-ruang"></div>
         <button type="submit" class="lg-btn lg-a lg-a4" id="btnMasuk">Masuk</button>
       </form>
+      <?php if ($_SERVER['REQUEST_METHOD'] !== 'POST' && ($_GET['keluar'] ?? '') !== '1' && ($_GET['aktif'] ?? '') !== '1'): ?>
+      <p class="lg-kaki" id="deviceAutoStatus" role="status" aria-live="polite" hidden></p>
+      <button type="button" class="lg-btn" id="deviceAutoRetry" hidden>Coba lagi</button>
+      <?php endif; ?>
 
       <p class="lg-kaki lg-a lg-a4">
         Siswa belum punya password? <a href="<?= e(portal_url('aktivasi')) ?>">Aktivasi akun</a><br>
@@ -1073,30 +1077,12 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
   <?php if ($_SERVER['REQUEST_METHOD'] !== 'POST' && ($_GET['keluar'] ?? '') !== '1' && ($_GET['aktif'] ?? '') !== '1'): ?>
     <script src="<?= BASE_URL ?>/assets/js/device.js?v=<?= @filemtime(__DIR__ . '/assets/js/device.js') ?: 0 ?>"></script>
     <script>
-      // Perangkat siswa yang sudah terdaftar masuk otomatis (tanpa password). Gagal/belum terdaftar: formulir ini tetap dipakai.
-      (function() {
-        try {
-          var u = getDeviceUuidIfExists();
-          if (!u) return;
-          fetch(<?= json_encode(portal_url('masuk-perangkat')) ?>, {
-              method: 'POST',
-              credentials: 'same-origin',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                uuid: u
-              })
-            })
-            .then(function(r) {
-              return r.json();
-            })
-            .then(function(d) {
-              if (d && d.ok) location.replace(<?= json_encode(portal_url('', ['_g' => 1])) ?>);
-            })
-            .catch(function() {});
-        } catch (e) {}
-      })();
+      startDeviceAutoLogin({
+        api: <?= json_encode(portal_url('masuk-perangkat')) ?>,
+        statusId: 'deviceAutoStatus', retryId: 'deviceAutoRetry',
+        cancelOnSubmit: true,
+        onSuccess: function () { location.replace(<?= json_encode(portal_url('', ['_g' => 1])) ?>); }
+      });
     </script>
   <?php endif; ?>
 </body>

@@ -283,6 +283,23 @@ terkunci sementara dengan menebak password berulang (pemulihannya otomatis setel
 
 ---
 
+### Keandalan identitas Safari dan masuk otomatis
+
+- Identitas browser dicadangkan di localStorage dan cookie. Bila keduanya berbeda, tunggu pemilihan
+  tepat satu binding ACTIVE oleh server sebelum menyinkronkan; tidak reset/daftar perangkat baru.
+  Dua kandidat ACTIVE atau tidak ada yang sah ditolak tanpa menimpa cadangan.
+- Gerbang/login membedakan penolakan perangkat dari koneksi gagal. Gangguan transport, timeout,
+  respons tidak valid atau server sibuk dicoba maksimal dua kali per tahap, lalu tampil **Coba lagi**
+  dan pilihan password. Tidak ada redirect login hanya karena jaringan gagal.
+- Semua pemanggil identitas (beranda, scan, konfirmasi, pairing, profil, aktivasi) menunggu pemeriksaan.
+  Pendaftaran tidak dikirim ketika identitas belum pasti; aktivasi tanpa pendaftaran tetap dapat dipakai.
+- Batas idle **2 jam**, revocation akun/sesi, CSRF/logout dan password ulang aksi sensitif tetap berlaku.
+  Cookie sesi bukan remember-me permanen; cookie server iOS menargetkan 400 hari, bukan jaminan
+  penyimpanan Safari/Private/ITP tidak pernah dihapus. Gunakan browser/origin yang sama, bukan Private.
+- Endpoint resolver hanya mengembalikan indeks kandidat yang cocok (atau penolakan generik), tanpa
+  nama/status siswa/UUID di respons atau log. UUID adalah kredensial, jangan dicatat di log/screenshot.
+- Regresi: [`tests/safari/README.md`](tests/safari/README.md).
+
 ## 8c. PENGAJUAN IZIN / SAKIT & NOTIFIKASI
 
 **Alur:** siswa mengajukan di `/portal/izin/baru` → petugas piket memutuskan di `/izin` → siswa mendapat

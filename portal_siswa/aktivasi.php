@@ -78,6 +78,11 @@ elseif (($_GET['dari'] ?? '') === 'perangkat') portal_alert('info', 'HP ini suda
 </form>
 <script src="<?= BASE_URL ?>/assets/js/device.js?v=<?= @filemtime(__DIR__ . '/../assets/js/device.js') ?: 0 ?>"></script>
 <script>
+(async function () {
+  guardDeviceIdentityForms();
+  try {
+    await prepareDeviceIdentity();
+
   (function() {
     var f = document.getElementById('device_uuid');
 
@@ -89,6 +94,9 @@ elseif (($_GET['dari'] ?? '') === 'perangkat') portal_alert('info', 'HP ini suda
     isi();
     f.form.addEventListener('submit', isi);
   })();
+
+  } catch (error) { showDeviceIdentityError(error); }
+})();
 </script>
 <p class="pt-kaki">Sudah punya password? <a href="<?= e(portal_login_url()) ?>">Masuk</a></p>
 <?php portal_auth_akhir();
