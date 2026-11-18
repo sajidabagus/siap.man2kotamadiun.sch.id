@@ -19,6 +19,7 @@ if (!$siswa) {
 }
 
 $settings = get_settings();
+$sesiScan = presensi_sesi(jadwal_hari(null, (string) $siswa['kelas']));
 
 // QR Kelas (kelas_target terisi) = presensi otomatis tanpa tombol konfirmasi bila perangkat sudah terdaftar.
 // QR Gerbang (kelas_target kosong) tetap memakai tombol konfirmasi.
@@ -126,7 +127,7 @@ $autoKonfirmasi = $infoGate && !empty($infoGate['kelas_target']);
       </div>
 
       <button id="btnConfirm" class="ps-btn hijau d-none" style="margin-top:16px">
-        <i class="bi bi-check-circle-fill"></i> <span id="btnLabel">KONFIRMASI PRESENSI</span>
+        <i class="bi bi-check-circle-fill"></i> <span id="btnLabel">KONFIRMASI <?= $sesiScan === 'pulang' ? 'PULANG' : 'DATANG' ?></span>
       </button>
       <a href="<?= BASE_URL ?>/presensi/index.php" class="ps-btn polos" id="btnBack" style="margin-top:10px">Kembali</a>
     </div>

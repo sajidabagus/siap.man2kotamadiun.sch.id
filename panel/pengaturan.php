@@ -31,14 +31,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Pilih minimal satu hari efektif presensi.';
     }
 
-    // Batas absen masuk (HH:MM). Harus setelah Batas Terlambat, kalau tidak siswa terlambat tidak bisa absen sama sekali.
-    $batasAbsenVal = trim((string) ($_POST['batas_absen'] ?? '10:00'));
-    if (!preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $batasAbsenVal)) {
-        $errors[] = 'Format Batas Absen Masuk tidak valid (JJ:MM).';
-    } elseif ($batasAbsenVal <= substr(clean($_POST['batas_terlambat'] ?? '07:15'), 0, 5)) {
-        $errors[] = 'Batas Absen Masuk harus lebih lambat dari Batas Terlambat.';
+    foreach (['jam_masuk','batas_absen','batas_terlambat','pulang_buka','pulang_tutup'] as $kol) {
+        if (isset($_POST[$kol]) && !is_string($_POST[$kol])) { $errors[] = 'Jam absensi wajib berupa teks JJ:MM, bukan daftar.'; $_POST[$kol] = ''; }
     }
-    $batasAbsenVal .= ':00';
+    $jamErrors = jam_absensi_validasi($_POST);
+    $errors = array_merge($errors, $jamErrors);
+    foreach (['pulang_buka','pulang_tutup','terlambat_aktif'] as $kol) {
+        if (!array_key_exists($kol, $settings)) { $errors[] = 'Jalankan php database/migrate_absen_pulang.php sebelum menyimpan Jam absensi.'; break; }
+    }
+    $batasAbsenVal = (string) ($_POST['batas_absen'] ?? '') . ':00';
 
     if (!$errors) {
     $logo = $settings['logo'] ?? null;
@@ -70,6 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     foreach ($identitas as $kol => $_) $setIdentitas .= "$kol=:$kol, ";
     $punyaKode = array_key_exists('device_wajib_kode', $settings);
     $punyaBatasAbsen = array_key_exists('batas_absen', $settings);
+    $setIdentitas .= 'pulang_buka=:pbuka, pulang_tutup=:ptutup, terlambat_aktif=:taktif, ';
     if ($punyaBatasAbsen) $setIdentitas .= 'batas_absen=:batasabsen, ';
     if ($punyaKode) $setIdentitas .= 'device_wajib_kode=:wajibkode, ';
     $stmt = $db->prepare(
@@ -84,7 +86,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ':logo' => $logo,
         ':tahun' => clean($_POST['tahun_pelajaran'] ?? ''),
         ':jam' => clean($_POST['jam_masuk'] ?? '07:00'),
-        ':batas' => clean($_POST['batas_terlambat'] ?? '07:15'),
+        ':batas' => ($_POST['batas_terlambat'] ?? '') !== '' ? $_POST['batas_terlambat'] : '00:00:00',
+        ':pbuka' => $_POST['pulang_buka'], ':ptutup' => $_POST['pulang_tutup'], ':taktif' => ($_POST['batas_terlambat'] ?? '') !== '' ? 1 : 0,
         ':lat' => $latVal,
         ':lng' => $lngVal,
         ':radius' => (int) ($_POST['radius_meter'] ?? 100),
@@ -119,6 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'jam_masuk' => clean($_POST['jam_masuk'] ?? '07:00'),
         'batas_terlambat' => clean($_POST['batas_terlambat'] ?? '07:15'),
         'batas_absen' => clean($_POST['batas_absen'] ?? '10:00'),
+        'pulang_buka' => clean($_POST['pulang_buka'] ?? ''), 'pulang_tutup' => clean($_POST['pulang_tutup'] ?? ''), 'terlambat_aktif' => ($_POST['batas_terlambat'] ?? '') !== '' ? 1 : 0,
         'pesan_sukses' => clean($_POST['pesan_sukses'] ?? ''),
         'gps_aktif' => $gpsAktif,
         'latitude_sekolah' => $latInput,
@@ -212,33 +216,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </div>
 
   <div class="tab-pane fade" id="tab-absensi" role="tabpanel">
-  <div class="card mb-3">
-    <div class="card-header">Jam & Status Kehadiran</div>
-    <div class="card-body row g-3">
-      <div class="col-md-4">
-        <label class="form-label">Jam Masuk</label>
-        <input type="time" name="jam_masuk" class="form-control" value="<?= e(substr($settings['jam_masuk'],0,5)) ?>">
-        <small class="text-muted">Presensi ditolak jika dilakukan sebelum jam ini (mencegah scan jauh di luar jam sekolah).</small>
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">Batas Terlambat</label>
-        <input type="time" name="batas_terlambat" class="form-control" value="<?= e(substr($settings['batas_terlambat'],0,5)) ?>">
-        <small class="text-muted">Presensi setelah jam ini otomatis berstatus TERLAMBAT.</small>
-      </div>
-      <?php if (array_key_exists('batas_absen', $settings)): ?>
-      <div class="col-md-4">
-        <label class="form-label">Batas Absen Masuk</label>
-        <input type="time" name="batas_absen" class="form-control" value="<?= e(substr((string) ($settings['batas_absen'] ?? '10:00'), 0, 5)) ?>">
-        <small class="text-muted">Setelah jam ini scan masuk ditutup, dan siswa aktif yang belum absen (tanpa izin/sakit disetujui) otomatis dicatat ALPA pada hari efektif.</small>
-      </div>
-      <?php endif; ?>
-      <div class="col-md-4">
-        <label class="form-label">Pesan Presensi Berhasil</label>
-        <input type="text" name="pesan_sukses" class="form-control" value="<?= e($settings['pesan_sukses']) ?>">
-        <small class="text-muted">Ditampilkan ke siswa di halaman hasil presensi setelah berhasil.</small>
-      </div>
-    </div>
-  </div>
+  <?php require __DIR__ . '/_jam_absensi.php'; ?>
+  <div class="mb-3"><label class="form-label" for="pesanSukses">Pesan Presensi Berhasil</label><input id="pesanSukses" type="text" name="pesan_sukses" class="form-control" value="<?= e($settings['pesan_sukses']) ?>"></div>
 
   <div class="card mb-3">
     <div class="card-header">Geolocation / GPS</div>

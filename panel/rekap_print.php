@@ -22,7 +22,7 @@ $sql = "SELECT s.nisn, s.nama,
           s.kelas
         ) AS kelas_bulan_ini,
         SUM(p.status IN ('HADIR','TERLAMBAT')) hadir, SUM(p.status='TERLAMBAT') terlambat,
-        SUM(p.status='IZIN') izin, SUM(p.status='SAKIT') sakit, SUM(p.status='ALPA') alpa
+        SUM(p.status='IZIN') izin, SUM(p.status='SAKIT') sakit, SUM(p.status='ALPA') alpa, SUM(p.jam_pulang IS NOT NULL AND p.status IN ('HADIR','TERLAMBAT')) pulang
         FROM siswa s LEFT JOIN presensi p ON p.siswa_id = s.id AND MONTH(p.tanggal)=:bulan AND YEAR(p.tanggal)=:tahun
         WHERE s.status='aktif'" . ($kelas !== '' ? ' AND s.kelas = :kelas' : '') . "
         GROUP BY s.id ORDER BY s.kelas, s.nama";
@@ -36,7 +36,7 @@ $rekapSiswa = $stmt->fetchAll();
 $stmtK = $db->prepare(
     "SELECT p.kelas_saat_presensi AS kelas, COUNT(DISTINCT p.siswa_id) total_siswa,
      SUM(p.status IN ('HADIR','TERLAMBAT')) hadir, SUM(p.status='TERLAMBAT') terlambat,
-     SUM(p.status='IZIN') izin, SUM(p.status='SAKIT') sakit, SUM(p.status='ALPA') alpa
+     SUM(p.status='IZIN') izin, SUM(p.status='SAKIT') sakit, SUM(p.status='ALPA') alpa, SUM(p.jam_pulang IS NOT NULL AND p.status IN ('HADIR','TERLAMBAT')) pulang
      FROM presensi p WHERE MONTH(p.tanggal)=:bulan AND YEAR(p.tanggal)=:tahun"
     . ($kelas !== '' ? ' AND p.kelas_saat_presensi = :kelas' : '') .
     " GROUP BY p.kelas_saat_presensi ORDER BY p.kelas_saat_presensi"
@@ -47,7 +47,7 @@ $rekapKelas = $stmtK->fetchAll();
 $logo = $settings['logo'] ?? '';
 $logoUrl = ($logo !== '' && is_file(__DIR__ . '/../uploads/siswa/' . $logo)) ? BASE_URL . '/uploads/siswa/' . rawurlencode($logo) : null;
 $judulKelas = $kelas !== '' ? 'Kelas ' . $kelas : 'Semua Kelas';
-$tot = ['hadir' => 0, 'terlambat' => 0, 'izin' => 0, 'sakit' => 0, 'alpa' => 0];
+$tot = ['hadir' => 0, 'terlambat' => 0, 'izin' => 0, 'sakit' => 0, 'alpa' => 0, 'pulang' => 0];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -112,7 +112,7 @@ $tot = ['hadir' => 0, 'terlambat' => 0, 'izin' => 0, 'sakit' => 0, 'alpa' => 0];
   <h3>Ringkasan Per Kelas</h3>
   <table>
     <thead>
-      <tr><th>Kelas</th><th>Jumlah Siswa</th><th>Hadir</th><th>Terlambat</th><th>Izin</th><th>Sakit</th><th>Alpa</th></tr>
+      <tr><th>Kelas</th><th>Jumlah Siswa</th><th>Hadir</th><th>Terlambat</th><th>Izin</th><th>Sakit</th><th>Alpa</th><th>Pulang</th></tr>
     </thead>
     <tbody>
       <?php foreach ($rekapKelas as $k): ?>
@@ -123,17 +123,17 @@ $tot = ['hadir' => 0, 'terlambat' => 0, 'izin' => 0, 'sakit' => 0, 'alpa' => 0];
           <td class="c"><?= (int) $k['terlambat'] ?></td>
           <td class="c"><?= (int) $k['izin'] ?></td>
           <td class="c"><?= (int) $k['sakit'] ?></td>
-          <td class="c"><?= (int) $k['alpa'] ?></td>
+          <td class="c"><?= (int) $k['alpa'] ?></td><td><?= (int) $k['pulang'] ?></td>
         </tr>
       <?php endforeach; ?>
-      <?php if (!$rekapKelas): ?><tr><td colspan="7" class="c">Belum ada data presensi pada bulan ini.</td></tr><?php endif; ?>
+      <?php if (!$rekapKelas): ?><tr><td colspan="8" class="c">Belum ada data presensi pada bulan ini.</td></tr><?php endif; ?>
     </tbody>
   </table>
 
   <h3>Rekap Per Siswa</h3>
   <table>
     <thead>
-      <tr><th style="width:30px">No</th><th>NISN</th><th>Nama</th><th>Kelas</th><th>Hadir</th><th>Terlambat</th><th>Izin</th><th>Sakit</th><th>Alpa</th></tr>
+      <tr><th style="width:30px">No</th><th>NISN</th><th>Nama</th><th>Kelas</th><th>Hadir</th><th>Terlambat</th><th>Izin</th><th>Sakit</th><th>Alpa</th><th>Pulang</th></tr>
     </thead>
     <tbody>
       <?php foreach ($rekapSiswa as $i => $r):
@@ -147,17 +147,17 @@ $tot = ['hadir' => 0, 'terlambat' => 0, 'izin' => 0, 'sakit' => 0, 'alpa' => 0];
           <td class="c"><?= (int) $r['terlambat'] ?></td>
           <td class="c"><?= (int) $r['izin'] ?></td>
           <td class="c"><?= (int) $r['sakit'] ?></td>
-          <td class="c"><?= (int) $r['alpa'] ?></td>
+          <td class="c"><?= (int) $r['alpa'] ?></td><td><?= (int) $r['pulang'] ?></td>
         </tr>
       <?php endforeach; ?>
-      <?php if (!$rekapSiswa): ?><tr><td colspan="9" class="c">Tidak ada data siswa.</td></tr><?php endif; ?>
+      <?php if (!$rekapSiswa): ?><tr><td colspan="10" class="c">Tidak ada data siswa.</td></tr><?php endif; ?>
     </tbody>
     <?php if ($rekapSiswa): ?>
     <tfoot>
       <tr>
         <td colspan="4" class="c">Total</td>
         <td class="c"><?= $tot['hadir'] ?></td><td class="c"><?= $tot['terlambat'] ?></td>
-        <td class="c"><?= $tot['izin'] ?></td><td class="c"><?= $tot['sakit'] ?></td><td class="c"><?= $tot['alpa'] ?></td>
+        <td class="c"><?= $tot['izin'] ?></td><td class="c"><?= $tot['sakit'] ?></td><td class="c"><?= $tot['alpa'] ?></td><td class="c"><?= $tot['pulang'] ?></td>
       </tr>
     </tfoot>
     <?php endif; ?>

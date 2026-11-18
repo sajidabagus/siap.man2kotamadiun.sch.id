@@ -99,6 +99,7 @@ $berhasilTampil = ($status === 'ok' || $status === 'already') && $result;
     <div class="ps-st done"><span>3</span><em>Konfirmasi</em></div>
   </div>
 
+  <?php if (($result['sesi'] ?? '') === 'pulang'): ?><div class="ps-note ok"><i class="bi bi-box-arrow-right"></i><div><strong>Absen pulang berhasil</strong><br>Datang <?= e(substr($result['jam_masuk'], 0, 5)) ?> · Pulang <?= e(substr($result['jam_pulang'], 0, 5)) ?></div></div><?php endif; ?>
   <div class="hs-hero">
     <div class="hs-ring <?= $sudahAda ? 'biru' : 'hijau' ?>">
       <svg viewBox="0 0 100 100" aria-hidden="true">
