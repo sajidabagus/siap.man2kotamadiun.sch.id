@@ -83,27 +83,100 @@ $nisnBermasalah = (int) $db->query("SELECT COUNT(*) FROM siswa WHERE status = 'a
     <?php if ($nisnF !== 'bermasalah'): ?><a class="btn btn-sm btn-outline-dark" href="<?= e(modul_url('siswa', ['nisn' => 'bermasalah'])) ?>">Tampilkan</a><?php endif; ?>
   </div>
 <?php endif; ?>
-<div class="tbl-card">
-  <div class="tbl-head">
-    <h6>Semua siswa</h6>
-    <div class="sub">Cari, saring, dan kelola data siswa.</div>
-  </div>
+<style>
+  /* Bar filter: sama dengan halaman Data Presensi */
+  .pf-filter {
+    display: grid !important;
+    grid-template-columns: auto auto minmax(200px, 1fr) auto;
+    align-items: center;
+    gap: .75rem !important;
+    width: 100%;
+  }
 
-  <div class="tbl-tools">
-    <form method="get" data-live data-live-target="#hasil-live"><?= hidden_modul() ?>
-      <?= render_per_page_field($perPage, false) ?>
-      <div class="tbl-search">
-        <i class="bi bi-search"></i>
-        <input type="text" name="q" class="form-control" placeholder="Cari nama/NISN..." value="<?= e($q) ?>">
-      </div>
-      <select name="kelas" class="form-select">
+  .pf-filter>* {
+    margin: 0 !important;
+    min-width: 0;
+  }
+
+  .pf-filter .form-select,
+  .pf-filter .form-control {
+    width: 100% !important;
+    flex: none !important;
+    max-width: none !important;
+  }
+
+  .pf-filter .pf-pp {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    white-space: nowrap;
+  }
+
+  .pf-filter .pf-pp .form-select {
+    width: auto !important;
+  }
+
+  .pf-filter .pf-kelas {
+    min-width: 160px;
+  }
+
+  .pf-filter .pf-btn {
+    white-space: nowrap;
+  }
+
+  .pf-filter .pf-search {
+    position: relative;
+  }
+
+  .pf-filter .pf-search .bi-search {
+    position: absolute;
+    top: 50%;
+    left: .85rem;
+    transform: translateY(-50%);
+    color: #6c757d;
+    pointer-events: none;
+  }
+
+  .pf-filter .pf-search .form-control {
+    padding-left: 2.4rem;
+  }
+
+  @media (max-width: 991.98px) {
+    .pf-filter {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .pf-filter .pf-pp,
+    .pf-filter .pf-search {
+      grid-column: 1 / -1;
+    }
+  }
+</style>
+
+<!-- Kartu filter -->
+<div class="tbl-card mb-3">
+  <div class="p-3">
+    <form method="get" data-live data-live-target="#hasil-live" id="formFilter" class="pf-filter"><?= hidden_modul() ?>
+      <div class="pf-pp"><?= render_per_page_field($perPage, false) ?></div>
+      <select name="kelas" class="form-select pf-kelas">
         <option value="">Semua Kelas</option>
         <?php foreach ($kelasList as $k): ?>
           <option value="<?= e($k) ?>" <?= $kelas === $k ? 'selected' : '' ?>><?= e($k) ?></option>
         <?php endforeach; ?>
       </select>
-      <a href="<?= modul_url('siswa') ?>" class="btn btn-light border" title="Hapus semua filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
+      <div class="pf-search">
+        <i class="bi bi-search"></i>
+        <input type="search" name="q" class="form-control" value="<?= e($q) ?>" placeholder="Cari nama siswa / NIS..." autocomplete="off">
+      </div>
+      <a href="<?= modul_url('siswa') ?>" class="btn btn-primary pf-btn" title="Hapus semua filter">Reset</a>
     </form>
+  </div>
+</div>
+
+<div class="tbl-card">
+  <div class="tbl-head">
+    <h6>Semua siswa</h6>
+    <div class="sub">Cari, saring, dan kelola data siswa.</div>
   </div>
 
   <div id="hasil-live">
