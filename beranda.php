@@ -1410,6 +1410,11 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
 
   <script src="<?= BASE_URL ?>/assets/js/device.js?v=<?= @filemtime(__DIR__ . '/assets/js/device.js') ?: 0 ?>"></script>
   <script>
+(async function () {
+  guardDeviceIdentityForms();
+  try {
+    await prepareDeviceIdentity();
+
     (function() {
       var BASE = <?= json_encode(BASE_URL) ?>;
       var $ = function(id) {
@@ -1848,7 +1853,10 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
         tutup('mdDaftar');
       });
     })();
-  </script>
+
+  } catch (error) { showDeviceIdentityError(error); }
+})();
+</script>
 </body>
 
 </html>

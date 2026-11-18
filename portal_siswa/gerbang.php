@@ -1,7 +1,7 @@
 <?php
 // /portal/gerbang — dipanggil bila belum ada sesi. Mencoba MASUK OTOMATIS lewat perangkat terdaftar (tanpa password).
 // Browser membaca UUID perangkatnya (tidak dibuat baru), mengirimnya ke /portal/masuk-perangkat, lalu diteruskan ke halaman
-// tujuan. Gagal / belum terdaftar / tanpa JavaScript -> halaman login seperti biasa.
+// tujuan. Penolakan -> login; gangguan koneksi -> retry terbatas dan status yang jelas.
 $lanjut = portal_lanjut_aman((string) ($_GET['lanjut'] ?? ''));
 $tujuan = portal_url($lanjut, ['_g' => 1]);      // _g: tanda "gerbang sudah dilewati" agar tidak berputar bila cookie ditolak
 $login = portal_login_url();
@@ -16,24 +16,24 @@ $logo = portal_logo_url();
 <main class="pt-gerbang-in" aria-live="polite">
   <div class="pt-gerbang-logo"><?php if ($logo): ?><img src="<?= e($logo) ?>" alt=""><?php else: ?><i class="bi bi-person-badge"></i><?php endif; ?></div>
   <div class="pt-spin" aria-hidden="true"></div>
-  <p>Memeriksa perangkat…</p>
-  <a class="pt-gerbang-link" href="<?= e($login) ?>">Masuk dengan password</a>
+  <p id="deviceAutoStatus" role="status">Memeriksa perangkat…</p>
+  <div class="pt-device-actions">
+    <button type="button" class="pt-btn kecil" id="deviceAutoRetry" hidden>Coba lagi</button>
+    <a class="pt-gerbang-link" href="<?= e($login) ?>">Masuk dengan password</a>
+  </div>
 </main>
 <script src="<?= BASE_URL ?>/assets/js/device.js?v=<?= @filemtime(__DIR__ . '/../assets/js/device.js') ?: 0 ?>"></script>
 <script>
-(function () {
-  var tujuan = <?= json_encode($tujuan) ?>, login = <?= json_encode($login) ?>, aktivasi = <?= json_encode(portal_url('aktivasi', ['dari' => 'perangkat'])) ?>, api = <?= json_encode(portal_url('masuk-perangkat')) ?>;
-  var selesai = false;
-  function ke(u) { if (selesai) return; selesai = true; location.replace(u); }
-  var uuid = '';
-  try { uuid = getDeviceUuidIfExists(); } catch (e) {}
-  if (!uuid) { ke(login); return; }                       // belum pernah dipakai di perangkat ini: langsung login
-  setTimeout(function () { ke(login); }, 8000);           // jaring pengaman bila jaringan macet
-  fetch(api, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uuid: uuid }) })
-    .then(function (r) { return r.json(); })
-    .then(function (d) { ke(d && d.ok ? tujuan : (d && d.perlu === 'aktivasi' ? aktivasi : login)); })
-    .catch(function () { ke(login); });
-})();
+startDeviceAutoLogin({
+  api: <?= json_encode(portal_url('masuk-perangkat')) ?>,
+  statusId: 'deviceAutoStatus', retryId: 'deviceAutoRetry',
+  onSuccess: function () { location.replace(<?= json_encode($tujuan) ?>); },
+  onRejected: function (data) {
+    location.replace(data.perlu === 'aktivasi'
+      ? <?= json_encode(portal_url('aktivasi', ['dari' => 'perangkat'])) ?>
+      : <?= json_encode($login) ?>);
+  }
+});
 </script>
 </body>
 </html>

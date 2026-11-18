@@ -160,6 +160,11 @@ $tutupHariIni = !$jdUmum['efektif'] && !agenda_ada_pembukaan(date('Y-m-d'));
 <script src="<?= BASE_URL ?>/assets/js/vendor/html5-qrcode.min.js"></script>
 <script src="<?= BASE_URL ?>/assets/js/device.js?v=<?= @filemtime(__DIR__ . '/../assets/js/device.js') ?: 0 ?>"></script>
 <script>
+(async function () {
+  guardDeviceIdentityForms();
+  try {
+    await prepareDeviceIdentity();
+
 function extractGateToken(text) {
   try {
     const url = new URL(text);
@@ -281,6 +286,9 @@ fetch('<?= BASE_URL ?>/api/scan.php', {
   .then(r => r.json())
   .then(d => { if (!d.success || d.status === 'BELUM') alt.classList.remove('d-none'); })
   .catch(() => alt.classList.remove('d-none'));   // gagal memeriksa: tetap beri jalan untuk mendaftar
+})();
+
+  } catch (error) { showDeviceIdentityError(error); }
 })();
 </script>
 </body>
