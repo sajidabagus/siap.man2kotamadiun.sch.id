@@ -458,25 +458,99 @@ endif; ?>
   $sampai = $offset + count($daftarS);
   $nonce = pengguna_nonce();
   ?>
+  <style>
+    /* Bar filter: sama dengan halaman Data Presensi */
+    .pf-filter {
+      display: grid !important;
+      grid-template-columns: auto auto minmax(200px, 1fr) auto;
+      align-items: center;
+      gap: .75rem !important;
+      width: 100%;
+    }
+
+    .pf-filter>* {
+      margin: 0 !important;
+      min-width: 0;
+    }
+
+    .pf-filter .form-select,
+    .pf-filter .form-control {
+      width: 100% !important;
+      flex: none !important;
+      max-width: none !important;
+    }
+
+    .pf-filter .pf-pp {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      white-space: nowrap;
+    }
+
+    .pf-filter .pf-pp .form-select {
+      width: auto !important;
+    }
+
+    .pf-filter .pf-sel {
+      min-width: 160px;
+    }
+
+    .pf-filter .pf-btn {
+      white-space: nowrap;
+    }
+
+    .pf-filter .pf-search {
+      position: relative;
+    }
+
+    .pf-filter .pf-search .bi-search {
+      position: absolute;
+      top: 50%;
+      left: .85rem;
+      transform: translateY(-50%);
+      color: #6c757d;
+      pointer-events: none;
+    }
+
+    .pf-filter .pf-search .form-control {
+      padding-left: 2.4rem;
+    }
+
+    @media (max-width: 767.98px) {
+      .pf-filter {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .pf-filter .pf-pp,
+      .pf-filter .pf-search {
+        grid-column: 1 / -1;
+      }
+    }
+  </style>
+
+  <!-- Kartu filter -->
+  <div class="tbl-card mb-3">
+    <div class="p-3">
+      <form method="get" data-live data-live-target="#hasil-live" id="formFilter" class="pf-filter"><?= hidden_modul() ?>
+        <input type="hidden" name="tab" value="siswa">
+        <div class="pf-pp"><?= render_per_page_field($perPage, false) ?></div>
+        <select name="kelas" class="form-select pf-sel">
+          <option value="">Semua Kelas</option>
+          <?php foreach ($kelasListS as $k): ?><option value="<?= e($k) ?>" <?= $kelasS === $k ? 'selected' : '' ?>><?= e($k) ?></option><?php endforeach; ?>
+        </select>
+        <div class="pf-search">
+          <i class="bi bi-search"></i>
+          <input type="search" name="q" class="form-control" value="<?= e($qS) ?>" placeholder="Cari nama siswa / NIS..." autocomplete="off">
+        </div>
+        <a href="<?= e(modul_url('pengguna', ['tab' => 'siswa'])) ?>" class="btn btn-primary pf-btn" title="Hapus semua filter">Reset</a>
+      </form>
+    </div>
+  </div>
+
   <div class="tbl-card">
     <div class="tbl-head">
       <h6>Akun siswa yang sudah aktivasi</h6>
       <div class="sub">Siswa yang sudah mengaktifkan akun portal (NISN adalah username). Administrator dapat mengganti atau mereset password. Kode aktivasi, blokir, dan perangkat dikelola di menu <a href="<?= e(modul_url('akun_siswa')) ?>">Akun Siswa</a>.</div>
-    </div>
-    <div class="tbl-tools">
-      <form method="get" data-live data-live-target="#hasil-live"><?= hidden_modul() ?>
-        <input type="hidden" name="tab" value="siswa">
-        <?= render_per_page_field($perPage, false) ?>
-        <div class="tbl-search">
-          <i class="bi bi-search"></i>
-          <input type="text" name="q" class="form-control" placeholder="Cari nama/NISN/NIS..." value="<?= e($qS) ?>">
-        </div>
-        <select name="kelas" class="form-select">
-          <option value="">Semua Kelas</option>
-          <?php foreach ($kelasListS as $k): ?><option value="<?= e($k) ?>" <?= $kelasS === $k ? 'selected' : '' ?>><?= e($k) ?></option><?php endforeach; ?>
-        </select>
-        <a href="<?= e(modul_url('pengguna', ['tab' => 'siswa'])) ?>" class="btn btn-light border" title="Hapus semua filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
-      </form>
     </div>
 
     <div id="hasil-live">

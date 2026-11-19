@@ -46,26 +46,107 @@ $extra = ['aksi' => $aksi, 'modul_log' => $modul, 'q' => $q, 'tanggal' => $tangg
 ?>
 <h4 class="mb-3"><i class="bi bi-clock-history"></i> Log Aktivitas</h4>
 
+<style>
+  /* Bar filter: sama dengan halaman Data Presensi */
+  .pf-filter {
+    display: grid !important;
+    grid-template-columns: auto auto auto auto minmax(200px, 1fr) auto;
+    align-items: center;
+    gap: .75rem !important;
+    width: 100%;
+  }
+
+  .pf-filter>* {
+    margin: 0 !important;
+    min-width: 0;
+  }
+
+  .pf-filter .form-select,
+  .pf-filter .form-control {
+    width: 100% !important;
+    flex: none !important;
+    max-width: none !important;
+  }
+
+  .pf-filter .pf-pp {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    white-space: nowrap;
+  }
+
+  .pf-filter .pf-pp .form-select {
+    width: auto !important;
+  }
+
+  .pf-filter .pf-sel {
+    min-width: 150px;
+  }
+
+  .pf-filter .pf-tgl {
+    min-width: 150px;
+  }
+
+  .pf-filter .pf-btn {
+    white-space: nowrap;
+  }
+
+  .pf-filter .pf-search {
+    position: relative;
+  }
+
+  .pf-filter .pf-search .bi-search {
+    position: absolute;
+    top: 50%;
+    left: .85rem;
+    transform: translateY(-50%);
+    color: #6c757d;
+    pointer-events: none;
+  }
+
+  .pf-filter .pf-search .form-control {
+    padding-left: 2.4rem;
+  }
+
+  @media (max-width: 1199.98px) {
+    .pf-filter {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .pf-filter .pf-pp,
+    .pf-filter .pf-search {
+      grid-column: 1 / -1;
+    }
+  }
+</style>
+
+<!-- Kartu filter -->
+<div class="tbl-card mb-3">
+  <div class="p-3">
+    <form method="get" data-live data-live-target="#hasil-live" id="formFilter" class="pf-filter"><?= hidden_modul() ?>
+      <div class="pf-pp"><?= render_per_page_field($perPage, false) ?></div>
+      <input type="date" name="tanggal" class="form-control pf-tgl" value="<?= e($tanggal) ?>" aria-label="Tanggal">
+      <select name="aksi" class="form-select pf-sel">
+        <option value="">Semua Aksi</option>
+        <?php foreach (AKSI_AKTIVITAS as $a): ?><option value="<?= $a ?>" <?= $aksi === $a ? 'selected' : '' ?>><?= $a ?></option><?php endforeach; ?>
+      </select>
+      <select name="modul_log" class="form-select pf-sel">
+        <option value="">Semua Modul</option>
+        <?php foreach ($daftarModul as $m): ?><option value="<?= e($m) ?>" <?= $modul === $m ? 'selected' : '' ?>><?= e($labelModul[$m] ?? $m) ?></option><?php endforeach; ?>
+      </select>
+      <div class="pf-search">
+        <i class="bi bi-search"></i>
+        <input type="search" name="q" class="form-control" value="<?= e($q) ?>" placeholder="Cari keterangan / nama admin..." autocomplete="off">
+      </div>
+      <a href="<?= modul_url('log_aktivitas') ?>" class="btn btn-primary pf-btn" title="Hapus semua filter">Reset</a>
+    </form>
+  </div>
+</div>
+
 <div class="tbl-card">
   <div class="tbl-head">
     <h6>Riwayat aktivitas</h6>
     <div class="sub">Tindakan admin yang tercatat di sistem.</div>
-  </div>
-  <div class="tbl-tools">
-    <form method="get" data-live data-live-target="#hasil-live"><?= hidden_modul() ?>
-      <?= render_per_page_field($perPage, false) ?>
-              <div class="tbl-search"><i class="bi bi-search"></i><input type="text" name="q" class="form-control" placeholder="Cari keterangan / nama admin" value="<?= e($q) ?>"></div>
-              <select name="aksi" class="form-select">
-          <option value="">Semua Aksi</option>
-          <?php foreach (AKSI_AKTIVITAS as $a): ?><option value="<?= $a ?>" <?= $aksi === $a ? 'selected' : '' ?>><?= $a ?></option><?php endforeach; ?>
-        </select>
-              <select name="modul_log" class="form-select">
-          <option value="">Semua Modul</option>
-          <?php foreach ($daftarModul as $m): ?><option value="<?= e($m) ?>" <?= $modul === $m ? 'selected' : '' ?>><?= e($labelModul[$m] ?? $m) ?></option><?php endforeach; ?>
-        </select>
-              <input type="date" name="tanggal" class="form-control" value="<?= e($tanggal) ?>">
-          <a href="<?= modul_url('log_aktivitas') ?>" class="btn btn-light border" title="Hapus semua filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
-    </form>
   </div>
   <div id="hasil-live">
   <div class="table-responsive">
