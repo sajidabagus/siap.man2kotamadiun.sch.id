@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (!csrf_verify($_POST['csrf_token'] ?? '')) {
     $error = 'Sesi tidak valid, silakan coba lagi.';
   } else {
-    $username = clean($_POST['username'] ?? '');
+    $username = clean($_POST['lg_identitas'] ?? ($_POST['username'] ?? ''));   // nama field sengaja bukan "username" agar browser tidak menawarkan riwayat/saved info
     $password = $_POST['password'] ?? '';
 
     if ($username === '' || $password === '') {
@@ -960,7 +960,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
           <div class="lg-ok netral" role="note"><i class="bi bi-info-circle-fill"></i><span>Portal siswa sedang ditutup sementara. Petugas tetap dapat masuk.</span></div>
         <?php endif; ?>
         <div class="lg-field lg-a lg-a2">
-          <input type="text" name="username" id="username" placeholder="Username / NISN" aria-label="Username atau NISN" autocomplete="username" required autocapitalize="none" spellcheck="false">
+          <input type="text" name="lg_identitas" id="lg_identitas" placeholder="Username / NISN" aria-label="Username atau NISN" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other" required autocapitalize="none" autocorrect="off" spellcheck="false">
         </div>
         <div class="lg-field pw lg-a lg-a3">
           <input type="password" name="password" id="password" placeholder="Password" aria-label="Password" required>
@@ -970,8 +970,8 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
         <button type="submit" class="lg-btn lg-a lg-a4" id="btnMasuk">Masuk</button>
       </form>
       <?php if ($_SERVER['REQUEST_METHOD'] !== 'POST' && ($_GET['keluar'] ?? '') !== '1' && ($_GET['aktif'] ?? '') !== '1'): ?>
-      <p class="lg-kaki" id="deviceAutoStatus" role="status" aria-live="polite" hidden></p>
-      <button type="button" class="lg-btn" id="deviceAutoRetry" hidden>Coba lagi</button>
+        <p class="lg-kaki" id="deviceAutoStatus" role="status" aria-live="polite" hidden></p>
+        <button type="button" class="lg-btn" id="deviceAutoRetry" hidden>Coba lagi</button>
       <?php endif; ?>
 
       <p class="lg-kaki lg-a lg-a4">
@@ -1053,7 +1053,7 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
 
       // Fokus otomatis ke username hanya di perangkat dengan mouse (desktop); di HP keyboard tidak boleh muncul sendiri.
       if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-        document.getElementById('username').focus();
+        document.getElementById('lg_identitas').focus();
       }
 
       var pw = document.getElementById('password'),
@@ -1079,9 +1079,12 @@ $logoUrl = ($logo !== '' && is_file(__DIR__ . '/uploads/siswa/' . $logo)) ? BASE
     <script>
       startDeviceAutoLogin({
         api: <?= json_encode(portal_url('masuk-perangkat')) ?>,
-        statusId: 'deviceAutoStatus', retryId: 'deviceAutoRetry',
+        statusId: 'deviceAutoStatus',
+        retryId: 'deviceAutoRetry',
         cancelOnSubmit: true,
-        onSuccess: function () { location.replace(<?= json_encode(portal_url('', ['_g' => 1])) ?>); }
+        onSuccess: function() {
+          location.replace(<?= json_encode(portal_url('', ['_g' => 1])) ?>);
+        }
       });
     </script>
   <?php endif; ?>
